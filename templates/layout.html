@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chase AI Habitat</title>
+    <link rel="stylesheet" href="/static/css/cyberpunk.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="sidebar">
+        <div class="logo">
+            CHASE AI HABITAT
+        </div>
+
+        <a href="/">Chat</a>
+        <a href="/habitat">Habitat</a>
+        <a href="/research">Research</a>
+        <a href="/agents">Agents</a>
+        <a href="/concept-graph">Concept Graph</a>
+    </div>
+
+    <div class="main">
+        {% block content %}{% endblock %}
+    </div>
+
+</div>
+
+<script src="/static/js/neural_background.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+
+<div class="chat-layout">
+
+    <!-- MAIN CHAT -->
+    <div class="chat-main chat-panel">
+        <div id="chat-thread"></div>
+
+        <div class="chat-input-area">
+            <input id="chat-input" placeholder="Speak to the Habitat..." />
+            <button id="send-btn" class="chat-btn primary">Send</button>
+            <button id="mic-btn" class="chat-btn">🎤</button>
+            <button id="mode-toggle" class="chat-btn">Orb</button>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="chat-right-panel">
+
+        <div class="panel">
+            <h3 class="panel-title">Conversations</h3>
+
+            <button id="new-chat-btn" class="chat-btn" style="margin-bottom:10px;">
+                + New Chat
+            </button>
+
+            <div id="chat-list"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="conversation-mode" style="display:none;">
+    <div class="orb"></div>
+    <div class="orb-subtext">Conversation Mode</div>
+    <button id="exit-mode" class="chat-btn" style="margin-top:20px;">Exit</button>
+</div>
+
+<div id="conversation-mode">
+    <div id="conversation-orb"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/js/chat.js"></script>
+{% endblock %}

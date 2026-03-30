@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chase AI Habitat</title>
+
+    <link rel="stylesheet" href="/static/css/cyberpunk.css">
+
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+
+<body>
+
+<div id="particle-background"></div>
+
+<div class="app-container">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2 class="logo">CHASE AI HABITAT</h2>
+
+        <nav>
+            <a href="/chat" class="{% if active == 'chat' %}active{% endif %}">Chat</a>
+            <a href="/habitat" class="{% if active == 'habitat' %}active{% endif %}">Habitat</a>
+            <a href="/agents" class="{% if active == 'agents' %}active{% endif %}">Agents</a>
+            <a href="/research">Research</a>
+            <a href="/concept_graph">Concept Graph</a>
+        </nav>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+        <!-- 🔥 THIS IS THE FIX -->
+        <div class="page-shell">
+            {% block content %}{% endblock %}
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/static/js/background_particles.js"></script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

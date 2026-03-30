@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chase AI Habitat — Agents</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cyberpunk.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/agents.css') }}">
+</head>
+
+<body>
+
+<div class="app-container agents-page">
+
+    <aside class="sidebar">
+        <h2>CHASE AI HABITAT</h2>
+        <a href="/">Habitat</a>
+        <a href="/chat">Chat</a>
+        <a href="/agents" class="active">Agents</a>
+    </aside>
+
+    <main class="main-content agents-main">
+
+        <section class="agents-layout">
+
+            <!-- LEFT: MAP -->
+            <div class="agent-map-shell">
+
+                <canvas id="agent-canvas"></canvas>
+
+                <div class="habitat-center-core">
+                    <div class="core-ring ring-a"></div>
+                    <div class="core-ring ring-b"></div>
+                    <div class="core-ring ring-c"></div>
+                    <div class="core-inner"></div>
+                    <div class="core-label">Habitat Core</div>
+                </div>
+
+                <!-- LEGEND -->
+                <div class="habitat-legend">
+                    <div class="legend-item"><span class="legend-dot strategist"></span> Strategist</div>
+                    <div class="legend-item"><span class="legend-dot researcher"></span> Researcher</div>
+                    <div class="legend-item"><span class="legend-dot builder"></span> Builder</div>
+                    <div class="legend-item"><span class="legend-dot archivist"></span> Archivist</div>
+                    <div class="legend-item"><span class="legend-dot curator"></span> Curator</div>
+                    <div class="legend-item"><span class="legend-dot optimizer"></span> Optimizer</div>
+                    <div class="legend-item"><span class="legend-dot sentinel"></span> Sentinel</div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT PANEL -->
+            <aside class="agent-info-panel">
+
+                <!-- TELEMETRY -->
+                <section class="panel-card">
+                    <div class="panel-card-header">
+                        <span class="panel-kicker">System Pulse</span>
+                        <h2>Habitat Telemetry</h2>
+                    </div>
+
+                    <div class="telemetry-grid">
+                        <div class="telemetry-block">
+                            <span>Population</span>
+                            <strong id="entity-count">0</strong>
+                        </div>
+                        <div class="telemetry-block">
+                            <span>Most Active</span>
+                            <strong id="most-active-agent">—</strong>
+                        </div>
+                        <div class="telemetry-block">
+                            <span>Status</span>
+                            <strong id="loop-status">syncing…</strong>
+                        </div>
+                        <div class="telemetry-block">
+                            <span>Last Update</span>
+                            <strong id="last-update">—</strong>
+                        </div>
+                        <div class="telemetry-block">
+                            <span>Entries</span>
+                            <strong id="entry-count">0</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AGENT LIST -->
+                <section class="panel-card">
+                    <div class="panel-card-header">
+                        <span class="panel-kicker">Agents</span>
+                        <h2>Active Minds</h2>
+                    </div>
+
+                    <div id="agent-list" class="agent-list"></div>
+                </section>
+
+                <!-- SELECTED AGENT -->
+                <section class="panel-card">
+                    <div class="panel-card-header">
+                        <span class="panel-kicker">Focused Mind</span>
+                        <h2 id="selected-agent-name">Select an Agent</h2>
+                    </div>
+
+                    <div id="selected-agent-state" class="agent-state-pill idle">idle</div>
+
+                    <p id="selected-agent-description">
+                        Click an agent to inspect its cognition and behavior.
+                    </p>
+
+                    <div class="selected-agent-metrics">
+                        <div class="metric-row">
+                            <span>Tasks</span>
+                            <strong id="selected-agent-task-count">0</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Insights</span>
+                            <strong id="selected-agent-insight-count">0</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Activity</span>
+                            <strong id="selected-agent-activity-count">0</strong>
+                        </div>
+                    </div>
+                </section>
+
+            </aside>
+
+        </section>
+
+    </main>
+</div>
+
+<!-- ✅ SCRIPT AT BOTTOM (correct placement) -->
+<script type="module" src="{{ url_for('static', filename='js/agent_map.js') }}"></script>
+
+</body>
+</html>

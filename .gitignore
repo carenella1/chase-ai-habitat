@@ -1,0 +1,30 @@
+# Virtual Environment (huge - never needed on GitHub)
+habitat-env/
+venv/
+env/
+
+# Python cache files (auto-generated, not needed)
+__pycache__/
+*.pyc
+*.pyo
+
+# Live memory files (change every cycle, cause push conflicts)
+memory.json
+memory.db
+cognition_log.json
+
+# Knowledge sources (too large - your ChatGPT history etc)
+context_package/knowledge_sources/
+
+# VS Code settings
+.vscode/
+
+# Pretrained models (too large)
+pretrained_models/
+
+# Zip files
+*.zip
+
+# Windows junk
+Thumbs.db
+desktop.ini

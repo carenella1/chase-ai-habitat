@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/habitat.css') }}">
+<div class="habitat-page">
+
+    <h1 class="page-title">Habitat Interface</h1>
+
+    <div id="system-status-bar">
+        <div class="status-item">
+            🧠 Cognition: <span id="status-cognition">Idle</span>
+        </div>
+        <div class="status-item">
+            🌐 Knowledge: <span id="status-knowledge">Connected</span>
+        </div>
+        <div class="status-item">
+            ⚙️ Agents: <span id="status-agents">Ready</span>
+        </div>
+    </div>
+
+    <p class="subtext">The Habitat core is active.</p>
+
+    <div class="controls">
+        <button id="run-cognition">Run Cognition Cycle</button>
+        <button id="run-agents">Execute Agent Tasks</button>
+    </div>
+
+    <div class="habitat-layout">
+        <div class="habitat-main">
+            <div class="panel">
+                <div class="cognitive-panel">
+    <h2>🧠 Cognitive State</h2>
+
+    <div class="cog-section">
+        <div class="label">Top Topics</div>
+        <div id="top-topics"></div>
+    </div>
+
+    <div class="cog-section">
+        <div class="label">Synthesis Activity</div>
+        <div id="synthesis"></div>
+    </div>
+
+    <div class="cog-section">
+        <div class="label">Memory Influence</div>
+        <div id="memory-context"></div>
+    </div>
+</div>
+                <h2>Builder Proposals</h2>
+                <div id="builder-proposals"></div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <h2>Habitat Cognition Feed</h2>
+            <div id="cognition-feed" class="cognition-feed"></div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/js/habitat.js?v=2"></script>
+{% endblock %}

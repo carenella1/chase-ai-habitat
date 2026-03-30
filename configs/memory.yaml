@@ -1,0 +1,14 @@
+memory:
+  default_tier: persistent
+
+tiers:
+
+  ephemeral:
+    type: ram
+    description: Temporary runtime memory used during a cognition cycle.
+
+  persistent:
+    type: sqlite
+    database: data/habitat_memory.db
+    table: memory_items
+    description: Long-term Habitat memory stored in SQLite.
