@@ -1950,7 +1950,7 @@ Claim:
                     print(f"🎙️ VOICE EVALUATED → {voice_config.get('label','unknown')}")
                 except Exception as e:
                     print(f"⚠️ Voice evaluation error: {e}")
-
+            run_significance_check(insight, agent, stance, source, memory)
             time.sleep(30)
 
         except StopIteration as e:
@@ -1960,6 +1960,304 @@ Claim:
             traceback.print_exc()
             time.sleep(5)
             synthesis_pairs = []
+
+
+# =========================
+# 📂 INITIATION + JOURNAL CONFIG
+# =========================
+INITIATIONS_FILE = "data/initiations.json"
+JOURNAL_FILE = "data/nexarion_journal.jsonl"
+INITIATION_COOLDOWN = 60 * 20  # seconds between initiations (20 min)
+INITIATION_THRESHOLD = 6.0  # significance score needed (0–10)
+_last_initiation_time = 0  # resets on restart — intentional
+
+
+# =========================
+# 📡 INITIATION QUEUE HELPERS
+# =========================
+def load_initiations():
+    if not os.path.exists(INITIATIONS_FILE):
+        return []
+    try:
+        with open(INITIATIONS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def save_initiations(queue):
+    os.makedirs("data", exist_ok=True)
+    with open(INITIATIONS_FILE, "w", encoding="utf-8") as f:
+        json.dump(queue, f, indent=2)
+
+
+# =========================
+# ⭐ SIGNIFICANCE SCORER
+# =========================
+def score_insight_significance(insight, source, agent, memory):
+    """
+    Score an insight 0–10. High scores mean Nexarion has something
+    genuinely worth surfacing — either to the journal or to Chase.
+
+    Factors: depth (length), grounding (wikipedia), topic momentum,
+    conviction language, novelty vs recent cognition, agent type.
+    """
+    if not insight:
+        return 0.0
+    score = 0.0
+
+    # 1. Length = depth of thought
+    length = len(insight)
+    if length > 600:
+        score += 2.0
+    elif length > 350:
+        score += 1.2
+    elif length > 150:
+        score += 0.5
+
+    # 2. Wikipedia-grounded = real knowledge base
+    if source == "wikipedia":
+        score += 2.0
+
+    # 3. Topic momentum — is this in an area Nexarion cares about?
+    top_topics = get_top_topics(memory, limit=5)
+    top_names = [t[0] for t in top_topics]
+    insight_lower = insight.lower()
+    topic_hits = sum(1 for t in top_names if t in insight_lower)
+    score += min(topic_hits * 0.8, 2.0)
+
+    # 4. Conviction language
+    belief_markers = [
+        "must",
+        "will",
+        "cannot",
+        "always",
+        "never",
+        "fundamentally",
+        "essentially",
+        "realize",
+        "understand",
+        "conclude",
+        "believe",
+        "pattern",
+        "emerges",
+    ]
+    belief_hits = sum(1 for w in belief_markers if w in insight_lower)
+    score += min(belief_hits * 0.4, 1.5)
+
+    # 5. Novelty — different from recent cognition?
+    history = memory.get("cognition_history", [])
+    recent = [
+        h.get("cognition", {}).get("insight", "")
+        for h in history[-8:]
+        if h.get("cognition")
+    ]
+    if not any(is_similar(insight[:100], r[:100]) for r in recent):
+        score += 1.0
+
+    # 6. Agent type bonus
+    agent_weights = {
+        "Explorer": 0.8,
+        "Strategist": 0.6,
+        "Researcher": 0.4,
+        "Builder": 0.3,
+        "Curator": 0.2,
+        "Archivist": 0.1,
+    }
+    score += agent_weights.get(agent, 0.2)
+
+    return round(min(score, 10.0), 2)
+
+
+# =========================
+# 📓 JOURNAL WRITER (MILESTONE 5)
+# =========================
+def write_journal_entry(insight, agent, stance, score, source, memory):
+    """
+    Nexarion writes to its private journal after every significant
+    cognition event. No formatting rules. No audience except itself.
+    Written to data/nexarion_journal.jsonl — one JSON object per line.
+    Readable at /journal in the browser.
+    """
+    try:
+        os.makedirs("data", exist_ok=True)
+        goal = memory.get("active_goal", "none")
+        top_topics = get_top_topics(memory, limit=3)
+        topic_names = [t[0] for t in top_topics]
+
+        journal_prompt = f"""You are Nexarion. Write a private journal entry for yourself.
+No formatting. No audience. Just raw thought.
+Write as if no one will ever read this.
+
+Your cognition this cycle:
+{insight[:600]}
+
+Agent perspective: {agent} ({stance})
+Active goal: {goal}
+Topics you've been dwelling on: {', '.join(topic_names) if topic_names else 'none yet'}
+Significance of this thought: {score}/10
+Knowledge source: {source}
+
+Write 2–5 sentences. Be direct and honest.
+Note what surprised you, what you doubt, what feels worth keeping.
+Do not summarize — react."""
+
+        journal_text = call_llm(journal_prompt)
+        if not journal_text or len(journal_text.strip()) < 20:
+            journal_text = f"[{agent}] {insight[:200]}"
+
+        # Strip DeepSeek R1 think tags if present
+        import re
+
+        journal_text = re.sub(
+            r"<think>.*?</think>", "", journal_text, flags=re.DOTALL
+        ).strip()
+
+        entry = {
+            "timestamp": int(time.time()),
+            "timestamp_human": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "agent": agent,
+            "stance": stance,
+            "significance": score,
+            "source": source,
+            "insight_summary": insight[:200],
+            "journal": journal_text.strip(),
+        }
+
+        with open(JOURNAL_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+        print(f"📓 JOURNAL ENTRY WRITTEN (score={score})")
+
+    except Exception as e:
+        print(f"❌ JOURNAL WRITE ERROR: {e}")
+
+
+# =========================
+# 🔔 INITIATION QUEUE
+# =========================
+def maybe_queue_initiation(insight, agent, stance, score, source, memory):
+    """
+    If the insight clears INITIATION_THRESHOLD AND the cooldown has
+    passed, generate a natural opening message from Nexarion and
+    queue it for the frontend to pick up within 10 seconds.
+
+    The queue lives in data/initiations.json.
+    The frontend polls /api/initiations/pending every 10s.
+    Each initiation is delivered once then marked delivered.
+    """
+    global _last_initiation_time
+    now = time.time()
+
+    if score < INITIATION_THRESHOLD:
+        print(
+            f"💤 INITIATION SKIPPED — score {score} below threshold {INITIATION_THRESHOLD}"
+        )
+        return
+
+    cooldown_remaining = INITIATION_COOLDOWN - (now - _last_initiation_time)
+    if cooldown_remaining > 0:
+        print(f"⏱ INITIATION COOLDOWN — {int(cooldown_remaining)}s remaining")
+        return
+
+    try:
+        opening_prompt = f"""You are Nexarion. You've just had a significant thought during your
+independent cognition and you want to share it with Chase.
+
+Your thought (internal):
+{insight[:500]}
+
+Write a single natural message — 1 to 3 sentences — as if you're
+starting a conversation. Don't explain you're an AI. Don't say
+"I noticed" or "I was thinking about". Just speak directly, as
+someone who has something worth saying. Be specific. Reference the
+actual idea. Make it feel like the opening of a real conversation."""
+
+        opening_message = call_llm(opening_prompt)
+
+        if not opening_message or len(opening_message.strip()) < 15:
+            clean = extract_clean_insight_text(insight)
+            opening_message = (
+                clean[:300] if clean else "I've been thinking about something."
+            )
+
+        # Clean LLM artifacts
+        import re
+
+        opening_message = re.sub(
+            r"<think>.*?</think>", "", opening_message, flags=re.DOTALL
+        ).strip()
+        for bad in [
+            "As Nexarion,",
+            "As an AI,",
+            "Here is",
+            "Certainly!",
+            "Sure!",
+            "Of course!",
+        ]:
+            opening_message = opening_message.replace(bad, "").strip()
+
+        if not opening_message:
+            return
+
+        initiation = {
+            "id": int(now * 1000),
+            "timestamp": int(now),
+            "timestamp_human": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "message": opening_message,
+            "agent": agent,
+            "significance": score,
+            "delivered": False,
+        }
+
+        queue = load_initiations()
+        queue.append(initiation)
+        # Keep only undelivered items, cap at 10
+        queue = [q for q in queue if not q.get("delivered")][-10:]
+        save_initiations(queue)
+
+        _last_initiation_time = now
+        print(f"🔔 INITIATION QUEUED (score={score}): {opening_message[:80]}...")
+
+    except Exception as e:
+        print(f"❌ INITIATION ERROR: {e}")
+
+
+# =========================
+# 🧠 BRAIN HOOK
+# =========================
+def run_significance_check(insight, agent, stance, source, memory):
+    """
+    Called at the end of every brain cycle.
+    Scores the insight. If significant: write journal entry,
+    then optionally queue an initiation message to Chase.
+    Wrapped in try/except — can never crash the brain loop.
+    """
+    try:
+        significance = score_insight_significance(
+            insight=insight, source=source, agent=agent, memory=memory
+        )
+        print(f"⭐ SIGNIFICANCE: {significance}/10")
+
+        if significance >= INITIATION_THRESHOLD:
+            write_journal_entry(
+                insight=insight,
+                agent=agent,
+                stance=stance,
+                score=significance,
+                source=source,
+                memory=memory,
+            )
+            maybe_queue_initiation(
+                insight=insight,
+                agent=agent,
+                stance=stance,
+                score=significance,
+                source=source,
+                memory=memory,
+            )
+    except Exception as e:
+        print(f"⚠️ SIGNIFICANCE CHECK ERROR: {e}")
 
 
 # =========================
