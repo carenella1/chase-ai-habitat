@@ -5,7 +5,7 @@
     "thesis": "--- Debate Response ---\nAgent: Archivist  \nStance: REFRAME  \n\n**Claim:**  \nA critical flaw in addressing cognitive bia lies in overlooking how these biases are perpetuated through systemic structures rather than isolated individual errors.  \n\n**Response:**  \nWhile it's true that cognitive bia influe",
     "started_by": "Archivist",
     "started_cycle": 594,
-    "current_step": 1,
+    "current_step": 2,
     "max_steps": 5,
     "steps": [
       {
@@ -15,6 +15,15 @@
         "cycle": 594,
         "timestamp": 1774997316,
         "role": "thesis"
+      },
+      {
+        "step": 2,
+        "agent": "Strategist",
+        "content": "By understanding how the availability heuristic affects their argument construction, debaters can enhance the accuracy and persuasiveness of their claims through more deliberate and balanced example selection.",
+        "cycle": 595,
+        "timestamp": 1774997381,
+        "role": "challenge",
+        "stance": "CHALLENGE"
       }
     ],
     "status": "active",

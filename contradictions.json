@@ -183,6 +183,52 @@
       "detected_at": 1774996969,
       "resolved": false,
       "detected_cycle": 588
+    },
+    {
+      "belief_a": {
+        "belief_id": 174,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T05:48:29.819439",
+        "last_updated": "2026-03-31T22:47:24.092565"
+      },
+      "belief_b": {
+        "belief_id": 173,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making by providing accurate and t",
+        "confidence": 0.8500000000000002,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T05:42:06.068293",
+        "last_updated": "2026-03-31T17:35:33.590929"
+      },
+      "detected_at": 1774997346,
+      "resolved": false,
+      "detected_cycle": 595
+    },
+    {
+      "belief_a": {
+        "belief_id": 174,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T05:48:29.819439",
+        "last_updated": "2026-03-31T22:47:24.092565"
+      },
+      "belief_b": {
+        "belief_id": 168,
+        "statement": "Implementing artificial intelligence in various industries can significantly improve efficiency and reduce costs.",
+        "confidence": 0.7500000000000001,
+        "created_by_agent": "Curator",
+        "status": "active",
+        "created_at": "2026-03-31T05:33:40.049953",
+        "last_updated": "2026-03-31T17:38:42.356203"
+      },
+      "detected_at": 1774997346,
+      "resolved": false,
+      "detected_cycle": 595
     }
   ],
   "resolved": [
