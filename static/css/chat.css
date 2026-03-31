@@ -478,3 +478,416 @@
     50% { transform: scale(1.08); }
     100% { transform: scale(1); }
 }
+
+
+
+/* =========================
+   PULSE RINGS
+========================= */
+
+#orb-rings {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.orb-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 240, 255, 0.12);
+}
+
+.ring-1 { width: 320px; height: 320px; }
+.ring-2 { width: 480px; height: 480px; opacity: 0.6; }
+.ring-3 { width: 640px; height: 640px; opacity: 0.3; }
+
+
+.ring-2 { animation-delay: 0.5s !important; }
+.ring-3 { animation-delay: 1s !important; }
+
+/* =========================
+   THE ORB
+========================= */
+
+#nexarion-orb {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.4s ease;
+
+    /* default idle state */
+    background: radial-gradient(circle at 38% 35%,
+        rgba(0, 240, 255, 0.35) 0%,
+        rgba(0, 100, 180, 0.25) 45%,
+        rgba(0, 20, 60, 0.6) 100%
+    );
+    box-shadow:
+        0 0 40px rgba(0, 240, 255, 0.25),
+        0 0 80px rgba(0, 200, 255, 0.1),
+        inset 0 0 30px rgba(0, 240, 255, 0.08);
+    animation: orbFloat 4s ease-in-out infinite;
+}
+
+#nexarion-orb:hover {
+    box-shadow:
+        0 0 55px rgba(0, 240, 255, 0.4),
+        0 0 100px rgba(0, 200, 255, 0.18),
+        inset 0 0 30px rgba(0, 240, 255, 0.12);
+}
+
+/* =========================
+   ORB STATES
+   Each state changes color and animation intensity
+========================= */
+
+/* IDLE — calm blue pulse */
+#nexarion-orb.orb-idle {
+    background: radial-gradient(circle at 38% 35%,
+        rgba(0, 240, 255, 0.35) 0%,
+        rgba(0, 100, 180, 0.25) 45%,
+        rgba(0, 20, 60, 0.6) 100%
+    );
+    box-shadow:
+        0 0 40px rgba(0, 240, 255, 0.25),
+        0 0 80px rgba(0, 200, 255, 0.1),
+        inset 0 0 30px rgba(0, 240, 255, 0.08);
+    animation: orbFloat 4s ease-in-out infinite;
+}
+
+/* LISTENING — bright teal, rapid pulse */
+#nexarion-orb.orb-listening {
+    background: radial-gradient(circle at 38% 35%,
+        rgba(0, 255, 200, 0.55) 0%,
+        rgba(0, 200, 160, 0.3) 45%,
+        rgba(0, 40, 60, 0.6) 100%
+    );
+    box-shadow:
+        0 0 60px rgba(0, 255, 180, 0.5),
+        0 0 120px rgba(0, 220, 160, 0.2),
+        inset 0 0 30px rgba(0, 255, 180, 0.15);
+    animation: orbListen 1s ease-in-out infinite;
+}
+
+/* THINKING — amber/purple, slow pulsing breathe */
+#nexarion-orb.orb-thinking {
+    background: radial-gradient(circle at 38% 35%,
+        rgba(160, 80, 255, 0.5) 0%,
+        rgba(100, 40, 200, 0.3) 45%,
+        rgba(20, 5, 60, 0.65) 100%
+    );
+    box-shadow:
+        0 0 50px rgba(150, 80, 255, 0.45),
+        0 0 100px rgba(120, 60, 220, 0.15),
+        inset 0 0 30px rgba(160, 80, 255, 0.12);
+    animation: orbThink 1.8s ease-in-out infinite;
+}
+
+/* SPEAKING — warm white/gold, energetic ripple */
+#nexarion-orb.orb-speaking {
+    background: radial-gradient(circle at 38% 35%,
+        rgba(255, 220, 100, 0.55) 0%,
+        rgba(255, 160, 40, 0.3) 45%,
+        rgba(60, 20, 5, 0.65) 100%
+    );
+    box-shadow:
+        0 0 60px rgba(255, 200, 80, 0.5),
+        0 0 120px rgba(255, 160, 40, 0.2),
+        inset 0 0 30px rgba(255, 200, 80, 0.15);
+    animation: orbSpeak 0.6s ease-in-out infinite;
+}
+
+/* =========================
+   ORB ANIMATIONS
+========================= */
+
+@keyframes orbFloat {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50%       { transform: translateY(-10px) scale(1.02); }
+}
+
+@keyframes orbListen {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.12); }
+}
+
+@keyframes orbThink {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+    33%       { transform: scale(1.06) rotate(1deg); opacity: 1; }
+    66%       { transform: scale(0.97) rotate(-1deg); opacity: 0.85; }
+}
+
+@keyframes orbSpeak {
+    0%, 100% { transform: scale(1); }
+    25%       { transform: scale(1.08); }
+    75%       { transform: scale(0.95); }
+}
+
+@keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 0.12; }
+    50%       { transform: scale(1.05); opacity: 0.22; }
+}
+
+/* =========================
+   STATUS TEXT
+========================= */
+
+#orb-status-text {
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+    transition: all 0.4s ease;
+}
+
+#orb-hint {
+    font-size: 12px;
+    color: rgba(0, 240, 255, 0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* =========================
+   EXIT BUTTON
+========================= */
+
+#exit-orb {
+    margin-top: 12px;
+    border-color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+}
+
+#exit-orb:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.8);
+    box-shadow: none;
+}
+
+/* =========================
+   ORB OVERLAY — PyWebView fix
+   
+   Add this to the BOTTOM of chat.css, replacing the existing
+   #orb-overlay block from chat_orb_additions.css
+   
+   The key fix: position:fixed with explicit z-index and
+   a solid background that fully covers the chat thread.
+   PyWebView renders the backdrop-filter differently to Chrome.
+========================= */
+
+#orb-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+
+    /* Solid dark background — no transparency bleed-through in PyWebView */
+    background: rgba(0, 8, 15, 0.96);
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+}
+
+#orb-overlay.orb-visible {
+    display: flex;
+}
+
+/* Pulse rings */
+#orb-rings {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.orb-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 240, 255, 0.12);
+}
+
+.ring-1 { width: 320px; height: 320px; }
+.ring-2 { width: 480px; height: 480px; opacity: 0.6; }
+.ring-3 { width: 640px; height: 640px; opacity: 0.3; }
+
+#orb-overlay.orb-visible .orb-ring {
+    animation: ringPulse 3s ease-in-out infinite;
+}
+.ring-2 { animation-delay: 0.5s !important; }
+.ring-3 { animation-delay: 1s !important; }
+
+/* The orb itself */
+#nexarion-orb {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    z-index: 1;
+
+    background: radial-gradient(circle at 38% 35%,
+        rgba(0, 240, 255, 0.35) 0%,
+        rgba(0, 100, 180, 0.25) 45%,
+        rgba(0, 20, 60, 0.6) 100%
+    );
+    box-shadow:
+        0 0 40px rgba(0, 240, 255, 0.25),
+        0 0 80px rgba(0, 200, 255, 0.1),
+        inset 0 0 30px rgba(0, 240, 255, 0.08);
+    animation: orbFloat 4s ease-in-out infinite;
+}
+
+/* ORB STATES */
+#nexarion-orb.orb-idle {
+    background: radial-gradient(circle at 38% 35%,
+        rgba(0, 240, 255, 0.35) 0%,
+        rgba(0, 100, 180, 0.25) 45%,
+        rgba(0, 20, 60, 0.6) 100%
+    );
+    animation: orbFloat 4s ease-in-out infinite;
+}
+
+#nexarion-orb.orb-listening {
+    background: radial-gradient(circle at 38% 35%,
+        rgba(0, 255, 200, 0.55) 0%,
+        rgba(0, 200, 160, 0.3) 45%,
+        rgba(0, 40, 60, 0.6) 100%
+    );
+    box-shadow:
+        0 0 60px rgba(0, 255, 180, 0.5),
+        0 0 120px rgba(0, 220, 160, 0.2),
+        inset 0 0 30px rgba(0, 255, 180, 0.15);
+    animation: orbListen 1s ease-in-out infinite;
+}
+
+#nexarion-orb.orb-thinking {
+    background: radial-gradient(circle at 38% 35%,
+        rgba(160, 80, 255, 0.5) 0%,
+        rgba(100, 40, 200, 0.3) 45%,
+        rgba(20, 5, 60, 0.65) 100%
+    );
+    box-shadow:
+        0 0 50px rgba(150, 80, 255, 0.45),
+        0 0 100px rgba(120, 60, 220, 0.15),
+        inset 0 0 30px rgba(160, 80, 255, 0.12);
+    animation: orbThink 1.8s ease-in-out infinite;
+}
+
+#nexarion-orb.orb-speaking {
+    background: radial-gradient(circle at 38% 35%,
+        rgba(255, 220, 100, 0.55) 0%,
+        rgba(255, 160, 40, 0.3) 45%,
+        rgba(60, 20, 5, 0.65) 100%
+    );
+    box-shadow:
+        0 0 60px rgba(255, 200, 80, 0.5),
+        0 0 120px rgba(255, 160, 40, 0.2),
+        inset 0 0 30px rgba(255, 200, 80, 0.15);
+    animation: orbSpeak 0.6s ease-in-out infinite;
+}
+
+/* ORB ANIMATIONS */
+@keyframes orbFloat {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50%       { transform: translateY(-10px) scale(1.02); }
+}
+@keyframes orbListen {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.12); }
+}
+@keyframes orbThink {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    33%       { transform: scale(1.06); opacity: 1; }
+    66%       { transform: scale(0.97); opacity: 0.85; }
+}
+@keyframes orbSpeak {
+    0%, 100% { transform: scale(1); }
+    25%       { transform: scale(1.08); }
+    75%       { transform: scale(0.95); }
+}
+@keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 0.12; }
+    50%       { transform: scale(1.05); opacity: 0.22; }
+}
+
+/* Status text */
+#orb-status-text {
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+    transition: all 0.4s ease;
+    z-index: 1;
+}
+
+#orb-hint {
+    font-size: 12px;
+    color: rgba(0, 240, 255, 0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    z-index: 1;
+}
+
+#exit-orb {
+    margin-top: 12px;
+    border-color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    z-index: 1;
+}
+
+#exit-orb:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.8);
+    box-shadow: none;
+}
+
+/* =========================
+   NEXARION-INITIATED MESSAGES
+   These look different from regular chat because they ARE different.
+   Nexarion spoke first. The visual treatment makes that legible at a glance.
+========================= */
+
+.nexarion-initiated {
+    border-left: 2px solid rgba(0, 240, 255, 0.45);
+    padding-left: 12px;
+    margin-bottom: 20px;
+    max-width: 80%;
+}
+
+.initiation-label {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    color: var(--accent);
+    opacity: 0.6;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.initiation-bubble {
+    background: rgba(0, 240, 255, 0.04) !important;
+    border: 1px solid rgba(0, 240, 255, 0.2) !important;
+    font-style: italic;
+    color: #d9fbff !important;
+}
+
+.initiation-meta {
+    font-size: 10px;
+    opacity: 0.3;
+    margin-top: 5px;
+    letter-spacing: 0.4px;
+}

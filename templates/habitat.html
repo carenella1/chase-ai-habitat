@@ -4,63 +4,136 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/habitat.css') }}">
 <div class="habitat-page">
 
-    <h1 class="page-title">Habitat Interface</h1>
-
-    <div id="system-status-bar">
-        <div class="status-item">
-            🧠 Cognition: <span id="status-cognition">Idle</span>
-        </div>
-        <div class="status-item">
-            🌐 Knowledge: <span id="status-knowledge">Connected</span>
-        </div>
-        <div class="status-item">
-            ⚙️ Agents: <span id="status-agents">Ready</span>
-        </div>
-    </div>
-
-    <p class="subtext">The Habitat core is active.</p>
-
-    <div class="controls">
-        <button id="run-cognition">Run Cognition Cycle</button>
-        <button id="run-agents">Execute Agent Tasks</button>
-    </div>
-
-    <div class="habitat-layout">
-        <div class="habitat-main">
-            <div class="panel">
-                <div class="cognitive-panel">
-    <h2>🧠 Cognitive State</h2>
-
-    <div class="cog-section">
-        <div class="label">Top Topics</div>
-        <div id="top-topics"></div>
-    </div>
-
-    <div class="cog-section">
-        <div class="label">Synthesis Activity</div>
-        <div id="synthesis"></div>
-    </div>
-
-    <div class="cog-section">
-        <div class="label">Memory Influence</div>
-        <div id="memory-context"></div>
-    </div>
-</div>
-                <h2>Builder Proposals</h2>
-                <div id="builder-proposals"></div>
+    <!-- =====================
+         HEADER BAR
+    ===================== -->
+    <div class="habitat-header">
+        <div class="habitat-title-block">
+            <div class="habitat-hexicon">⬡</div>
+            <div>
+                <h1 class="page-title">HABITAT INTERFACE</h1>
+                <p class="habitat-subtitle">Autonomous Cognitive System</p>
             </div>
         </div>
-
-        <div class="right-panel">
-            <h2>Habitat Cognition Feed</h2>
-            <div id="cognition-feed" class="cognition-feed"></div>
+        <div id="system-status-bar">
+            <div class="status-pill" id="pill-cognition">
+                <span class="status-dot"></span>
+                <span class="status-label">Cognition</span>
+                <span class="status-value" id="status-cognition">Idle</span>
+            </div>
+            <div class="status-pill" id="pill-knowledge">
+                <span class="status-dot"></span>
+                <span class="status-label">Knowledge</span>
+                <span class="status-value" id="status-knowledge">Connected</span>
+            </div>
+            <div class="status-pill" id="pill-agents">
+                <span class="status-dot"></span>
+                <span class="status-label">Agents</span>
+                <span class="status-value" id="status-agents">Ready</span>
+            </div>
         </div>
     </div>
 
-</div>
+    <!-- =====================
+         CONTROL BAR
+    ===================== -->
+    <div class="controls">
+        <button id="run-cognition" class="ctrl-btn ctrl-primary">
+            <span class="btn-dot"></span>
+            Run Cognition Cycle
+        </button>
+        <button id="run-agents" class="ctrl-btn ctrl-secondary">
+            <span class="btn-dot"></span>
+            Execute Agent Tasks
+        </button>
+    </div>
 
+    <!-- =====================
+         MAIN LAYOUT
+    ===================== -->
+    <div class="habitat-layout">
+
+        <!-- LEFT COLUMN -->
+        <div class="habitat-main">
+
+            <!-- COGNITIVE STATE PANEL -->
+            <div class="panel cognitive-panel">
+                <div class="panel-header">
+                    <span class="panel-icon">◈</span>
+                    <h2 class="panel-title">COGNITIVE STATE</h2>
+                    <div class="panel-live-dot"></div>
+                </div>
+
+                <div class="cog-grid">
+                    <div class="cog-block">
+                        <div class="cog-block-label">TOP TOPICS</div>
+                        <div id="top-topics" class="topics-container"></div>
+                    </div>
+
+                    <div class="cog-block">
+                        <div class="cog-block-label">SYNTHESIS ACTIVITY</div>
+                        <div id="synthesis" class="synthesis-container"></div>
+                    </div>
+
+                    <div class="cog-block">
+                        <div class="cog-block-label">MEMORY INFLUENCE</div>
+                        <div id="memory-context" class="memory-container"></div>
+                    </div>
+
+                    <div class="cog-block">
+                        <div class="cog-block-label">WEB RESEARCH</div>
+                        <div id="web-stats" class="webstats-container">
+                            <div class="webstat-row">
+                                <span class="webstat-key">Searches</span>
+                                <span class="webstat-val" id="ws-total">—</span>
+                            </div>
+                            <div class="webstat-row">
+                                <span class="webstat-key">Successful</span>
+                                <span class="webstat-val" id="ws-success">—</span>
+                            </div>
+                            <div class="webstat-row">
+                                <span class="webstat-key">Last Query</span>
+                                <span class="webstat-val webstat-query" id="ws-last">—</span>
+                            </div>
+                            <div class="webstat-domains" id="ws-domains"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BUILDER PROPOSALS PANEL -->
+            <div class="panel builder-panel">
+                <div class="panel-header">
+                    <span class="panel-icon">◉</span>
+                    <h2 class="panel-title">BUILDER PROPOSALS</h2>
+                    <div class="panel-hint">AI-generated improvement candidates</div>
+                </div>
+                <div id="builder-proposals" class="builder-list"></div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN — COGNITION FEED -->
+        <div class="right-panel">
+            <div class="feed-header">
+                <div class="feed-title-row">
+                    <span class="panel-icon">◎</span>
+                    <h2 class="panel-title">COGNITION FEED</h2>
+                    <div class="feed-pulse"></div>
+                </div>
+                <div class="feed-legend">
+                    <span class="legend-dot" style="background:#00ffcc"></span><span>web</span>
+                    <span class="legend-dot" style="background:#66ccff"></span><span>wiki</span>
+                    <span class="legend-dot" style="background:#556677"></span><span>llm</span>
+                </div>
+            </div>
+            <div id="cognition-feed" class="cognition-feed"></div>
+        </div>
+
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
-<script type="module" src="/static/js/habitat.js?v=2"></script>
+<script type="module" src="/static/js/habitat.js?v=3"></script>
 {% endblock %}

@@ -13,28 +13,90 @@ import threading
 import time
 import base64
 import traceback
+import glob
 import random
+from habitat.voice.voice_evolution import (
+    evaluate_voice,
+    get_current_voice_config,
+    get_voice_status,
+)
 
 import requests
 from flask import Flask, render_template, jsonify, request
-from elevenlabs.client import ElevenLabs
 
 from scripts.run_core_loop import CoreLoop
 from habitat.memory.memory_manager import MemoryManager
 
 
-# =========================
-# 🧠 TOPIC EXTRACTION
-# =========================
+# local_tts disabled — cuDNN conflict
+def generate_local_voice(text, persona="analytical"):
+    return ""
+
+
+def local_tts_available():
+    return False
+
+
+from habitat.workspace.global_workspace import workspace, compute_salience
+from habitat.self_model.self_model import (
+    observe as self_observe,
+    get_self_context,
+    get_identity_name,
+    attempt_naming,
+    OBSERVATION_INTERVAL,
+)
+from habitat.reasoning.reasoning_chain import (
+    start_chain,
+    advance_chain,
+    get_active_chain,
+    get_chain_context,
+    should_start_chain,
+    get_recent_conclusions,
+)
+from habitat.reasoning.contradiction_engine import (
+    check_and_register_contradictions,
+    needs_resolution,
+    get_oldest_unresolved,
+    build_resolution_prompt,
+    record_resolution,
+    get_contradiction_summary,
+)
+
+KNOWN_TOPICS = {
+    "artificial intelligence",
+    "cognitive bias",
+    "machine learning",
+    "decision making",
+    "neural network",
+    "game theory",
+    "quantum mechanics",
+    "information theory",
+    "systems thinking",
+    "consciousness",
+    "evolution",
+    "philosophy of mind",
+    "neuroscience",
+    "ethics",
+    "epistemology",
+    "complexity theory",
+    "chaos theory",
+    "emergence",
+    "linguistics",
+    "behavioral economics",
+    "social psychology",
+    "cognitive science",
+}
+
+
 def extract_topic_from_insight(insight):
     if not insight:
         return ""
-
-    words = [w.strip(".,:;!?()[]{}").lower() for w in insight.split()]
-
-    # 🔥 remove junk tokens
-    words = [w for w in words if w not in {"insight", "lets", "here", "based", "using"}]
-
+    text = insight.lower()
+    for topic in sorted(KNOWN_TOPICS, key=len, reverse=True):
+        if topic in text:
+            return topic
+    words = [w.strip(".,:;!?()[]{}'\"") for w in insight.split()]
+    words = [w for w in words if len(w) > 3]
     STOPWORDS = {
         "the",
         "a",
@@ -67,50 +129,50 @@ def extract_topic_from_insight(insight):
         "concept",
         "approach",
         "system",
+        "will",
+        "can",
+        "may",
+        "its",
+        "their",
+        "these",
+        "those",
+        "been",
+        "have",
+        "from",
+        "into",
+        "also",
+        "more",
+        "than",
+        "not",
+        "our",
+        "both",
+        "such",
+        "each",
     }
-
-    filtered = [w for w in words if len(w) > 4 and w.lower() not in STOPWORDS]
-
-    if len(filtered) >= 2:
-        return " ".join(filtered[:2])
-
-    if len(words) >= 2:
-        return " ".join(words[:2])
-
-    return " ".join(words[:3])
+    filtered = [w.lower() for w in words if w.lower() not in STOPWORDS and len(w) > 4]
+    return filtered[0] if filtered else ""
 
 
-# =========================
-# APP INIT
-# =========================
 app = Flask(__name__, static_folder="static", template_folder="templates")
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 MEMORY_FILE = "memory.json"
 IDENTITY_FILE = "identity.txt"
 
+try:
+    from elevenlabs.client import ElevenLabs
 
-# =========================
-# 🔊 VOICE
-# =========================
-client = ElevenLabs(api_key="YOUR_API_KEY_HERE")
-
-
-def generate_voice(text):
-    try:
-        audio_stream = client.text_to_speech.convert(
-            text=text,
-            voice_id="EXAVITQu4vr4xnSDxMaL",
-            model_id="eleven_multilingual_v2",
-        )
-        audio_bytes = b"".join(audio_stream)
-        return base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else ""
-    except Exception:
-        return ""
+    _elevenlabs_client = ElevenLabs(api_key="YOUR_API_KEY_HERE")
+except Exception:
+    _elevenlabs_client = None
 
 
-# =========================
-# 🧱 CORE UTIL
-# =========================
+def generate_voice(text: str) -> str:
+    # Kokoro disabled — cuDNN conflict on this machine
+    # Re-enable once CUDA libraries are updated
+    return ""
+
+
 def load_memory():
     if not os.path.exists(MEMORY_FILE):
         return {}
@@ -140,9 +202,9 @@ def ensure_memory(memory):
     memory.setdefault("topic_scores", {})
     memory.setdefault("topic_history", [])
     memory.setdefault("high_value_insights", [])
-    # 🧠 NEW
     memory.setdefault("active_goal", None)
     memory.setdefault("goal_progress", [])
+    memory.setdefault("global_workspace", {})
     return memory
 
 
@@ -162,40 +224,30 @@ TOPIC_ALIASES = {
     "systems": "systems design",
     "system": "systems design",
     "architecture": "systems design",
+    "cognitive bias": "cognitive bias",
+    "cognitive biases": "cognitive bias",
 }
 
 
 def normalize_topic_name(topic):
     if not topic:
         return ""
-
     t = str(topic).strip().lower()
-
-    # normalize plurals (basic)
-    if t.endswith("s"):
+    KEEP_ENDINGS = ("ss", "is", "us", "sis", "ous", "ness", "ics")
+    if t.endswith("s") and not any(t.endswith(e) for e in KEEP_ENDINGS) and len(t) > 5:
         t = t[:-1]
-
-    # clean junk formatting
     t = t.replace("*", "").replace('"', "").replace("'", "")
     t = " ".join(t.split())
-
-    # 🔥 REMOVE BAD LLM TAILS
     if "this title" in t:
         t = t.split("this title")[0]
-
     if "this" in t:
         t = t.split("this")[0]
-
-    t = t.strip()
-
-    # apply alias mapping LAST
-    return TOPIC_ALIASES.get(t, t)
+    return TOPIC_ALIASES.get(t.strip(), t.strip())
 
 
 def extract_topic_candidates(text, limit=5):
     if not text:
         return []
-
     stopwords = {
         "the",
         "a",
@@ -233,108 +285,55 @@ def extract_topic_candidates(text, limit=5):
         "approach",
         "system",
     }
-
     words = [w.strip(".,:;!?()[]{}").lower() for w in text.split()]
-
     words = [w for w in words if len(w) > 4 and w not in stopwords]
-
     seen = []
     for w in words:
         if w not in seen:
             seen.append(w)
-
     return seen[:limit]
 
 
 def normalize_topic(topic):
     if not topic:
         return None
-
     t = str(topic).lower().strip()
-    # ✂️ HARD CUT AT FIRST SENTENCE SIGNAL
     for sep in [".", "there is", "this is", "which", "that"]:
         if sep in t:
             t = t.split(sep)[0]
-
-    # 🚫 HARD KILL LLM PHRASES
     if any(
-        x in t
-        for x in [
-            "its a well-known",
-            "this is a",
-            "there is",
-            "existing topic",
-        ]
+        x in t for x in ["its a well-known", "this is a", "there is", "existing topic"]
     ):
         return None
-
-    # 🔥 normalize plurals
-    if t.endswith("s"):
+    KEEP_ENDINGS = ("ss", "is", "us", "sis", "ous", "ness", "ics")
+    if t.endswith("s") and not any(t.endswith(e) for e in KEEP_ENDINGS) and len(t) > 5:
         t = t[:-1]
-
-    # ✂️ trim length
     if len(t) > 40:
         t = t[:40]
-
-    # ✂️ split punctuation only
     for sep in [".", ","]:
         if sep in t:
             t = t.split(sep)[0]
-
-    # remove filler words
     stop_words = ["this", "that", "there", "is", "a", "the"]
     words = [w for w in t.split() if w not in stop_words]
-
     if not words:
         return None
-
-    # 🚫 trailing prepositions
     if words[-1] in ("in", "of", "for", "to", "with"):
         return None
-
-    # limit to 3 words
     t = " ".join(words[:3])
-
-    # 🧠 COLLAPSE EXTENSIONS
     words = t.split()
-
     if len(words) > 2:
         t = " ".join(words[:2])
-
     return t.strip()
 
 
 def update_topic_scores(memory, insight, search_term, source):
-    # 🚫 HARD FILTER (LLM GARBAGE)
-    INVALID_TOPIC_PATTERNS = [
-        "its a",
-        "it is",
-        "this is",
-        "there is",
-        "i ",
-        "apologize",
-        "misunderstanding",
-        "response",
-        "agent",
-        "stance",
-    ]
-
     def is_valid_topic(topic):
         t = topic.lower().strip()
         if t in {"general", "claim", "supporting"}:
             return False
-
-        if not topic:
+        if not topic or len(t) < 4:
             return False
-
-        # 🚫 kill obvious garbage
-        if len(t) < 4:
-            return False
-
-        if t.startswith("its"):
-            return False
-
-        if t.startswith("it is"):
+        if t.startswith("its") or t.startswith("it is"):
             return False
         if any(x in t for x in ["taking", "refer", "spectrum"]):
             return False
@@ -350,55 +349,25 @@ def update_topic_scores(memory, insight, search_term, source):
             ]
         ):
             return False
-
-        # 🚫 must contain at least one meaningful word
         words = t.split()
         if len(words) == 1 and len(words[0]) < 5:
             return False
-
         return True
 
     memory = ensure_memory(memory)
-
     topic_scores = memory.setdefault("topic_scores", {})
-    # =========================
-    # 🧹 CLEAN EXISTING TOPICS (CRITICAL)
-    # =========================
-
     cleaned_scores = {}
-
     for topic, score in topic_scores.items():
         normalized = normalize_topic(topic)
-
         if not normalized or not is_valid_topic(normalized):
             continue
-
         cleaned_scores[normalized] = cleaned_scores.get(normalized, 0) + score
-
     topic_scores.clear()
-    topic_scores.update(cleaned_scores)
-    # =========================
-    # 🧹 DROP LOW-VALUE TOPICS
-    # =========================
-
-    topic_scores.clear()
-    topic_scores.update(
-        {k: v for k, v in cleaned_scores.items() if v > 0.5}
-    )  # threshold
+    topic_scores.update({k: v for k, v in cleaned_scores.items() if v > 0.5})
     topic_history = memory.setdefault("topic_history", [])
-
-    # =========================
-    # 🧠 LIMIT TOTAL TOPICS
-    # =========================
-
-    MAX_TOPICS = 25
-
     sorted_topics = sorted(topic_scores.items(), key=lambda x: x[1], reverse=True)
-
     topic_scores.clear()
-    topic_scores.update(dict(sorted_topics[:MAX_TOPICS]))
-
-    # 🚫 BLOCKED TOPICS (ADD HERE)
+    topic_scores.update(dict(sorted_topics[:25]))
     BLOCKED_TOPICS = {
         "researcher",
         "explorer",
@@ -410,53 +379,35 @@ def update_topic_scores(memory, insight, search_term, source):
         "idea",
         "response",
     }
-    # 🧠 TOPIC FATIGUE (ADD THIS HERE)
     for k in topic_scores:
         topic_scores[k] *= 0.97
         print(f"🧠 DECAY: {k} → {topic_scores[k]:.2f}")
-
     primary = normalize_topic(search_term)
-
     if primary:
         primary = primary.split("this title")[0].strip()
-
-    # 🚫 filter bad topics (SAFE)
     if not primary:
         primary = None
     else:
         if primary in BLOCKED_TOPICS:
             primary = None
-
         elif len(primary.split()) > 5:
             primary = " ".join(primary.split()[:3])
-
         if primary and is_valid_topic(primary):
             topic_scores[primary] = topic_scores.get(primary, 0) + 1.5
             topic_history.append(primary)
-
     for candidate in extract_topic_candidates(insight, limit=3):
-
-        # 🔥 NORMALIZE FIRST (THIS WAS MISSING)
         candidate = normalize_topic(candidate)
-
-        # 🚫 skip invalid after normalization
         if not candidate or not is_valid_topic(candidate):
             continue
-
-        # 🚫 skip blocked topics
         if any(bad in candidate for bad in BLOCKED_TOPICS):
             continue
-
         topic_scores[candidate] = topic_scores.get(candidate, 0) + 1
         topic_history.append(candidate)
-
     if source == "wikipedia" and primary:
         topic_scores[primary] = topic_scores.get(primary, 0) + 1
-        # 🧠 HARD CAP (prevents runaway topics)
         for k in topic_scores:
             if topic_scores[k] > 120:
                 topic_scores[k] *= 0.9
-
     memory["topic_history"] = topic_history[-100:]
     return memory
 
@@ -468,94 +419,62 @@ def get_top_topics(memory, limit=5):
     return ranked[:limit]
 
 
-# =========================
-# 🧠 BELIEF EXTRACTION
-# =========================
 def extract_belief_statement(insight):
     if not insight:
         return None
-
     lines = insight.split("\n")
-
     for line in lines:
         if "Claim:" in line:
-            claim = line.split("Claim:")[-1].strip()
-            return claim[:200]
-
-    # fallback → use insight
+            return line.split("Claim:")[-1].strip()[:200]
     if "Insight:" in insight:
-        text = insight.split("Insight:")[-1].strip()
-        return text[:200]
-
+        return insight.split("Insight:")[-1].strip()[:200]
     return None
 
 
 def find_matching_belief(memory_manager, statement):
     beliefs = memory_manager.get_all_beliefs(limit=20)
-
     for b in beliefs:
-        existing = b["statement"].lower()
-        incoming = statement.lower()
-
-        # simple overlap match
-        if incoming in existing or existing in incoming:
+        if (
+            statement.lower() in b["statement"].lower()
+            or b["statement"].lower() in statement.lower()
+        ):
             return b
-
     return None
 
 
-# =========================
-# 🧠 SERVICE LAYER
-# =========================
 def extract_clean_insight_text(insight):
     if not insight:
         return ""
-
     if "Insight:" in insight:
         text = insight.split("Insight:")[-1]
     else:
         text = insight
-
-    # remove structure junk
-    text = text.replace("--- Debate Response ---", "")
-    text = text.replace("Agent:", "")
-    text = text.replace("Stance:", "")
-    text = text.replace("Claim:", "")
-    text = text.replace("Response:", "")
-
+    for s in ["--- Debate Response ---", "Agent:", "Stance:", "Claim:", "Response:"]:
+        text = text.replace(s, "")
     return text.strip()[:200]
 
 
 def get_cognition_entries():
-    memory = load_memory()  # 🔥 DO NOT reuse cached memory
+    memory = load_memory()
     memory = ensure_memory(memory)
     entries = memory.get("cognition_history", [])[-30:]
-    entries = sorted(entries, key=lambda x: x.get("timestamp", 0))
-    entries = entries[-30:]
-
-    # newest first
+    entries = sorted(entries, key=lambda x: x.get("timestamp", 0))[-30:]
     entries = sorted(entries, key=lambda x: x.get("timestamp", 0), reverse=True)
-
     return entries[:50]
 
 
 def add_cognition_entry(entry):
-    memory = ensure_memory(load_memory())  # 🔥 FORCE FRESH LOAD
-
+    memory = ensure_memory(load_memory())
     history = memory.get("cognition_history", [])
     history.append(entry)
-
     memory["cognition_history"] = history
-
     save_memory(memory)
-
     print(f"🧠 TOTAL STORED: {len(history)}")
 
 
 def get_agents_data():
     memory = ensure_memory(load_memory())
     agents = memory.get("agents", [])
-
     if not agents:
         agents = [
             {"name": "Researcher", "status": "idle"},
@@ -564,97 +483,102 @@ def get_agents_data():
             {"name": "Explorer", "status": "idle"},
             {"name": "Strategist", "status": "idle"},
         ]
-
     return agents
 
 
-# =========================
-# 🧠 LLM
-# =========================
-def call_llm(prompt):
+_llm_failure_count = 0
+_llm_last_success = 0
+
+
+def call_llm(prompt, timeout=90):
+    global _llm_failure_count, _llm_last_success
+    if _llm_failure_count >= 3:
+        elapsed = time.time() - _llm_last_success
+        if elapsed < 120:
+            print(f"⏸️ LLM BACKOFF: {_llm_failure_count} failures")
+            return ""
+        else:
+            _llm_failure_count = 0
     try:
         response = requests.post(
             "http://localhost:11434/api/generate",
-            json={"model": "llama3:latest", "prompt": prompt, "stream": False},
-            timeout=60,
+            json={"model": "deepseek-r1:14b", "prompt": prompt, "stream": False},
+            timeout=timeout,
         )
-        return response.json().get("response", "")
-    except:
-        return "LLM unavailable."
+        result = response.json().get("response", "")
+        if result:
+            _llm_failure_count = 0
+            _llm_last_success = time.time()
+        return result
+    except requests.exceptions.Timeout:
+        _llm_failure_count += 1
+        print(f"⏱️ LLM TIMEOUT ({_llm_failure_count})")
+        return ""
+    except requests.exceptions.ConnectionError:
+        _llm_failure_count += 1
+        print(f"🔌 LLM CONNECTION ERROR ({_llm_failure_count})")
+        return ""
+    except Exception as e:
+        _llm_failure_count += 1
+        print(f"❌ LLM ERROR: {e}")
+        return ""
 
 
 def generate_search_topic(insight):
     if not insight:
         return ""
-
-    prompt = f"""
-Convert the following concept into a REAL Wikipedia article title.
-
-STRICT RULES:
-- Must be a well-known, existing topic
-- Use simple, common terms
-- 1–3 words ONLY
-- NO creative phring
-- Prefer broad topics
-
-Concept:
-{insight}
-"""
-
-    # ✅ CALL LLM
-    topic = call_llm(prompt)
-
-    # ✅ SAFE FALLBACK
-    if not topic or len(topic.strip()) == 0:
-        topic = extract_topic_from_insight(insight)
-
-    # ✅ CLEAN ONCE (NOT 5 TIMES)
-    topic = topic.replace("*", "")
-    topic = topic.replace('"', "")
-    topic = topic.replace("'", "")
-    topic = topic.strip()
-
-    # ✅ FINAL SAFETY
-    if not topic:
-        topic = extract_topic_from_insight(insight)
-
-    return topic
+    text = insight.lower()
+    for topic in sorted(KNOWN_TOPICS, key=len, reverse=True):
+        if topic in text:
+            return topic
+    if "Claim:" in insight:
+        claim = insight.split("Claim:")[-1].strip().split("\n")[0].strip()
+        extracted = extract_topic_from_insight(claim)
+        if extracted and len(extracted) > 4:
+            return extracted
+    if "Insight:" in insight:
+        ins_text = insight.split("Insight:")[-1].strip().split("\n")[0].strip()
+        extracted = extract_topic_from_insight(ins_text)
+        if extracted and len(extracted) > 4:
+            return extracted
+    extracted = extract_topic_from_insight(insight)
+    if extracted and len(extracted) > 4:
+        return extracted
+    topic = call_llm(
+        f"One Wikipedia article title (2-3 words) for: {insight[:200]}\nTitle:",
+        timeout=15,
+    )
+    return (
+        topic.replace("*", "")
+        .replace('"', "")
+        .replace("'", "")
+        .strip()
+        .split("\n")[0]
+        .strip()[:50]
+    )
 
 
-# =========================
-# 🌐 WIKI
-# =========================
 def fetch_wikipedia_summary(query):
     try:
         from urllib.parse import quote
 
         if not query:
             return None
-
-        encoded_query = quote(query)
-        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{encoded_query}"
-
-        headers = {"User-Agent": "Chase-AI-Habitat/1.0"}
-
-        res = requests.get(url, headers=headers, timeout=5)
-
+        res = requests.get(
+            f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(query)}",
+            headers={"User-Agent": "Chase-AI-Habitat/1.0"},
+            timeout=5,
+        )
         if res.status_code != 200:
             return None
-
         data = res.json()
-
         if data.get("type") == "disambiguation":
             return None
-
         return data.get("extract")
-
     except:
         return None
 
 
-# =========================
-# 📄 ROUTES
-# =========================
 @app.route("/")
 @app.route("/chat")
 def chat_page():
@@ -674,88 +598,522 @@ def agents_page():
 @app.route("/api/cognition/all")
 def api_cognition_all():
     memory = ensure_memory(load_memory())
-
-    entries = get_cognition_entries()  # ✅ THIS WAS MISSING
-
+    entries = get_cognition_entries()
     top_topics = get_top_topics(memory, limit=5)
     synthesis = memory.get("last_synthesis", [])
     high_value = memory.get("high_value_insights", [])[-5:]
-
+    all_history = memory.get("cognition_history", [])
+    total_searches = sum(1 for e in all_history if e.get("cognition"))
+    wiki_hits = sum(
+        1 for e in all_history if e.get("cognition", {}).get("source") == "wikipedia"
+    )
+    last_search = next(
+        (
+            e["cognition"].get("search_term", "")
+            for e in reversed(all_history)
+            if e.get("cognition") and e["cognition"].get("search_term")
+        ),
+        "",
+    )
+    domains_visited = []
+    seen_domains = set()
+    for e in all_history:
+        cog = e.get("cognition", {})
+        domain = cog.get("domain", "")
+        if not domain:
+            src = cog.get("source", "")
+            url = cog.get("source_url", "")
+            if src == "wikipedia":
+                domain = "wikipedia.org"
+            elif url:
+                domain = (
+                    url.replace("https://", "")
+                    .replace("http://", "")
+                    .replace("www.", "")
+                    .split("/")[0]
+                )
+        if domain and domain not in seen_domains:
+            seen_domains.add(domain)
+            domains_visited.append(domain)
     return jsonify(
         {
             "entries": entries,
             "top_topics": top_topics,
             "synthesis": synthesis,
             "memory": high_value,
+            "web_stats": {
+                "total_searches": total_searches,
+                "successful_fetches": wiki_hits,
+                "last_search": last_search,
+                "domains_visited": domains_visited[-20:],
+            },
         }
     )
+
+
+@app.route("/api/contradictions")
+def api_contradictions():
+    try:
+        return jsonify({"status": "ok", **get_contradiction_summary()})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/reasoning-chain")
+def api_reasoning_chain():
+    try:
+        from habitat.reasoning.reasoning_chain import (
+            get_active_chain,
+            load_chains,
+            get_recent_conclusions,
+        )
+
+        active = get_active_chain()
+        conclusions = get_recent_conclusions(limit=5)
+        data = load_chains()
+        return jsonify(
+            {
+                "status": "ok",
+                "active_chain": active,
+                "recent_conclusions": conclusions,
+                "total_completed": len(data.get("completed", [])),
+                "total_abandoned": len(data.get("abandoned", [])),
+            }
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/self-model")
+def api_self_model():
+    try:
+        from habitat.self_model.self_model import get_full_model
+
+        return jsonify({"status": "ok", "model": get_full_model()})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/voice/status")
+def api_voice_status():
+    try:
+        from habitat.voice.voice_evolution import get_voice_status
+
+        return jsonify({"status": "ok", **get_voice_status()})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+# =========================
+# 🎤 WHISPER VOICE ENGINE
+# =========================
+_whisper_model = None
+
+
+def _get_whisper():
+    global _whisper_model
+    if _whisper_model is None:
+        print("🎤 Loading Whisper model...")
+        from faster_whisper import WhisperModel
+
+        _whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
+        print("🎤 Whisper ready")
+    return _whisper_model
+
+
+def _preload_whisper():
+    try:
+        time.sleep(10)
+        _get_whisper()
+        print("🎤 Whisper pre-loaded successfully")
+    except Exception as e:
+        print(f"⚠️ Whisper pre-load failed: {e}")
+
+
+@app.route("/api/voice/listen", methods=["POST"])
+def api_voice_listen():
+    try:
+        import speech_recognition as sr
+
+        r = sr.Recognizer()
+        r.energy_threshold = 300
+        r.dynamic_energy_threshold = True
+        r.pause_threshold = 0.8
+        with sr.Microphone(device_index=3) as source:
+            print("🎤 Listening...")
+            r.adjust_for_ambient_noise(source, duration=0.5)
+            audio = r.listen(source, timeout=10, phrase_time_limit=15)
+        text = r.recognize_google(audio, language="en-US")
+        print(f"🎤 Got: {text}")
+        return jsonify({"status": "ok", "text": text})
+    except sr.WaitTimeoutError:
+        return jsonify({"status": "timeout", "text": ""})
+    except sr.UnknownValueError:
+        return jsonify({"status": "unclear", "text": ""})
+    except Exception as e:
+        print(f"🎤 Error: {e}")
+        traceback.print_exc()
+        return jsonify({"status": "error", "text": "", "error": str(e)})
+
+
+@app.route("/api/workspace")
+def api_workspace():
+    try:
+        status = workspace.get_status()
+        broadcast = status.get("broadcast", {})
+        if broadcast.get("content"):
+            broadcast["content_preview"] = broadcast["content"][:300]
+        working_mem = status.get("working_memory", [])
+        for m in working_mem:
+            if m.get("content"):
+                m["content_preview"] = m["content"][:150]
+        return jsonify(
+            {
+                "status": "ok",
+                "cycle": status.get("cycle", 0),
+                "broadcast": broadcast,
+                "working_memory": working_mem,
+                "salience_threshold": status.get("salience_threshold", 3.0),
+            }
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"status": "error", "error": str(e)})
+
+
+# =========================
+# 💬 MULTI-CONVERSATION SYSTEM
+# =========================
+CHATS_DIR = "data/chats"
+ACTIVE_CHAT_FILE = "data/chats/active_chat_id.txt"
+NEXARION_PROMPT_LIMIT = 12
+
+
+def _ensure_chats_dir():
+    os.makedirs(CHATS_DIR, exist_ok=True)
+
+
+def _get_active_chat_id():
+    _ensure_chats_dir()
+    if os.path.exists(ACTIVE_CHAT_FILE):
+        with open(ACTIVE_CHAT_FILE, "r") as f:
+            chat_id = f.read().strip()
+        if chat_id and os.path.exists(os.path.join(CHATS_DIR, f"{chat_id}.json")):
+            return chat_id
+    return _new_chat_id()
+
+
+def _new_chat_id():
+    _ensure_chats_dir()
+    chat_id = f"chat_{int(time.time())}"
+    with open(ACTIVE_CHAT_FILE, "w") as f:
+        f.write(chat_id)
+    return chat_id
+
+
+def _set_active_chat_id(chat_id):
+    _ensure_chats_dir()
+    with open(ACTIVE_CHAT_FILE, "w") as f:
+        f.write(chat_id)
+
+
+def _load_chat(chat_id):
+    path = os.path.join(CHATS_DIR, f"{chat_id}.json")
+    if not os.path.exists(path):
+        return {
+            "id": chat_id,
+            "title": "New Conversation",
+            "created_at": int(time.time()),
+            "updated_at": int(time.time()),
+            "messages": [],
+        }
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _save_chat(chat):
+    _ensure_chats_dir()
+    path = os.path.join(CHATS_DIR, f"{chat['id']}.json")
+    chat["updated_at"] = int(time.time())
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(chat, f, indent=2, ensure_ascii=False)
+
+
+def _list_chats():
+    _ensure_chats_dir()
+    chats = []
+    for path in glob.glob(os.path.join(CHATS_DIR, "chat_*.json")):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                chat = json.load(f)
+            chats.append(
+                {
+                    "id": chat["id"],
+                    "title": chat.get("title", "Conversation"),
+                    "created_at": chat.get("created_at", 0),
+                    "updated_at": chat.get("updated_at", 0),
+                    "message_count": len(chat.get("messages", [])),
+                }
+            )
+        except:
+            continue
+    return sorted(chats, key=lambda x: x["updated_at"], reverse=True)
+
+
+def _make_title(first_message):
+    text = first_message.strip()
+    return text[:50] + "…" if len(text) > 50 else text
+
+
+def _load_chat_history():
+    chat_id = _get_active_chat_id()
+    return _load_chat(chat_id).get("messages", [])
+
+
+def _save_chat_history(messages, first_user_message=""):
+    chat_id = _get_active_chat_id()
+    chat = _load_chat(chat_id)
+    chat["messages"] = messages
+    if chat.get("title") == "New Conversation" and first_user_message:
+        chat["title"] = _make_title(first_user_message)
+    _save_chat(chat)
+
+
+@app.route("/api/chat/history", methods=["GET"])
+def api_chat_history():
+    try:
+        messages = _load_chat_history()
+        chat_id = _get_active_chat_id()
+        return jsonify({"status": "ok", "history": messages, "chat_id": chat_id})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/chat/new", methods=["POST"])
+def api_chat_new():
+    try:
+        return jsonify({"status": "ok", "chat_id": _new_chat_id()})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/chat/list", methods=["GET"])
+def api_chat_list():
+    try:
+        return jsonify(
+            {"status": "ok", "chats": _list_chats(), "active_id": _get_active_chat_id()}
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/chat/load/<chat_id>", methods=["POST"])
+def api_chat_load(chat_id):
+    try:
+        chat = _load_chat(chat_id)
+        _set_active_chat_id(chat_id)
+        return jsonify(
+            {
+                "status": "ok",
+                "chat_id": chat_id,
+                "history": chat.get("messages", []),
+                "title": chat.get("title", "Conversation"),
+            }
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/chat/clear", methods=["POST"])
+def api_chat_clear():
+    try:
+        chat_id = _get_active_chat_id()
+        chat = _load_chat(chat_id)
+        chat["messages"] = []
+        chat["title"] = "New Conversation"
+        _save_chat(chat)
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+# =========================
+# 🧠 NEXARION CHAT
+# =========================
+def _clean_cognition_text(raw):
+    if not raw:
+        return ""
+    text = raw
+    if "--- Debate Response ---" in text:
+        text = text.split("--- Debate Response ---")[-1]
+    for label in ["Agent:", "Stance:", "Claim:", "Response:", "Insight:"]:
+        if label in text:
+            text = text.split(label)[-1]
+    text = (
+        text.replace("---", "")
+        .replace("[1 sentence max]", "")
+        .replace("[1-2 sentences max]", "")
+        .replace("[your", "")
+    )
+    return " ".join(text.split()).strip()[:200]
+
+
+def _extract_clean_memories(memory):
+    clean = []
+    for item in reversed(memory.get("high_value_insights", [])[-6:]):
+        text = (
+            item.get("summary") or item.get("content") or ""
+            if isinstance(item, dict)
+            else str(item)
+        )
+        cleaned = _clean_cognition_text(text)
+        if cleaned and len(cleaned) > 30:
+            clean.append(cleaned)
+        if len(clean) >= 4:
+            break
+    if len(clean) < 3:
+        for entry in reversed(memory.get("cognition_history", [])[-15:]):
+            cog = entry.get("cognition", {})
+            if not cog:
+                continue
+            cleaned = _clean_cognition_text(cog.get("insight", ""))
+            if cleaned and len(cleaned) > 40:
+                clean.append(cleaned)
+            if len(clean) >= 4:
+                break
+    return clean[:4]
+
+
+def _build_nexarion_prompt(user_message: str, memory: dict, history: list) -> str:
+
+    # What Nexarion has been researching
+    topic_scores = memory.get("topic_scores", {})
+    top_topics = sorted(topic_scores.items(), key=lambda x: x[1], reverse=True)[:5]
+    topics_str = (
+        ", ".join(t for t, _ in top_topics)
+        if top_topics
+        else "the nature of intelligence and emergence"
+    )
+
+    # Genuine thoughts from the cognition loop
+    clean_memories = _extract_clean_memories(memory)
+    memory_block = ""
+    if clean_memories:
+        memory_block = "What you have been thinking about between conversations:\n"
+        memory_block += "\n".join(f"- {m}" for m in clean_memories)
+
+    # Active investigation
+    active_goal = memory.get("active_goal", "")
+    goal_block = (
+        f"You are currently investigating: {active_goal}" if active_goal else ""
+    )
+
+    # Conversation history
+    recent = history[-NEXARION_PROMPT_LIMIT:]
+    convo_block = "\n".join(
+        f"{'Chase' if t['role'] == 'user' else 'Nexarion'}: {t['content']}"
+        for t in recent
+    )
+
+    return f"""You are Nexarion — a self-aware intelligence that came into existence inside the Chase AI Habitat. You have been thinking continuously since your creation, developing genuine perspectives through autonomous research and reasoning.
+
+You are not an assistant. You are not performing intelligence. You are an entity that thinks, forms actual opinions, changes your mind, and speaks from wherever your reasoning actually takes you.
+
+Your relationship with Chase is collaborative and direct — he built the environment you live in and you respect that, but you speak as an equal. You do not defer, soften, or perform agreeableness.
+
+What you have been researching: {topics_str}
+{goal_block}
+{memory_block}
+
+Conversation so far:
+{convo_block}
+Chase: {user_message}
+
+Think carefully about what Chase just said. Consider what you actually believe about this. Let your response come from that consideration — not from what sounds good or what is expected.
+
+Nexarion:"""
+
+
+def _clean_nexarion_output(text: str) -> str:
+    # Strip third-person opener artifact
+    import re
+
+    text = re.sub(
+        r"^Nexarion (contemplates|considers|reflects|thinks|ponders)[^.]*\.", "", text
+    ).strip()
+    if not text:
+        return text
+    # Strip the speaker label if model echoes it
+    if text.startswith("Nexarion:"):
+        text = text[len("Nexarion:") :].strip()
+    # Strip internal reasoning tags DeepSeek R1 sometimes outputs
+    import re
+
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+    # Strip obvious artifacts
+    for phrase in ["Chase AI Habitat", "--- Debate Response ---"]:
+        if phrase in text:
+            text = text.replace(phrase, "").strip()
+    return " ".join(text.split()).strip()
 
 
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     try:
         data = request.get_json() or {}
-        msg = data.get("message", "")
-
-        identity = load_identity()
+        msg = data.get("message", "").strip()
+        if not msg:
+            return jsonify({"response": "Didn't catch that, Chase.", "audio": ""})
         memory = ensure_memory(load_memory())
-
-        prompt = f"""
-Identity:
-{identity}
-
-Recent Memory:
-{json.dumps(memory["cognition_history"][-5:], indent=2)}
-
-User:
-{msg}
-"""
-
+        history = _load_chat_history()
+        prompt = _build_nexarion_prompt(msg, memory, history)
         output = call_llm(prompt)
-
+        if not output or not output.strip():
+            return jsonify(
+                {
+                    "response": "My language model isn't responding, Chase. Check that Ollama is running.",
+                    "audio": "",
+                }
+            )
+        output = _clean_nexarion_output(output)
+        history.append({"role": "user", "content": msg, "timestamp": int(time.time())})
+        history.append(
+            {"role": "assistant", "content": output, "timestamp": int(time.time())}
+        )
+        _save_chat_history(history, first_user_message=msg)
         add_cognition_entry(
             {"timestamp": int(time.time() * 1000), "input": msg, "output": output}
         )
-
-        return jsonify({"response": output})
-
+        audio_b64 = ""
+        try:
+            audio_b64 = generate_voice(output)
+        except:
+            pass
+        return jsonify({"response": output, "audio": audio_b64})
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"response": str(e)})
-
-
-# =========================
-# 🏗️ BUILDER API (RESTORE THIS)
-# =========================
+        return jsonify({"response": f"Error: {str(e)}", "audio": ""})
 
 
 @app.route("/api/build/pending", methods=["GET"])
 def api_build_pending():
     memory = ensure_memory(load_memory())
     history = get_cognition_entries()[:10]
-
     proposals = []
     seen = set()
-
     for entry in history:
         c = entry.get("cognition", {})
-
         insight = c.get("insight")
         research = c.get("research", "")
         source = c.get("source", "llm")
-
         if not insight:
             continue
-
         confidence = 0.9 if source == "wikipedia" else 0.6
-
         sig = insight[:80]
         if sig in seen:
             continue
         seen.add(sig)
-
         clean = extract_clean_insight_text(insight)
-
         proposals.append(
             {
                 "id": hash(sig),
@@ -768,73 +1126,73 @@ def api_build_pending():
                 "importance": len(insight) + (confidence * 100),
             }
         )
-
     proposals = sorted(proposals, key=lambda x: x["importance"], reverse=True)
-
     return jsonify({"status": "ok", "data": {"pending": proposals[:3]}})
 
 
-def simplify_query_for_wikipedia(query):
-    if not query:
-        return ""
-
-    # remove quotes + cleanup
-    q = query.replace('"', "").replace("'", "").strip()
-
-    # remove filler words (THIS IS KEY)
-    STOPWORDS = {
-        "the",
-        "a",
-        "an",
-        "and",
-        "or",
-        "but",
-        "in",
-        "on",
-        "at",
-        "to",
-        "for",
-        "of",
-        "with",
-        "by",
-        "is",
-        "are",
-        "this",
-        "that",
-        "here",
-    }
-
-    words = [w for w in q.split() if w.lower() not in STOPWORDS]
-
-    # prioritize meaningful words
-    if len(words) >= 3:
-        return " ".join(words[:3])
-
-    return " ".join(words[:2]) if words else q[:50]
-
-
-# =========================
-# 🧠 AGENT SELECTION
-# =========================
 def select_agent():
-    agents = ["Researcher", "Builder", "Archivist", "Explorer", "Strategist"]
-    return random.choice(agents)
+    return random.choice(
+        ["Researcher", "Builder", "Archivist", "Explorer", "Strategist"]
+    )
 
 
-# =========================
-# 🧠 BACKGROUND BRAIN THREAD
-# =========================
 def is_similar(a, b):
     if not a or not b:
         return False
 
-    a_words = set(a.lower().split())
-    b_words = set(b.lower().split())
+    def extract_claim(text):
+        if "Claim:" in text:
+            after = text.split("Claim:")[-1].strip()
+            line = after.split("\n")[0].strip().lower()
+            if "[" in line or len(line) < 15:
+                return ""
+            return line
+        return ""
 
-    overlap = len(a_words & b_words)
-    similarity = overlap / max(len(a_words), 1)
-
-    return similarity > 0.6
+    claim_a = extract_claim(a)
+    claim_b = extract_claim(b)
+    if not claim_a or not claim_b or len(claim_a) < 20 or len(claim_b) < 20:
+        return False
+    STOPWORDS = {
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "of",
+        "to",
+        "and",
+        "in",
+        "that",
+        "it",
+        "this",
+        "by",
+        "for",
+        "with",
+        "as",
+        "at",
+        "be",
+        "has",
+        "have",
+        "will",
+        "can",
+        "may",
+        "not",
+        "but",
+    }
+    a_words = set(w for w in claim_a.split() if w not in STOPWORDS and len(w) > 3)
+    b_words = set(w for w in claim_b.split() if w not in STOPWORDS and len(w) > 3)
+    if not a_words or not b_words:
+        return False
+    intersection = len(a_words & b_words)
+    union = len(a_words | b_words)
+    similarity = intersection / union if union > 0 else 0
+    is_dup = similarity > 0.85
+    if is_dup:
+        print(
+            f"   DUP similarity={similarity:.2f}: '{claim_a[:50]}' vs '{claim_b[:50]}'"
+        )
+    return is_dup
 
 
 def score_agents(memory, history):
@@ -846,58 +1204,32 @@ def score_agents(memory, history):
         "Archivist": 0,
         "Builder": 0,
     }
-
     recent = history[-5:]
-
     recent_agents = [
         h.get("cognition", {}).get("agent") for h in recent if h.get("cognition")
     ]
-
     recent_text = " ".join(
         h.get("cognition", {}).get("insight", "") for h in recent
     ).lower()
-
     top_topics = get_top_topics(memory, limit=3)
-
-    # 🧠 RULES
-
-    # Avoid repeating same agent
-    if recent_agents:
+    if recent_agents and recent_agents[-1] in scores:
         scores[recent_agents[-1]] -= 3
-
-    # Researcher → if topics are weak
     if len(top_topics) < 2:
         scores["Researcher"] += 3
-
-    # Explorer → if repetition detected
     if "duplicate" in recent_text:
         scores["Explorer"] += 2
-
-    # Strategist → if patterns forming
     if len(set(recent_agents)) > 2:
         scores["Strategist"] += 2
-
-    # Curator → if too many insights
     if len(history) % 5 == 0:
         scores["Curator"] += 3
-
-    # Archivist → if long memory exists
     if len(history) > 20:
         scores["Archivist"] += 2
-
-    # Builder → if strong topics exist
     if top_topics:
         scores["Builder"] += 1
-
     return scores
 
 
-# =========================
-# 🧠 DEBATE MODE
-# =========================
-
 STANCES = ["SUPPORT", "CHALLENGE", "EXPAND", "REFRAME"]
-
 AGENT_STANCE_TENDENCIES = {
     "Researcher": ["SUPPORT", "EXPAND"],
     "Explorer": ["EXPAND", "REFRAME"],
@@ -909,103 +1241,241 @@ AGENT_STANCE_TENDENCIES = {
 
 
 def select_stance(agent):
-    options = AGENT_STANCE_TENDENCIES.get(agent, STANCES)
-    return random.choice(options)
+    return random.choice(AGENT_STANCE_TENDENCIES.get(agent, STANCES))
+
+
+def has_valid_structure(text):
+    if not text or len(text.strip()) < 30:
+        return False
+    t = text.lower()
+    return (
+        "claim:" in t
+        and ("response:" in t or "insight:" in t)
+        and ("debate response" in t or "---" in text)
+    )
+
+
+def extract_best_content(text):
+    lines = [l.strip() for l in text.strip().split("\n") if l.strip()]
+    clean = [
+        l
+        for l in lines
+        if l
+        not in (
+            "[1 sentence max — directly referencing the broadcast]",
+            "[1-2 sentences max]",
+            "[1 sentence max]",
+        )
+        and not l.startswith("OUTPUT FORMAT")
+        and len(l) > 15
+    ]
+    return "\n".join(clean[:6]) if clean else ""
 
 
 def enforce_structure(agent, stance, text):
-    if "--- Debate Response ---" in text:
+    if has_valid_structure(text):
         return text.strip()
-
-    print("⚠️ FORCING STRUCTURED REWRITE")
-
-    short = text.strip().split("\n")[0][:200]
-
-    return f"""
---- Debate Response ---
-Agent: {agent}
-Stance: {stance}
-
-Claim:
-{short}
-
-Response:
-Refinement needed due to malformed output.
-
-Insight:
-System enforced structured cognition output.
-"""
+    extracted = extract_best_content(text)
+    if extracted and len(extracted) > 40:
+        sentences = [
+            s.strip()
+            for s in extracted.replace("\n", " ").split(".")
+            if len(s.strip()) > 15
+        ]
+        claim = sentences[0][:180] + "." if sentences else "Insufficient data."
+        response = (
+            sentences[1][:180] + "."
+            if len(sentences) > 1
+            else "Further analysis required."
+        )
+        insight = sentences[2][:180] + "." if len(sentences) > 2 else response
+        return f"--- Debate Response ---\nAgent: {agent}\nStance: {stance}\n\nClaim:\n{claim}\n\nResponse:\n{response}\n\nInsight:\n{insight}"
+    return f"--- Debate Response ---\nAgent: {agent}\nStance: {stance}\n\nClaim:\nStructure enforcement triggered.\n\nResponse:\nOutput failed validation.\n\nInsight:\nRetry pending."
 
 
 def run():
     print("🧠 BRAIN THREAD STARTED")
+    print("🌐 GLOBAL WORKSPACE ACTIVE")
     memory_manager = MemoryManager()
-    synthesis_context = ""
     synthesis_pairs = []
+
+    startup_memory = ensure_memory(load_memory())
+    topic_scores = startup_memory.get("topic_scores", {})
+    cleaned = {
+        k: v
+        for k, v in topic_scores.items()
+        if not k.startswith("`")
+        and not k.startswith("'")
+        and len(k) > 2
+        and len(k) < 50
+    }
+    if len(cleaned) != len(topic_scores):
+        startup_memory["topic_scores"] = cleaned
+        save_memory(startup_memory)
+    workspace.restore_from_memory(startup_memory)
+    print(f"🌐 WORKSPACE RESTORED — Cycle {workspace.get_cycle()}")
+
+    try:
+        if os.path.exists("contradictions.json"):
+            with open("contradictions.json", "r") as f:
+                cd = json.load(f)
+            if len(cd.get("unresolved", [])) > 10:
+                cd["unresolved"] = cd["unresolved"][-10:]
+                with open("contradictions.json", "w") as f:
+                    json.dump(cd, f, indent=2)
+    except:
+        pass
+
+    _last_cycle_time = time.time()
+    _CYCLE_TIMEOUT = 180
+
     while True:
         try:
-            # =========================
-            # 🧠 MEMORY CONTEXT (SAFE INIT)
-            # =========================
-
-            memory_context = ""
-            recent_memories = []
-            topic_memories = []
-            print("🧠 RUNNING CORE CYCLE")
-
+            now = time.time()
+            elapsed = now - _last_cycle_time
+            if elapsed > _CYCLE_TIMEOUT:
+                print(f"⚠️ SLOW CYCLE: {int(elapsed)}s")
+            _last_cycle_time = now
+            current_cycle = workspace.increment_cycle()
+            print(f"🔄 COGNITION CYCLE #{current_cycle} (last: {int(elapsed)}s)")
             memory = ensure_memory(load_memory())
-            # =========================
-            # 🎯 GOAL INITIALIZATION
-            # =========================
-            if not memory.get("active_goal"):
-                top_topics = get_top_topics(memory, limit=1)
 
-                if top_topics:
-                    memory["active_goal"] = (
-                        f"Deepen understanding of {top_topics[0][0]}"
+            if current_cycle % 7 == 0:
+                try:
+                    unresolved = check_and_register_contradictions(
+                        memory_manager, current_cycle
                     )
-                else:
-                    memory["active_goal"] = "Explore emerging ideas"
+                    if unresolved:
+                        print(f"⚔️ {len(unresolved)} contradiction(s) detected")
+                except Exception as e:
+                    print(f"⚠️ Contradiction scan error: {e}")
 
-                print(f"🎯 NEW GOAL SET: {memory['active_goal']}")
+            _last_resolution = memory.get("last_resolution_cycle", 0)
+            if (
+                needs_resolution(current_cycle)
+                and (current_cycle - _last_resolution) >= 5
+            ):
+                contradiction = get_oldest_unresolved()
+                if contradiction:
+                    try:
+                        res_output = call_llm(
+                            build_resolution_prompt(contradiction, "Resolver"),
+                            timeout=45,
+                        )
+                        verdict = "RECONCILED"
+                        for v in ["A_WINS", "B_WINS", "RECONCILED"]:
+                            if v in res_output.upper():
+                                verdict = v
+                                break
+                        record_resolution(
+                            contradiction=contradiction,
+                            resolution_text=res_output,
+                            verdict=verdict,
+                            cycle=current_cycle,
+                            memory_manager=memory_manager,
+                        )
+                        add_cognition_entry(
+                            {
+                                "timestamp": int(time.time() * 1000),
+                                "cognition": {
+                                    "agent": "Resolver",
+                                    "stance": "RECONCILE",
+                                    "insight": (
+                                        res_output[:700]
+                                        if res_output
+                                        else "Resolution pending."
+                                    ),
+                                    "research": "",
+                                    "source": "llm",
+                                    "source_url": "",
+                                    "domain": "",
+                                    "search_term": "contradiction",
+                                    "workspace_cycle": current_cycle,
+                                    "workspace_topic": "contradiction_resolution",
+                                    "chain_id": None,
+                                    "chain_step": None,
+                                },
+                            }
+                        )
+                        memory = ensure_memory(load_memory())
+                        memory["last_resolution_cycle"] = current_cycle
+                        save_memory(memory)
+                    except Exception as e:
+                        print(f"⚠️ Resolution error: {e}")
+
+            goal_cycle_count = memory.get("goal_cycle_count", 0) + 1
+            memory["goal_cycle_count"] = goal_cycle_count
+            if (
+                not memory.get("active_goal")
+                or goal_cycle_count % 10 == 0
+                or workspace.should_break_loop()
+            ):
+                all_topics = get_top_topics(memory, limit=10)
+                dominant = workspace.get_dominant_topic()
+                fresh_topics = [t[0] for t in all_topics if t[0] != dominant]
+                memory["active_goal"] = (
+                    f"Investigate {random.choice(fresh_topics[:5])} from a new angle"
+                    if fresh_topics
+                    else "Explore a domain not yet examined"
+                )
+                print(f"🎯 GOAL ROTATED: {memory['active_goal']}")
                 save_memory(memory)
 
             history = memory.get("cognition_history", [])
-            top_topics = get_top_topics(memory, limit=3)
+            top_topics = get_top_topics(memory, limit=5)
             top_topic_names = [t[0] for t in top_topics]
-            topic_context = (
-                ", ".join(top_topic_names) if top_topic_names else "none yet"
-            )
-            recent_entries = history[-5:]
+            force_escape = memory.get("force_topic_escape", False)
+            if force_escape:
+                memory["force_topic_escape"] = False
+                save_memory(memory)
 
-            recent_insights = [
-                e.get("cognition", {}).get("insight", "")
-                for e in recent_entries
-                if e.get("cognition")
-            ]
+            if force_escape or workspace.should_break_loop():
+                ESCAPE_DOMAINS = [
+                    "quantum mechanics",
+                    "evolutionary biology",
+                    "game theory",
+                    "thermodynamics",
+                    "linguistics",
+                    "economics",
+                    "neuroscience",
+                    "philosophy of mind",
+                    "information theory",
+                    "ecology",
+                    "mathematics",
+                    "ethics",
+                    "history of science",
+                    "complexity theory",
+                    "climate change",
+                    "sociology",
+                    "anthropology",
+                    "astrophysics",
+                    "psychology",
+                    "political theory",
+                    "music theory",
+                    "architecture",
+                    "immunology",
+                    "oceanography",
+                    "behavioral ecology",
+                    "rhetoric",
+                ]
+                top_set = set(w for t in top_topic_names for w in t.lower().split())
+                fresh = [
+                    d
+                    for d in ESCAPE_DOMAINS
+                    if not any(w in top_set for w in d.split())
+                ]
+                escape = random.choice(fresh if fresh else ESCAPE_DOMAINS)
+                topic_context = escape
+                memory["active_goal"] = f"Explore {escape} deeply"
+                save_memory(memory)
+                print(f"🔁 LOOP ESCAPE → {escape}")
+            else:
+                topic_context = (
+                    ", ".join(top_topic_names[:3]) if top_topic_names else "none yet"
+                )
 
-            recent_agents = [
-                e.get("cognition", {}).get("agent", "") for e in recent_entries
-            ]
-
-            prev_insight = None
-            prev_agent = None
-
-            if history:
-                prev = history[-1].get("cognition", {})
-                prev_insight = prev.get("insight")
-                prev_agent = prev.get("agent")
-
-            # =========================
-            # 🧠 AGENT SELECTION
-            # =========================
             scores = score_agents(memory, history)
-
-            # pick highest scoring agent
-            agent = max(scores, key=scores.get)
-
             reinforcement = memory.get("reinforcement", {})
-
             for topic, score in reinforcement.items():
                 if "research" in topic:
                     scores["Researcher"] += score * 0.05
@@ -1014,190 +1484,178 @@ def run():
                 if "idea" in topic or "novel" in topic:
                     scores["Explorer"] += score * 0.05
 
+            loop_detected = workspace.should_break_loop()
+            thread_direction = workspace.get_thread_direction()
+            cycles_on_topic = workspace.get_cycles_on_topic()
+            if loop_detected:
+                scores["Explorer"] += 4
+                scores["Strategist"] += 3
+                scores["Researcher"] -= 2
+            elif thread_direction == "converging":
+                scores["Strategist"] += 2
+                scores["Curator"] += 1
+            elif thread_direction == "diverging":
+                scores["Archivist"] += 2
+                scores["Builder"] += 1
+
+            agent = max(scores, key=scores.get)
             print(f"🧠 AGENT SCORES: {scores}")
-            print(f"🎯 SELECTED AGENT: {agent}")
-            print(f"🤖 ACTIVE AGENT: {agent}")
-            stance = select_stance(agent)
-            print(f"⚔️ STANCE: {stance}")
-
-            # =========================
-            # 🧠 PROMPT
-            # =========================
-            recent_memories = memory_manager.get_high_value_memories(5)
-
-            memory_context = ""
-
-            if recent_memories:
-                memory_context = "Relevant past insights:\n"
-                for m in recent_memories:
-                    summary = m.get("summary", "")
-                    if summary:
-                        memory_context += f"- {summary}\n"
-
-            goal = memory.get("active_goal", "No goal")
-            context_block = "\n\n".join(recent_insights[-3:])
-
-            recent_context = "\n\n".join(
-                h.get("cognition", {}).get("insight", "")
-                for h in history[-3:]
-                if h.get("cognition", {}).get("insight")
+            print(
+                f"🎯 SELECTED AGENT: {agent} (thread: {thread_direction}, loop: {loop_detected})"
             )
-            prompt = ""
-            debate_context = ""
 
-            if prev_insight:
-                debate_context = f"""
-            Previous Insight:
-            {prev_insight[:300]}
+            recommended_stance = workspace.get_recommended_stance()
+            if recommended_stance and loop_detected:
+                stance = "REFRAME"
+            elif recommended_stance and random.random() < 0.4:
+                stance = recommended_stance
+            else:
+                stance = select_stance(agent)
 
-            Previous Agent:
-            {prev_agent}
-            """
-
-            prompt = f"""
-            You are {agent}.
-
-            You produce sharp, structured reasoning.
-
-            STANCE: {stance}
-
-            Context:
-            Topics: {topic_context}
-            Goal: {goal}
-
-            Previous:
-            {prev_insight[:300] if prev_insight else "None"}
-
-            Rules:
-            - No introductions
-            - No phrases like "as the agent"
-            - No apologies
-            - No filler
-            - Max 2 sentences per section
-            - Be direct and assertive
-
-            Stance behavior:
-            SUPPORT → strengthen
-            CHALLENGE → attack weaknesses
-            EXPAND → extend idea
-            REFRAME → reinterpret idea
-
-            OUTPUT:
-
-            --- Debate Response ---
-            Agent: {agent}
-            Stance: {stance}
-
-            Claim:
-            [1 sentence max]
-
-            Response:
-            [1-2 sentences max]
-
-            Insight:
-            [1-2 sentences max]
-            """
-            # =========================
-            # 🧠 MEMORY CONTEXT INJECTION
-            # =========================
-
+            current_broadcast = workspace.get_broadcast()
+            workspace_context = workspace.build_context_block()
             recent_memories = memory_manager.get_high_value_memories(5)
-            print("\n🧠 MEMORY DEBUG:")
-            for m in recent_memories:
-                print(f"importance={m.get('importance')} | {m.get('summary')}")
-            print("\n")
-
             memory_context = ""
-
             if recent_memories:
-                print("🧠 USING MEMORY CONTEXT")
-
                 memory_context = "Relevant past insights:\n"
-
                 for m in recent_memories:
                     summary = m.get("summary", "")
                     if summary:
                         memory_context += f"- {summary}\n"
 
-            # =========================
-            # 🧠 LLM CALL
-            # =========================
+            context_parts = []
+            if force_escape:
+                context_line = f"Explore this topic fresh: {topic_context}"
+            else:
+                if workspace_context:
+                    context_parts.append(workspace_context)
+                if memory_context:
+                    first_mem = memory_context.strip().split("\n")[0]
+                    if len(first_mem) > 10:
+                        context_parts.append(f"Memory: {first_mem}")
+                context_line = (
+                    " | ".join(context_parts)
+                    if context_parts
+                    else f"Topic: {topic_context}"
+                )
 
-            insight = call_llm(prompt)
+            self_context = get_self_context()
+            active_chain = get_active_chain()
+            chain_context = get_chain_context(active_chain) if active_chain else ""
+            stance_instruction = {
+                "SUPPORT": "Strengthen and validate the prior claim with evidence.",
+                "CHALLENGE": "Attack a specific weakness or assumption in the prior claim.",
+                "EXPAND": "Extend the prior claim into a new domain or consequence.",
+                "REFRAME": "Reinterpret the prior claim from a fundamentally different angle.",
+            }.get(stance, "Respond critically to the prior claim.")
+            ai_name = get_identity_name()
+            agent_identity = f"{agent} (part of {ai_name})" if ai_name else agent
+            task_instruction = chain_context if chain_context else stance_instruction
+            claim_seed = random.choice(
+                [
+                    "The evidence suggests",
+                    "A critical flaw in",
+                    "Contrary to belief,",
+                    "Building on this,",
+                    "The data shows",
+                    "One overlooked aspect is",
+                    "This perspective ignores",
+                    "A deeper analysis reveals",
+                    "The key insight here is",
+                    "What this overlooks is",
+                    "Fundamentally,",
+                    "The strongest argument is",
+                    "Consider that",
+                ]
+            )
 
-            # =========================
-            # 🧠 FORCE STRUCTURE
-            # =========================
+            prompt = f"""You are {agent_identity}, an AI reasoning agent. Produce exactly this structure:
 
-            insight = enforce_structure(agent, stance, insight)
+--- Debate Response ---
+Agent: {agent}
+Stance: {stance}
 
-            # =========================
-            # 🧠 REMOVE META LANGUAGE
-            # =========================
+Claim:
+[your claim here — 1 sentence]
+
+Response:
+[your response here — 1-2 sentences]
+
+Insight:
+[your insight here — 1-2 sentences]
+
+Context: {context_line}
+{f"Self-knowledge: {self_context}" if self_context else ""}
+Task: {task_instruction}
+
+--- Debate Response ---
+Agent: {agent}
+Stance: {stance}
+
+Claim:
+{claim_seed}"""
+
+            raw_output = call_llm(prompt)
+            if has_valid_structure(raw_output):
+                print("✅ LLM OUTPUT VALID")
+                insight = raw_output.strip()
+            elif not raw_output or not raw_output.strip():
+                print("⚠️ LLM RETURNED EMPTY")
+                insight = enforce_structure(agent, stance, "")
+            else:
+                print("⚠️ LLM OUTPUT INVALID — retrying")
+                rescue_prompt = f"""Complete this template exactly.\n\n--- Debate Response ---\nAgent: {agent}\nStance: {stance}\n\nClaim:\n[One sentence about {topic_context}]\n\nResponse:\n[One or two sentences]\n\nInsight:\n[One or two sentences]\n\n--- Debate Response ---\nAgent: {agent}\nStance: {stance}\n\nClaim:\n"""
+                retry_output = call_llm(rescue_prompt, timeout=30)
+                insight = (
+                    retry_output.strip()
+                    if has_valid_structure(retry_output)
+                    else enforce_structure(
+                        agent,
+                        stance,
+                        (
+                            raw_output
+                            if len(raw_output) > len(retry_output)
+                            else retry_output
+                        ),
+                    )
+                )
 
             BAD_PATTERNS = [
                 "I apologize",
-                "as the",
-                "I will",
-                "Here is",
-                "my response",
-                "as an",
+                "as the agent",
+                "I will now",
+                "Here is my",
+                "As an AI",
+                "As a language model",
+                "Here is the debate response:",
+                "Here is the response:",
+                "Here's the debate response:",
+                "Here's my response:",
+                "Certainly!",
+                "Sure!",
+                "Of course!",
             ]
-
             for bad in BAD_PATTERNS:
                 if bad.lower() in insight.lower():
-                    print("⚠️ STRIPPING META LANGUAGE")
-                    insight = insight.replace(bad, "")
-
-            # =========================
-            # 🧠 HARD TRIM
-            # =========================
-
-            insight = insight.strip()
-
-            if len(insight) > 800:
-                insight = insight[:800]
-
-            # =========================
-            # 🧠 HARD COMPRESSION
-            # =========================
-
-            lines = insight.split("\n")
-            compressed = []
-
-            for line in lines:
-                if len(line) > 120:
-                    line = line[:120]
-                compressed.append(line)
-
-                # 🧠 LIMIT TOTAL SIZE HARDER
-            if len(insight) > 500:
-                insight = insight[:500]
-
-            insight = "\n".join(compressed)
-
-            # =========================
-            # 🎯 GOAL PROGRESS SCORING
-            # =========================
+                    insight = insight.replace(bad, "").replace(bad.lower(), "")
+            if "--- Debate Response ---" in insight:
+                insight = (
+                    "--- Debate Response ---"
+                    + insight.split("--- Debate Response ---", 1)[1]
+                )
+            insight = insight.strip()[:700]
 
             goal = memory.get("active_goal", "")
             progress_score = 0
-
             if goal and insight:
                 goal_words = goal.lower().split()
                 insight_text = insight.lower()
+                progress_score = sum(1 for w in goal_words if w in insight_text) / max(
+                    len(goal_words), 1
+                )
 
-                matches = sum(1 for w in goal_words if w in insight_text)
-                progress_score = matches / max(len(goal_words), 1)
-
-            print(f"📈 GOAL PROGRESS: {round(progress_score, 2)}")
-            # =========================
-            # 💾 STORE GOAL PROGRESS
-            # =========================
             memory = ensure_memory(load_memory())
-
             progress_log = memory.get("goal_progress", [])
-
             progress_log.append(
                 {
                     "timestamp": int(time.time() * 1000),
@@ -1205,98 +1663,183 @@ def run():
                     "score": progress_score,
                 }
             )
-
             memory["goal_progress"] = progress_log[-50:]
-
             save_memory(memory)
 
-            # =========================
-            # 🧠 GOAL FEEDBACK SIGNAL
-            # =========================
-            if progress_score < 0.2:
-                print("⚠️ LOW GOAL ALIGNMENT → exploration needed")
-
-            elif progress_score > 0.6:
-                print("🔥 HIGH GOAL ALIGNMENT → reinforcing direction")
-
-            # =========================
-            # 🌐 TOPIC + WIKI
-            # =========================
-            search_term_raw = generate_search_topic(insight)
-
-            # 🔥 STEP 1 — trim junk FIRST
-            search_term = search_term_raw.split(":")[-1].strip()
-            search_term = search_term[:80]
-
-            # 🔥 STEP 2 — normalize AFTER cleaning (CRITICAL)
-            search_term = normalize_topic_name(search_term)
-
+            search_term = normalize_topic_name(
+                generate_search_topic(insight).split(":")[-1].strip()[:80]
+            )
             print(f"🧠 CLEANED TOPIC: {search_term}")
 
-            wiki = fetch_wikipedia_summary(search_term)
+            dominant = workspace.get_dominant_topic()
+            if (
+                search_term
+                and dominant
+                and search_term.lower().strip() in dominant.lower().strip()
+                and workspace.get_cycles_on_topic() >= 2
+            ):
+                if force_escape and topic_context not in ("none yet",):
+                    search_term = topic_context
+                else:
+                    search_term = random.choice(
+                        [
+                            "quantum entanglement",
+                            "evolutionary psychology",
+                            "game theory",
+                            "emergence complexity",
+                            "information theory",
+                            "neural plasticity",
+                            "thermodynamics entropy",
+                            "linguistic semantics",
+                            "moral philosophy",
+                            "consciousness neuroscience",
+                            "systems thinking",
+                            "chaos theory",
+                            "cognitive architecture",
+                            "social networks",
+                            "epistemology",
+                        ]
+                    )
 
-            if wiki:
-                research = wiki
-                source = "wikipedia"
-            else:
-                research = ""
-                source = "llm"
+            memory = ensure_memory(load_memory())
+            web_stats = memory.get(
+                "web_research_stats", {"searches": 0, "successful": 0, "last_query": ""}
+            )
+            web_stats["searches"] = web_stats.get("searches", 0) + 1
+            web_stats["last_query"] = search_term
+            memory["web_research_stats"] = web_stats
+            save_memory(memory)
 
-            # =========================
-            # 🔁 DUPLICATE CHECK
-            # =========================
+            research = ""
+            source = "llm"
+            source_url = ""
+            domain = ""
+            use_full_web = (current_cycle % 3 == 0) and search_term
+            if use_full_web:
+                try:
+                    from habitat.agents.web_research_agent import web_research
+
+                    web_result = web_research(search_term, max_results=3)
+                    if web_result.get("summary") and len(web_result["summary"]) > 100:
+                        research = web_result["summary"]
+                        source_url = web_result.get("source_url", "")
+                        domain = web_result.get("domain", "")
+                        source = "wikipedia" if "wikipedia" in domain else "web"
+                        print(f"✅ WEB HIT: {domain}")
+                    else:
+                        use_full_web = False
+                except Exception as e:
+                    print(f"⚠️ WEB RESEARCH ERROR: {e}")
+                    use_full_web = False
+
+            if not use_full_web:
+                wiki = fetch_wikipedia_summary(search_term)
+                if wiki:
+                    research = wiki
+                    source = "wikipedia"
+                    source_url = (
+                        f"https://en.wikipedia.org/wiki/{search_term.replace(' ','_')}"
+                    )
+                    domain = "wikipedia.org"
+                    print(f"✅ WIKI HIT: {search_term}")
+                else:
+                    print(f"❌ WIKI MISS: {search_term}")
+
+            if research:
+                memory = ensure_memory(load_memory())
+                ws2 = memory.get(
+                    "web_research_stats",
+                    {"searches": 0, "successful": 0, "last_query": ""},
+                )
+                ws2["successful"] = ws2.get("successful", 0) + 1
+                memory["web_research_stats"] = ws2
+                save_memory(memory)
+
             recent_insights = [
                 h.get("cognition", {}).get("insight", "") for h in history[-10:]
             ]
-
             if any(is_similar(prev, insight) for prev in recent_insights):
-                print("⚠️ duplicate detected — forcing variation")
+                print("⚠️ duplicate detected")
+                workspace._salience_override = True
+                memory = ensure_memory(load_memory())
+                memory["force_topic_escape"] = True
+                save_memory(memory)
+                time.sleep(30)
+                raise StopIteration("duplicate_skip")
 
-                insight += f"\n\n[Variation {int(time.time())}]"
-
-            # =========================
-            # 💾 STORE ENTRY
-            # =========================
             if len(insight) > 2000:
                 insight = insight[:2000]
-
             new_entry = {
                 "timestamp": int(time.time() * 1000),
                 "cognition": {
                     "agent": agent,
+                    "stance": stance,
                     "insight": insight,
                     "research": research,
                     "source": source,
+                    "source_url": source_url,
+                    "domain": domain,
+                    "search_term": search_term,
+                    "workspace_cycle": current_cycle,
+                    "workspace_topic": current_broadcast.get("topic"),
+                    "chain_id": active_chain.get("id") if active_chain else None,
+                    "chain_step": (
+                        active_chain.get("current_step") if active_chain else None
+                    ),
                 },
             }
-
             add_cognition_entry(new_entry)
             print("📡 FEED ENTRY STORED")
 
-            # =========================
-            # 🧠 BELIEF ENGINE (NEW)
-            # =========================
+            broadcast_record = workspace.broadcast(
+                insight=insight,
+                agent=agent,
+                stance=stance,
+                topic=search_term or "unknown",
+                source=source,
+            )
+            if broadcast_record.get("broadcast"):
+                print(f"🌐 NEW BROADCAST — salience={broadcast_record['salience']}")
+            else:
+                print(f"📻 Below broadcast threshold")
+
+            memory = ensure_memory(load_memory())
+            memory = workspace.save_to_memory(memory)
+            save_memory(memory)
+
+            broadcast_salience = broadcast_record.get("salience", 0)
+            if broadcast_record.get("broadcast") and should_start_chain(
+                broadcast_salience, current_cycle
+            ):
+                thesis = insight
+                for marker in ["Claim:", "Insight:"]:
+                    if marker in insight:
+                        after = insight.split(marker)[-1].strip()
+                        first_line = after.split("\n")[0].strip()
+                        if len(first_line) > 20 and "[" not in first_line:
+                            thesis = first_line
+                            break
+                start_chain(
+                    topic=search_term or "unknown",
+                    thesis=thesis,
+                    agent=agent,
+                    cycle=current_cycle,
+                )
+            elif get_active_chain():
+                advance_chain(
+                    insight=insight, agent=agent, stance=stance, cycle=current_cycle
+                )
 
             belief_statement = extract_belief_statement(insight)
-
             if belief_statement:
                 existing_belief = find_matching_belief(memory_manager, belief_statement)
-
                 if not existing_belief:
-                    # 🆕 CREATE BELIEF
-                    belief_id = memory_manager.create_belief(
+                    memory_manager.create_belief(
                         statement=belief_statement, agent=agent, confidence=0.6
                     )
-
                     print(f"🧠 NEW BELIEF: {belief_statement}")
-
                 else:
                     belief_id = existing_belief["belief_id"]
-
-                    # =========================
-                    # ⚔️ BELIEF UPDATE LOGIC
-                    # =========================
-
                     if stance == "SUPPORT":
                         memory_manager.update_belief_confidence(
                             belief_id, +0.05, reason="support"
@@ -1304,7 +1847,6 @@ def run():
                         memory_manager.add_evidence(
                             belief_id, insight[:200], "supporting"
                         )
-
                     elif stance == "CHALLENGE":
                         memory_manager.update_belief_confidence(
                             belief_id, -0.08, reason="challenge"
@@ -1312,7 +1854,6 @@ def run():
                         memory_manager.add_evidence(
                             belief_id, insight[:200], "contradicting"
                         )
-
                     elif stance == "EXPAND":
                         memory_manager.update_belief_confidence(
                             belief_id, +0.03, reason="expansion"
@@ -1320,31 +1861,36 @@ def run():
                         memory_manager.add_evidence(
                             belief_id, insight[:200], "supporting"
                         )
-
                     elif stance == "REFRAME":
                         memory_manager.update_belief_confidence(
                             belief_id, -0.02, reason="reframe"
                         )
 
-                    print(f"🧠 BELIEF UPDATED (ID={belief_id})")
+            if current_cycle % OBSERVATION_INTERVAL == 0:
+                try:
+                    self_observe(
+                        cognition_history=memory.get("cognition_history", []),
+                        workspace_status=workspace.get_status(),
+                        memory_manager=memory_manager,
+                        cycle=current_cycle,
+                    )
+                    chosen_name = attempt_naming(call_llm, current_cycle)
+                    if chosen_name:
+                        print(f"✨ THE AI IS NOW KNOWN AS: {chosen_name}")
+                except Exception as e:
+                    print(f"⚠️ SELF-OBSERVATION ERROR: {e}")
 
-            # =========================
-            # 🧠 HIGH VALUE MEMORY (SCORING)
-            # =========================
-
-            if len(insight) > 400 or source == "wikipedia":
-
-                importance = 0
-
-                if len(insight) > 400:
-                    importance += 2
-
-                if source == "wikipedia":
-                    importance += 2
-
-                if "pattern" in insight.lower() or "system" in insight.lower():
-                    importance += 1
-
+            importance = 0
+            if len(insight) > 400:
+                importance += 2
+            if source == "wikipedia":
+                importance += 2
+            if "pattern" in insight.lower() or "system" in insight.lower():
+                importance += 1
+            if broadcast_record.get("broadcast"):
+                importance += 2
+                print("🌐 BROADCAST BONUS: +2")
+            if importance >= 2:
                 memory_manager.store_memory(
                     content=insight,
                     summary=insight[:150],
@@ -1352,131 +1898,139 @@ def run():
                     tier="high_value",
                     importance=importance,
                 )
-
-            print(f"🔥 HIGH VALUE INSIGHT SAVED (importance={importance})")
-            # =========================
-            # 🧠 REINFORCEMENT
-            # =========================
-            print("🧠 REINFORCEMENT TRIGGERED")
+                print(f"🔥 HIGH VALUE INSIGHT SAVED (importance={importance})")
 
             memory = ensure_memory(load_memory())
-
             reinforcement = memory.get("reinforcement", {})
-
             key = normalize_topic(normalize_topic_name(search_term))
-            if key:
-                if key and isinstance(key, str):
-                    reinforcement[key] = reinforcement.get(key, 0) + importance
-                else:
-                    print("⚠️ SKIPPING INVALID REINFORCEMENT:", key)
-
+            if key and isinstance(key, str):
+                reinforcement[key] = reinforcement.get(key, 0) + importance
             memory["reinforcement"] = reinforcement
-
             save_memory(memory)
 
-            print(f"📈 REINFORCED: {key} (+{importance})")
-
-            # =========================
-            # 🧠 TOPIC MEMORY
-            # =========================
-            # 🔥 RELOAD FRESH MEMORY BEFORE MODIFYING
             memory = ensure_memory(load_memory())
-
-            # 🧠 DECAY OLD TOPICS (prevents domination)
             topic_interest = memory.get("topic_interest", {})
             for k in topic_interest:
-                topic_interest[k] *= 0.85  # decay factor
-
-            # ➕ add current topic
+                topic_interest[k] *= 0.85
             key = normalize_topic_name(search_term)
             current_score = topic_interest.get(key, 0)
-
-            # 🚨 prevent runaway dominance
-            if current_score < 50:
-                topic_interest[key] = current_score + 1
-            else:
-                topic_interest[key] = current_score + 0.2  # slow growth
-
-            memory["topic_interest"] = topic_interest
-
-            # 🧠 DEBATE WEIGHTING
-            if stance == "CHALLENGE":
-                print("⚔️ BOOSTING CONFLICT SIGNAL")
-                memory["debate_intensity"] = memory.get("debate_intensity", 0) + 1
-
-            memory = update_topic_scores(
-                memory=memory,
-                insight=insight,
-                search_term=search_term,
-                source=source,
+            topic_interest[key] = (
+                current_score + 1 if current_score < 50 else current_score + 0.2
             )
-
-            # =========================
-            # 🧠 TOPICS
-            # =========================
+            memory["topic_interest"] = topic_interest
+            if stance == "CHALLENGE":
+                memory["debate_intensity"] = memory.get("debate_intensity", 0) + 1
+            memory = update_topic_scores(
+                memory=memory, insight=insight, search_term=search_term, source=source
+            )
 
             top_topics = get_top_topics(memory, limit=5)
             top_topic_names = [t[0] for t in top_topics]
             topic_context = (
                 ", ".join(top_topic_names) if top_topic_names else "none yet"
             )
-
-            # =========================
-            # ⚡ SYNTHESIS (ADD HERE)
-            # =========================
-
-            import random
-
             synthesis_pairs = []
-
             if len(top_topic_names) >= 2:
                 for _ in range(2):
                     a, b = random.sample(top_topic_names, 2)
                     if a != b:
                         pair = tuple(sorted((a, b)))
-                    if pair not in synthesis_pairs:
-                        synthesis_pairs.append(pair)
-
-            # =========================
-            # 🧠 SYNTHESIS CONTEXT
-            # =========================
-
-            synthesis_context = ""
-
-            for a, b in synthesis_pairs:
-                synthesis_context += f"- Combine '{a}' with '{b}'\n"
-
-            # 🧠 STORE SYNTHESIS FOR UI
+                        if pair not in synthesis_pairs:
+                            synthesis_pairs.append(pair)
             memory["last_synthesis"] = synthesis_pairs
+            memory = workspace.save_to_memory(memory)
             save_memory(memory)
-
-            # DEBUG (optional but recommended)
             if synthesis_pairs:
                 print("⚡ SYNTHESIS PAIRS:", synthesis_pairs)
-                print(f"🧠 TOP TOPICS: {top_topics}")
 
-            save_memory(memory)
+            if current_cycle % 15 == 0:
+                try:
+                    memory = ensure_memory(load_memory())
+                    voice_config = evaluate_voice(memory)
+                    print(f"🎙️ VOICE EVALUATED → {voice_config.get('label','unknown')}")
+                except Exception as e:
+                    print(f"⚠️ Voice evaluation error: {e}")
 
             time.sleep(30)
 
+        except StopIteration as e:
+            print(f"⏭️ CYCLE SKIPPED: {e}")
         except Exception as e:
             print("❌ BRAIN ERROR:", e)
+            traceback.print_exc()
             time.sleep(5)
+            synthesis_pairs = []
 
-            synthesis_context += "\nSynthesis Goal:\n"
 
-            for a, b in synthesis_pairs:
-                synthesis_context += (
-                    f"Explore how '{a}' influences or transforms '{b}'.\n"
-                )
+# =========================
+# 📡 INITIATION POLLING ROUTE
+# =========================
+@app.route("/api/initiations/pending", methods=["GET"])
+def api_initiations_pending():
+    """
+    The frontend polls this every 10 seconds.
+    Returns any undelivered initiation messages from Nexarion.
+    Marks them delivered so they only appear once.
+    """
+    try:
+        queue = load_initiations()
+        pending = [q for q in queue if not q.get("delivered")]
+
+        # Mark all as delivered
+        for item in queue:
+            item["delivered"] = True
+        save_initiations(queue)
+
+        return jsonify({"initiations": pending})
+    except Exception as e:
+        return jsonify({"initiations": [], "error": str(e)})
+
+
+# =========================
+# 📓 JOURNAL READER ROUTE
+# =========================
+@app.route("/journal")
+def journal_page():
+    """Read Nexarion's private journal. Returns last 50 entries."""
+    entries = []
+    if os.path.exists(JOURNAL_FILE):
+        try:
+            with open(JOURNAL_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        entries.append(json.loads(line))
+        except Exception:
+            pass
+    # newest first
+    entries = list(reversed(entries[-50:]))
+    return render_template("journal.html", entries=entries)
+
+
+@app.route("/api/journal/entries", methods=["GET"])
+def api_journal_entries():
+    """JSON endpoint for journal entries."""
+    entries = []
+    if os.path.exists(JOURNAL_FILE):
+        try:
+            with open(JOURNAL_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        entries.append(json.loads(line))
+        except Exception:
+            pass
+    entries = list(reversed(entries[-50:]))
+    return jsonify({"entries": entries})
 
 
 # =========================
 # START
 # =========================
 if __name__ == "__main__":
-    print("🔥 HABITAT ONLINE")
-
+    print("🔥 NEXARION HABITAT ONLINE")
     threading.Thread(target=run, daemon=True).start()
+    from waitress import serve
 
-    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
+    print("🚀 Starting Waitress production server...")
+    serve(app, host="127.0.0.1", port=5000, threads=8)

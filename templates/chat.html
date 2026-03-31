@@ -11,38 +11,45 @@
         <div id="chat-thread"></div>
 
         <div class="chat-input-area">
-            <input id="chat-input" placeholder="Speak to the Habitat..." />
+            <input id="chat-input" placeholder="Speak to Nexarion..." />
             <button id="send-btn" class="chat-btn primary">Send</button>
-            <button id="mic-btn" class="chat-btn">🎤</button>
-            <button id="mode-toggle" class="chat-btn">Orb</button>
+            <button id="mic-btn" class="chat-btn" title="Voice input">🎤</button>
+            <button id="mode-toggle" class="chat-btn" title="Orb Mode">Orb</button>
         </div>
     </div>
 
     <!-- RIGHT PANEL -->
     <div class="chat-right-panel">
-
         <div class="panel">
             <h3 class="panel-title">Conversations</h3>
-
-            <button id="new-chat-btn" class="chat-btn" style="margin-bottom:10px;">
+            <button id="new-chat-btn" class="chat-btn" style="margin-bottom:10px;width:100%;">
                 + New Chat
             </button>
-
             <div id="chat-list"></div>
         </div>
-
     </div>
 
 </div>
 
-<div id="conversation-mode" style="display:none;">
-    <div class="orb"></div>
-    <div class="orb-subtext">Conversation Mode</div>
-    <button id="exit-mode" class="chat-btn" style="margin-top:20px;">Exit</button>
-</div>
+<!-- ORB MODE OVERLAY -->
+<div id="orb-overlay">
 
-<div id="conversation-mode">
-    <div id="conversation-orb"></div>
+    <div id="orb-rings">
+        <div class="orb-ring ring-1"></div>
+        <div class="orb-ring ring-2"></div>
+        <div class="orb-ring ring-3"></div>
+    </div>
+
+    <div id="nexarion-orb"></div>
+
+    <div id="orb-status-text">Nexarion is ready</div>
+
+    <div id="orb-response-text"></div>
+
+    <div id="orb-hint">Tap the orb or use the mic to speak</div>
+
+    <button id="exit-orb" class="chat-btn">&#x2715; Exit Orb Mode</button>
+
 </div>
 
 {% endblock %}

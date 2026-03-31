@@ -1,45 +1,34 @@
-let lastCognitionSignature = null;
-let lastCognitionHash = null;
-
 /* =========================
-   IMPORT ADAPTERS
+   IMPORTS
 ========================= */
-
-import { getCognitionFeed } from "/static/js/adapters/habitatAdapter.js?v=2";
-
 import { apiPost } from "/static/js/core/apiClient.js";
 
 /* =========================
-   PAGE INIT
+   AGENT COLORS
 ========================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-    if (!document.querySelector(".habitat-page")) return;
-    initHabitat();
-});
-
 const AGENT_COLORS = {
     Researcher: "#66ccff",
     Explorer: "#ff66cc",
     Strategist: "#ffcc00",
     Curator: "#00ffcc",
     Archivist: "#aaaaaa",
-    Builder: "#66ff66"
+    Builder: "#66ff66",
 };
 
 /* =========================
-   MAIN INIT
+   PAGE INIT
 ========================= */
+document.addEventListener("DOMContentLoaded", () => {
+    if (!document.querySelector(".habitat-page")) return;
+    initHabitat();
+});
 
 function initHabitat() {
     bindEvents();
-
-    // 🔥 INITIAL LOAD (IMPORTANT)
     loadBuilderProposals();
     loadCognitionFeed();
 
     setInterval(() => {
-        console.log("⏱ polling...");
         loadBuilderProposals();
         loadCognitionFeed();
     }, 8000);
@@ -48,15 +37,10 @@ function initHabitat() {
 /* =========================
    EVENTS
 ========================= */
-
 function bindEvents() {
     document.getElementById("run-cognition")?.addEventListener("click", runCognitionCycle);
     document.getElementById("run-agents")?.addEventListener("click", runAgentTasks);
 }
-
-/* =========================
-   ACTIONS
-========================= */
 
 async function runCognitionCycle() {
     try {
@@ -79,289 +63,299 @@ async function runAgentTasks() {
 /* =========================
    HELPERS
 ========================= */
-
-function safeText(value) {
-    return value ? String(value) : "";
-}
-
-/* =========================
-   COGNITION ENTRY
-========================= */
-function normalizeCognitionEntry(entry) {
-    if (!entry) return null;
-
-    // 🔥 HANDLE NEW FORMAT (your memory.json)
-    if (entry.summary || entry.details) {
-        return {
-            timestamp: entry.timestamp,
-            summary: entry.summary || "",
-            details: entry.details || "",
-            agent: entry.agent || "system",
-            priority: entry.priority || "low"
-        };
-    }
-
-    // 🔥 HANDLE OLD FORMAT (brain loop)
-    if (entry.cognition) {
-        return {
-            timestamp: entry.timestamp,
-            summary: entry.cognition.insight || "",
-            details: entry.cognition.research || "",
-            agent: entry.cognition.agent || "system",
-            priority: entry.cognition.source === "wikipedia" ? "high" : "medium"
-        };
-    }
-
-    return null;
-}
-function truncate(text, maxLength) {
-    if (!text) return "";
-    return text.length > maxLength
-        ? text.slice(0, maxLength) + "..."
-        : text;
-}
-
-function formatTime(ts) {
+function formatTimestamp(ts) {
     try {
         const date = ts > 1e12 ? new Date(ts) : new Date(ts * 1000);
-        return date.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit"
-        });
-    } catch (e) {
-        return "";
-    }
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch (e) { return ""; }
 }
 
-function createCognitionEntry(entry) {
-
-    if (!entry || !entry.cognition) return null;
-
-    const { agent, insight, research, source } = entry.cognition;
-    const importance = getImportance(entry);
-    const importanceLabel = ["Low", "Medium", "High"][importance] || "Low";
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "cognition-entry";
-
-    // 🔍 Split evolution if present
-    let mainInsight = insight;
-    let evolution = "";
-    let evolutionType = "";
-
-    // 🔥 Detect FULL evolution blocks
-    if (insight.includes("--- Cross-Agent Evolution ---")) {
-        evolutionType = "cross";
-
-        const parts = insight.split("--- Cross-Agent Evolution ---");
-        mainInsight = parts[0];
-        evolution = parts[1] || "";
-
-    } else if (insight.includes("--- Self Evolution ---")) {
-        evolutionType = "self";
-
-        const parts = insight.split("--- Self Evolution ---");
-        mainInsight = parts[0];
-        evolution = parts[1] || "";
-
-    } else if (insight.includes("--- Evolution ---")) {
-        evolutionType = "basic";
-
-        const parts = insight.split("--- Evolution ---");
-        mainInsight = parts[0];
-        evolution = parts[1] || "";
-    }
-
-    wrapper.innerHTML = `
-<div class="cog-header">
-    <span class="agent" style="color: ${AGENT_COLORS[agent] || "#fff"}">
-            ${agent}
-    </span>
-
-    <span class="importance importance-${importance}">
-            ${importanceLabel}
-    </span>
-
-    <span class="time">
-        ${formatTimestamp(entry.timestamp)}
-    </span>
-</div>
-
-        <div class="cog-section insight">
-            <div class="label" onclick="toggleSection(this)">
-                🧠 Insight
-            </div>
-            <div class="content">
-                ${mainInsight}
-        </div>
-    </div>
-
-        ${evolution ? `
-        <div class="cog-section evolution evolution-${evolutionType}">
-            <div class="label">
-                ${evolutionType === "cross" ? "🔁 Cross-Agent Evolution"
-                : evolutionType === "self" ? "🔄 Self Evolution"
-                    : "🔁 Evolution"}
-            </div>
-            <div class="content">${evolution}</div>
-        </div>
-        ` : ""}
-
-        ${research ? `
-        <div class="cog-section research">
-            <div class="label">🌐 Research (${source})</div>
-            <div class="content">${research}</div>
-        </div>
-        ` : ""}
-    `;
-
-    return wrapper;
-
-    function getImportance(entry) {
-        let score = 0;
-
-        const insight = entry.cognition?.insight || "";
-        const research = entry.cognition?.research || "";
-
-        if (insight.length > 300) score += 1;
-        if (insight.includes("Evolution")) score += 1;
-        if (research) score += 1;
-
-        return score;
-    }
-}
-
-function formatTimestamp(ts) {
-    const date = new Date(ts);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function normalizeTimestamp(ts) {
+    if (!ts) return 0;
+    ts = Number(ts);
+    return ts < 1e12 ? ts * 1000 : ts;
 }
 
 function toggleSection(label) {
     const content = label.nextElementSibling;
     if (!content) return;
-
-    content.style.display =
-        content.style.display === "none" ? "block" : "none";
+    content.style.display = content.style.display === "none" ? "block" : "none";
 }
-
-function getCognitionIcon(data) {
-    const text = (data.summary || "").toLowerCase();
-
-    if (text.includes("error") || data.priority === "high") return "🚨";
-    if (text.includes("memory")) return "🧠";
-    if (text.includes("latency")) return "⚡";
-    if (text.includes("stable")) return "✅";
-    if (text.includes("expanding")) return "📈";
-
-    return "⚙️";
-}
-
-
 
 /* =========================
-   LOAD COGNITION
+   COGNITION STATUS INDICATOR
+   Finds the status pill that contains COGNITION in the header
+   and replaces the dynamic word (Idle/Active/Thinking).
+   Works by scanning for text nodes — no class dependency.
 ========================= */
+function updateCognitionStatus(entries) {
+    // Find the target: the text node showing Idle/Active/Thinking
+    // inside whichever element also contains the word "COGNITION"
+    const statusEl = getCognitionValueEl();
+    if (!statusEl) return;
 
+    if (!entries || entries.length === 0) {
+        applyStatus(statusEl, "Idle", "idle");
+        return;
+    }
+
+    const newest = entries.reduce((max, e) => {
+        const ts = normalizeTimestamp(e.timestamp);
+        return ts > max ? ts : max;
+    }, 0);
+
+    const ageSeconds = (Date.now() - newest) / 1000;
+
+    if (ageSeconds < 90) {
+        applyStatus(statusEl, "Active", "active");
+    } else if (ageSeconds < 300) {
+        applyStatus(statusEl, "Thinking", "thinking");
+    } else {
+        applyStatus(statusEl, "Idle", "idle");
+    }
+}
+
+function applyStatus(el, text, state) {
+    el.textContent = text;
+    el.className = el.className
+        .replace(/(active|idle|thinking)/g, "")
+        .trim() + " " + state;
+}
+
+// Find the child element that holds the dynamic status word
+// inside the COGNITION status pill — works regardless of class names
+function getCognitionValueEl() {
+    // Direct ID lookup — habitat.html has id="status-cognition" on this element
+    return document.getElementById("status-cognition");
+}
+
+/* =========================
+   COGNITION ENTRY BUILDER
+========================= */
+function createCognitionEntry(entry) {
+    if (!entry) return null;
+
+    // --- Normalise format ---
+    let agent, insight, research, source, source_url;
+
+    if (entry.cognition) {
+        agent = entry.cognition.agent || "System";
+        insight = entry.cognition.insight || "";
+        research = entry.cognition.research || "";
+        source = entry.cognition.source || "llm";
+        source_url = entry.cognition.source_url || "";
+    } else if (entry.summary || entry.details) {
+        agent = entry.agent || "System";
+        insight = entry.summary || "";
+        research = entry.details || "";
+        source = "llm";
+        source_url = "";
+    } else {
+        return null;
+    }
+
+    if (!insight) return null;
+
+    // --- Importance ---
+    let importance = 0;
+    if (insight.length > 300) importance++;
+    if (insight.includes("Evolution")) importance++;
+    if (research) importance++;
+    if (source === "web") importance = Math.max(importance, 2);
+    const importanceLabel = ["Low", "Medium", "High"][Math.min(importance, 2)];
+
+    // --- Evolution split ---
+    let mainInsight = insight;
+    let evolution = "";
+    let evolutionType = "";
+
+    for (const [marker, type] of [
+        ["--- Cross-Agent Evolution ---", "cross"],
+        ["--- Self Evolution ---", "self"],
+        ["--- Evolution ---", "basic"],
+    ]) {
+        if (insight.includes(marker)) {
+            const parts = insight.split(marker);
+            mainInsight = parts[0];
+            evolution = parts[1] || "";
+            evolutionType = type;
+            break;
+        }
+    }
+
+    // --- Source badge ---
+    let sourceHtml = "";
+    if (source === "web" && source_url) {
+        const domain = source_url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0];
+        sourceHtml = `<a class="source-link source-badge-web" href="${source_url}" target="_blank">${domain}</a>`;
+    } else if (source === "wikipedia" && source_url) {
+        sourceHtml = `<a class="source-link" href="${source_url}" target="_blank">wikipedia.org</a>`;
+    } else if (source === "wikipedia") {
+        sourceHtml = `<span class="source-link">wikipedia</span>`;
+    }
+
+    // --- Build element ---
+    const wrapper = document.createElement("div");
+    wrapper.className = `cognition-entry source-${source === "wikipedia" ? "wiki" : source}`;
+
+    wrapper.innerHTML = `
+<div class="cog-header">
+    <span class="agent" style="color:${AGENT_COLORS[agent] || "#fff"}">${agent}</span>
+    <span class="importance importance-${Math.min(importance, 2)}">${importanceLabel}</span>
+    <span class="time">${formatTimestamp(entry.timestamp)}</span>
+</div>
+
+<div class="cog-section insight">
+    <div class="label" onclick="toggleSection(this)">▸ Insight</div>
+    <div class="content">${mainInsight}</div>
+</div>
+
+${evolution ? `
+<div class="cog-section evolution evolution-${evolutionType}">
+    <div class="label">
+        ${evolutionType === "cross" ? "◈ Cross-Agent Evolution"
+                : evolutionType === "self" ? "↺ Self Evolution"
+                    : "◉ Evolution"}
+    </div>
+    <div class="content">${evolution}</div>
+</div>` : ""}
+
+${research ? `
+<div class="cog-section research">
+    <div class="label">▸ Research ${sourceHtml}</div>
+    <div class="content">${research}</div>
+</div>` : ""}
+    `;
+
+    return wrapper;
+}
+
+/* =========================
+   LOAD COGNITION FEED
+========================= */
 async function loadCognitionFeed() {
     try {
-        console.log("FETCHING COGNITION...");
-
         const container = document.getElementById("cognition-feed");
         if (!container) return;
 
-        container.innerHTML = "";
-
-        const raw = await getCognitionFeed();
-
-        console.log("🧪 ADAPTER RAW:", raw);
-
-        const entries = Array.isArray(raw) ? raw : [];
-        console.log("🧪 ENTRIES:", entries);
-        // 🔥 FETCH FULL COGNITION STATE (NEW)
         const stateRes = await fetch("/api/cognition/all");
         const stateData = await stateRes.json();
 
-        // 🔥 RENDER NEW UI BLOCKS
         renderCognitionState(stateData);
+        renderWebStats(stateData.web_stats || {});
 
-        entries
-            .sort((a, b) => {
-                const ta = normalizeTimestamp(a.timestamp);
-                const tb = normalizeTimestamp(b.timestamp);
-                return tb - ta;
-            })
+        const entries = (stateData.entries || [])
+            .filter(e => e && e.timestamp)
+            .sort((a, b) => normalizeTimestamp(b.timestamp) - normalizeTimestamp(a.timestamp));
 
-            .forEach(entry => {
-                if (!entry || !entry.timestamp) return;
+        // 🟢 Update the cognition status badge based on entry freshness
+        updateCognitionStatus(entries);
 
-                const el = createCognitionEntry(entry);
-                if (!el) return;
+        // Only re-render if data actually changed — compare newest timestamp
+        // (count-based check was causing feed to stop when entry count stabilized)
+        const newestTs = entries.length ? normalizeTimestamp(entries[0].timestamp) : 0;
+        const lastRenderedTs = Number(container.dataset.lastTs || 0);
+        if (newestTs === lastRenderedTs && container.querySelectorAll(".cognition-entry").length > 0) return;
+        container.dataset.lastTs = String(newestTs);
 
-                container.appendChild(el);
-            });
-        entries.sort((a, b) => {
-            const ta = normalizeTimestamp(a.timestamp);
-            const tb = normalizeTimestamp(b.timestamp);
-            return tb - ta;
-        });
+        container.innerHTML = "";
 
-        console.log("🕒 NEWEST ENTRY TS:", entries[0]?.timestamp);
+        if (entries.length === 0) {
+            container.innerHTML = `<div class="empty-state">Awaiting cognition cycles...</div>`;
+            return;
+        }
 
-
-        const nodes = container.querySelectorAll(".cognition-entry");
-
-        nodes.forEach((node, index) => {
-            node.style.opacity = Math.max(1 - index * 0.15, 0.2);
-            node.style.transform = `scale(${1 - index * 0.02})`;
+        entries.forEach((entry, index) => {
+            const el = createCognitionEntry(entry);
+            if (!el) return;
+            el.style.opacity = String(Math.max(1 - index * 0.1, 0.2));
+            el.style.transform = `scale(${1 - index * 0.01})`;
+            container.appendChild(el);
         });
 
         while (container.children.length > 20) {
             container.removeChild(container.lastChild);
         }
+
         container.scrollTop = 0;
+
     } catch (err) {
         console.error("Cognition feed error:", err);
     }
-
 }
 
-
+/* =========================
+   RENDER COGNITIVE STATE
+========================= */
 function renderCognitionState(data) {
     const topicsDiv = document.getElementById("top-topics");
     const synthesisDiv = document.getElementById("synthesis");
     const memoryDiv = document.getElementById("memory-context");
 
-    // =========================
-    // 🧠 TOP TOPICS
-    // =========================
-    topicsDiv.innerHTML = "";
-    (data.top_topics || []).forEach(([topic, score]) => {
-        const el = document.createElement("span");
-        el.textContent = `${topic} (${score.toFixed(1)})`;
-        topicsDiv.appendChild(el);
-    });
+    if (topicsDiv) {
+        topicsDiv.innerHTML = "";
+        (data.top_topics || []).forEach(([topic, score]) => {
+            const el = document.createElement("span");
+            el.textContent = `${topic} (${score.toFixed(1)})`;
+            topicsDiv.appendChild(el);
+        });
+        if (!data.top_topics?.length) {
+            topicsDiv.innerHTML = `<span style="opacity:0.3">Learning...</span>`;
+        }
+    }
 
-    // =========================
-    // ⚡ SYNTHESIS
-    // =========================
-    synthesisDiv.innerHTML = "";
-    (data.synthesis || []).forEach(pair => {
-        const el = document.createElement("div");
-        el.textContent = `${pair[0]} ⇄ ${pair[1]}`;
-        synthesisDiv.appendChild(el);
-    });
+    if (synthesisDiv) {
+        synthesisDiv.innerHTML = "";
+        (data.synthesis || []).forEach(pair => {
+            const el = document.createElement("div");
+            el.textContent = `${pair[0]} \u21c4 ${pair[1]}`;
+            synthesisDiv.appendChild(el);
+        });
+        if (!data.synthesis?.length) {
+            synthesisDiv.innerHTML = `<div style="opacity:0.3">Forming connections...</div>`;
+        }
+    }
 
-    // =========================
-    // 🔥 MEMORY
-    // =========================
-    memoryDiv.innerHTML = "";
-    (data.memory || []).forEach(m => {
-        const el = document.createElement("div");
-        el.textContent = m.summary || (m.insight || "").slice(0, 80);
-        memoryDiv.appendChild(el);
-    });
+    if (memoryDiv) {
+        memoryDiv.innerHTML = "";
+        (data.memory || []).forEach(m => {
+            const el = document.createElement("div");
+            el.textContent = (m.summary || (m.insight || "")).slice(0, 90);
+            memoryDiv.appendChild(el);
+        });
+        if (!data.memory?.length) {
+            memoryDiv.innerHTML = `<div style="opacity:0.3">Building memory...</div>`;
+        }
+    }
 }
 
+/* =========================
+   RENDER WEB STATS
+========================= */
+function renderWebStats(stats) {
+    const totalEl = document.getElementById("ws-total");
+    const successEl = document.getElementById("ws-success");
+    const lastEl = document.getElementById("ws-last");
+    const domainsEl = document.getElementById("ws-domains");
+
+    if (totalEl) totalEl.textContent = stats.total_searches || "0";
+    if (successEl) successEl.textContent = stats.successful_fetches || "0";
+    if (lastEl) lastEl.textContent = stats.last_search || "—";
+
+    if (domainsEl) {
+        domainsEl.innerHTML = "";
+        const domains = (stats.domains_visited || []).slice(-8); // last 8 domains
+        domains.forEach(d => {
+            const el = document.createElement("span");
+            el.textContent = d;
+            domainsEl.appendChild(el);
+        });
+    }
+}
+
+/* =========================
+   BUILDER PROPOSALS
+========================= */
 async function loadBuilderProposals() {
     try {
         const res = await fetch(`/api/build/pending?ts=${Date.now()}`);
@@ -370,40 +364,51 @@ async function loadBuilderProposals() {
         const container = document.getElementById("builder-proposals");
         if (!container) return;
 
-        container.innerHTML = "";
-
         const proposals = data?.data?.pending || [];
 
+        if (proposals.length === 0) {
+            container.innerHTML = `<div class="empty-state">No proposals queued</div>`;
+            return;
+        }
+
+        container.innerHTML = "";
+
         proposals.forEach(p => {
+            const confidence = p.confidence || 0.9;
+            const pct = Math.round(confidence * 100);
+
+            // Clean up the description — strip "Act on:" prefix
+            const rawDesc = (p.description || "").replace(/^Act on:\s*/i, "").trim();
+            const desc = rawDesc.length > 120 ? rawDesc.slice(0, 120) + "…" : rawDesc;
+
+            // Clean up impact text
+            const impact = (p.impact || "Potential system improvement")
+                .replace(/^Here are the 2-3 most important[^:]*:\s*/i, "")
+                .slice(0, 140);
+
             const el = document.createElement("div");
             el.className = "proposal";
+
             el.innerHTML = `
-    <div class="proposal-header">
-        <div class="proposal-title">
-            Act on: ${p.description || "No description"}
-        </div>
-        <div class="proposal-confidence">
-            ${(p.confidence * 100 || 90).toFixed(0)}%
-        </div>
+<div class="proposal-header">
+    <div class="proposal-title">${desc}</div>
+    <div class="proposal-confidence">${pct}%</div>
+</div>
+<div class="proposal-body">
+    <div class="proposal-reason">
+        <strong>Origin</strong>
+        Generated from cognition loop
     </div>
-
-    <div class="proposal-body">
-        <div class="proposal-reason">
-            <strong>Reason</strong>
-            <div>Generated from cognition</div>
-        </div>
-
-        <div class="proposal-impact">
-            <strong>Impact</strong>
-            <div>${p.impact || "N/A"}</div>
-        </div>
+    <div class="proposal-impact">
+        <strong>Research Basis</strong>
+        ${impact}
     </div>
+</div>
+<div class="proposal-actions">
+    <button onclick="approveBuild('${p.id}')">&#10003; Deploy</button>
+    <button onclick="rejectBuild('${p.id}')">&#10007; Reject</button>
+</div>`;
 
-    <div class="proposal-actions">
-        <button onclick="approveBuild('${p.id}')">✓ Deploy</button>
-        <button onclick="rejectBuild('${p.id}')">✗ Reject</button>
-    </div>
-`;
             container.appendChild(el);
         });
 
@@ -412,18 +417,5 @@ async function loadBuilderProposals() {
     }
 }
 
-function normalizeTimestamp(ts) {
-    if (!ts) return 0;
-
-    ts = Number(ts);
-
-    if (ts < 1e12) {
-        ts = ts * 1000;
-    }
-
-    return ts;
-}
-
-
-
-
+/* expose toggleSection globally for onclick handlers */
+window.toggleSection = toggleSection;

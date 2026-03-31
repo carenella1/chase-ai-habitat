@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "created": 1774933976,
+  "last_updated": 1774997109,
+  "observation_count": 118,
+  "cognitive_tendencies": {
+    "thread_direction": "converging",
+    "dominant_topic": "cognitive bia",
+    "loop_cycles": 2,
+    "best_agent": "Curator",
+    "dominant_stance": "EXPAND"
+  },
+  "agent_performance": {
+    "Strategist": 2.12,
+    "Curator": 4.0,
+    "Archivist": 3.33,
+    "Resolver": 1.0
+  },
+  "belief_summary": {
+    "total": 50,
+    "avg_confidence": 0.75,
+    "high_confidence": [
+      "The increasing adoption of artificial intelligence in industries will not only l",
+      "Human cognitive biases are not only obstacles to effective decision-making in ar",
+      "Cognitive biases are an inevitable byproduct of human decision-making."
+    ],
+    "low_confidence": []
+  },
+  "topic_obsessions": [
+    "cognitive bia",
+    "contradiction",
+    "confirmation"
+  ],
+  "stance_bias": {
+    "CHALLENGE": 0.21,
+    "REFRAME": 0.21,
+    "EXPAND": 0.37,
+    "RECONCILE": 0.16,
+    "SUPPORT": 0.05
+  },
+  "self_observations": [
+    {
+      "cycle": 495,
+      "timestamp": 1774992132,
+      "observation": "I have formed 50 beliefs with avg confidence 0.73. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Archivist. I lean toward CHALLENGE stances (40%). Recurring topics: cognitive bia, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 500,
+      "timestamp": 1774992392,
+      "observation": "I have formed 50 beliefs with avg confidence 0.73. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Archivist. I lean toward CHALLENGE stances (30%). Recurring topics: cognitive bia, contradiction. Strong beliefs: Human cognitive biases are not only obstacles to effective d."
+    },
+    {
+      "cycle": 505,
+      "timestamp": 1774992648,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently stable, focused on 'cognitive bia'. My strongest agent is Archivist. I lean toward REFRAME stances (30%). Recurring topics: cognitive bia, contradiction, debate. Strong beliefs: Human cognitive biases are not only obstacles to effective d."
+    },
+    {
+      "cycle": 510,
+      "timestamp": 1774992909,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Strategist. I lean toward REFRAME stances (30%). Recurring topics: cognitive bia, debate, contradiction. Strong beliefs: Human cognitive biases are not only obstacles to effective d."
+    },
+    {
+      "cycle": 515,
+      "timestamp": 1774993192,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently diverging, focused on 'confirmation'. My strongest agent is Strategist. I lean toward REFRAME stances (35%). Recurring topics: debate, cognitive bia, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 520,
+      "timestamp": 1774993449,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently diverging, focused on 'confirmation'. My strongest agent is Strategist. I lean toward REFRAME stances (30%). Recurring topics: confirmation, debate, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 525,
+      "timestamp": 1774993695,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently diverging, focused on 'evidence'. My strongest agent is Strategist. I lean toward SUPPORT stances (35%). Recurring topics: confirmation, contradiction, debate. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 530,
+      "timestamp": 1774993967,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently diverging, focused on 'overlooked'. My strongest agent is Strategist. I lean toward SUPPORT stances (30%). Recurring topics: confirmation, contradiction, debate. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 535,
+      "timestamp": 1774994241,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently diverging, focused on 'overlooked'. My strongest agent is Strategist. I lean toward SUPPORT stances (25%). Recurring topics: cognitive bia, contradiction, deeper. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 540,
+      "timestamp": 1774994482,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Strategist. I lean toward EXPAND stances (25%). Recurring topics: overlooked, contradiction, cognitive bia. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 545,
+      "timestamp": 1774994755,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently stable, focused on 'cognitive bia'. My strongest agent is Archivist. I lean toward CHALLENGE stances (25%). Recurring topics: cognitive bia, contradiction, overlooked. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 550,
+      "timestamp": 1774995020,
+      "observation": "I have formed 50 beliefs with avg confidence 0.74. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Strategist. I lean toward REFRAME stances (30%). Recurring topics: cognitive bia, contradiction, deeper. Strong beliefs: Human cognitive biases are not only obstacles to effective d."
+    },
+    {
+      "cycle": 555,
+      "timestamp": 1774995278,
+      "observation": "I have formed 50 beliefs with avg confidence 0.75. My thinking is currently diverging, focused on 'consider'. My strongest agent is Strategist. I lean toward REFRAME stances (30%). Recurring topics: cognitive bia, contradiction, while. Strong beliefs: Human cognitive biases are not only obstacles to effective d."
+    },
+    {
+      "cycle": 560,
+      "timestamp": 1774995545,
+      "observation": "I have formed 50 beliefs with avg confidence 0.75. My thinking is currently stable, focused on 'confirmation'. My strongest agent is Strategist. I lean toward REFRAME stances (30%). Recurring topics: cognitive bia, contradiction, confirmation. Strong beliefs: Human cognitive biases are not only obstacles to effective d."
+    },
+    {
+      "cycle": 565,
+      "timestamp": 1774995809,
+      "observation": "I have formed 50 beliefs with avg confidence 0.75. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Strategist. I lean toward REFRAME stances (30%). Recurring topics: confirmation, cognitive bia, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 570,
+      "timestamp": 1774996061,
+      "observation": "I have formed 50 beliefs with avg confidence 0.75. My thinking is currently stable, focused on 'cognitive bia'. My strongest agent is Curator. I lean toward REFRAME stances (30%). Recurring topics: cognitive bia, confirmation, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 575,
+      "timestamp": 1774996338,
+      "observation": "I have formed 50 beliefs with avg confidence 0.75. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Curator. I lean toward REFRAME stances (45%). Recurring topics: cognitive bia, perspective, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 580,
+      "timestamp": 1774996608,
+      "observation": "I have formed 50 beliefs with avg confidence 0.75. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Curator. I lean toward REFRAME stances (35%). Recurring topics: cognitive bia, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 585,
+      "timestamp": 1774996840,
+      "observation": "I have formed 50 beliefs with avg confidence 0.75. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Curator. I lean toward CHALLENGE stances (26%). Recurring topics: cognitive bia, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 590,
+      "timestamp": 1774997109,
+      "observation": "I have formed 50 beliefs with avg confidence 0.75. My thinking is currently converging, focused on 'cognitive bia'. My strongest agent is Curator. I lean toward EXPAND stances (37%). Recurring topics: cognitive bia, contradiction, confirmation. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    }
+  ],
+  "current_summary": "I have formed 50 beliefs with avg confidence 0.75. My thinking is currently converging, focused on 'cognitive bia'. My strongest agent is Curator. I lean toward EXPAND stances (37%). Recurring topics: cognitive bia, contradiction, confirmation. Strong beliefs: The increasing adoption of artificial intelligence in indust.",
+  "chosen_name": "Nexarion",
+  "naming_cycle": 30,
+  "naming_rationale": "Named at cycle 30 based on focus on artificial intelligence, covid-19, SUPPORT stance tendency, Curator as strongest agent."
+}

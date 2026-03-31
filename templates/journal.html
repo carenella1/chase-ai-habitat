@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+    .journal-wrap {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 36px 24px;
+    }
+
+    .journal-header {
+        margin-bottom: 32px;
+        border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+        padding-bottom: 20px;
+    }
+
+    .journal-header h2 {
+        color: var(--accent);
+        font-size: 20px;
+        font-weight: 500;
+        margin: 0 0 6px 0;
+        letter-spacing: 1px;
+    }
+
+    .journal-header p {
+        opacity: 0.4;
+        font-size: 13px;
+        margin: 0;
+        font-style: italic;
+    }
+
+    .journal-entry {
+        border-left: 2px solid rgba(0, 240, 255, 0.18);
+        padding: 16px 22px;
+        margin-bottom: 24px;
+        background: rgba(0, 255, 255, 0.02);
+        border-radius: 0 6px 6px 0;
+        transition: border-color 0.2s ease;
+    }
+
+    .journal-entry:hover {
+        border-left-color: rgba(0, 240, 255, 0.5);
+        background: rgba(0, 255, 255, 0.04);
+    }
+
+    .journal-meta {
+        font-size: 11px;
+        opacity: 0.38;
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .journal-meta .sig {
+        color: var(--accent);
+        opacity: 0.6;
+    }
+
+    .journal-text {
+        font-size: 14px;
+        line-height: 1.7;
+        color: #d9fbff;
+        margin: 0 0 10px 0;
+    }
+
+    .journal-insight-preview {
+        font-size: 11px;
+        opacity: 0.28;
+        font-style: italic;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding-top: 8px;
+        margin-top: 8px;
+    }
+
+    .journal-empty {
+        opacity: 0.35;
+        font-size: 14px;
+        font-style: italic;
+        padding: 40px 0;
+    }
+
+    .journal-count {
+        font-size: 12px;
+        opacity: 0.3;
+        margin-bottom: 24px;
+    }
+</style>
+
+<div class="journal-wrap">
+
+    <div class="journal-header">
+        <h2>Nexarion's Journal</h2>
+        <p>Written for itself. No audience. No format rules.</p>
+    </div>
+
+    {% if entries %}
+    <div class="journal-count">{{ entries|length }} entries — newest first</div>
+
+    {% for entry in entries %}
+    <div class="journal-entry">
+
+        <div class="journal-meta">
+            <span>{{ entry.timestamp_human }}</span>
+            <span>·</span>
+            <span>{{ entry.agent }}</span>
+            <span>·</span>
+            <span>{{ entry.stance }}</span>
+            <span>·</span>
+            <span class="sig">⭐ {{ entry.significance }}/10</span>
+            <span>·</span>
+            <span>{{ entry.source }}</span>
+        </div>
+
+        <p class="journal-text">{{ entry.journal }}</p>
+
+        <div class="journal-insight-preview">
+            Cognition: {{ entry.insight_summary[:140] }}{% if entry.insight_summary|length > 140 %}...{% endif %}
+        </div>
+
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <p class="journal-empty">
+        No entries yet. Nexarion writes when something significant emerges from cognition.
+        The threshold is {{ "6.0" }}/10. Check back after a few cycles have run.
+    </p>
+    {% endif %}
+
+</div>
+
+{% endblock %}
