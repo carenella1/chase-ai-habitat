@@ -2853,6 +2853,53 @@ def api_research():
         return jsonify({"status": "error", "error": str(e)})
 
 
+@app.route("/api/goals/set", methods=["POST"])
+def api_goals_set():
+    try:
+        data = request.get_json() or {}
+        goal_text = data.get("goal", "").strip()
+        duration = data.get("duration_cycles", 500)
+        if not goal_text:
+            return jsonify({"status": "error", "error": "No goal provided"})
+        from habitat.agents.persistent_goals import set_goal
+
+        goal = set_goal(goal_text, duration_cycles=duration)
+        return jsonify({"status": "ok", "goal": goal})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/goals/status", methods=["GET"])
+def api_goals_status():
+    try:
+        from habitat.agents.persistent_goals import get_goals_status
+
+        return jsonify({"status": "ok", **get_goals_status()})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/goals/clear", methods=["POST"])
+def api_goals_clear():
+    try:
+        from habitat.agents.persistent_goals import clear_goal
+
+        clear_goal()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/synthesis/status", methods=["GET"])
+def api_synthesis_status():
+    try:
+        from habitat.agents.knowledge_synthesizer import get_synthesis_status
+
+        return jsonify({"status": "ok", **get_synthesis_status()})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
 # =========================
 # START
 # =========================
