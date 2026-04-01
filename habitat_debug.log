@@ -1,4 +1,1253 @@
-Flask process started (PID: 571612)
-Waiting for Flask at http://127.0.0.1:5000...
-Flask is ready!
+🌐 GLOBAL WORKSPACE INITIALIZED (Milestone A+B)
+🔥 NEXARION HABITAT ONLINE
+🧠 BRAIN THREAD STARTED
+🌐 GLOBAL WORKSPACE ACTIVE
+🌐 WORKSPACE RESTORED: cycle=1898, topic=behavioral economics, thread=diverging
+🌐 WORKSPACE RESTORED — Cycle 1898
+🔄 WORKSPACE CYCLE: 1899
+🔄 COGNITION CYCLE #1899 (last: 0s)
+🎓 CURRICULUM ACTIVE: computer science and algorithms
+🧬 TRIGGERING SYNTHESIS PASS (cycle 1899)
+🧬 SYNTHESIS PASS STARTING (cycle 1899)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2.35, 'Curator': 3, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Curator (thread: diverging, loop: False)
+🧬 Synthesizing: physics and cosmology...
+🚀 Starting Waitress production server...
+🧬 Synthesizing: biology and life...
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: behavioral economics
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'behavioral economics'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 116
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Curator] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 27.56
+🧠 DECAY: sustainability → 11.26
+🧠 DECAY: behavioral economics → 9.68
+🧠 DECAY: cryptography → 9.60
+🧠 DECAY: computational complexity → 3.91
+🧠 DECAY: market failure → 3.25
+🧠 DECAY: **debate → 2.72
+🧠 DECAY: game theory → 2.37
+🧠 DECAY: history → 2.22
+🧠 DECAY: evolution → 2.15
+🧠 DECAY: natural selection → 2.12
+🧠 DECAY: algorithm → 2.08
+🧠 DECAY: cryptographic → 2.02
+🧠 DECAY: supply and → 1.54
+🧠 DECAY: quantum mechanics → 1.50
+🧠 DECAY: legal → 1.44
+🧠 DECAY: information theory → 1.36
+🧠 DECAY: renaissance → 1.35
+🧠 DECAY: industrial revolution → 1.33
+🧠 DECAY: trade → 1.28
+🧠 DECAY: while → 1.13
+🧠 DECAY: logic → 1.03
+🧠 DECAY: support → 0.97
+🧠 DECAY: systems design → 0.94
+🧠 DECAY: civilization → 0.81
+⚡ SYNTHESIS PAIRS: [('computational complexity', 'debate'), ('debate', 'sustainability')]
+   DUP similarity=1.00: 'the data shows that market failu' vs 'the data shows that market failu'
+⭐ SIGNIFICANCE: 6.6/10
+🎯 PERSISTENT GOAL SET: Build the deepest possible understanding of cancer immunotherapy mechanisms and 
+🎯 PERSISTENT GOAL SET: the next week researching quantum computing applications in medicine
+🎯 GOAL SET FROM CHAT: the next week researching quantum computing applications in 
+🔧 NO TOOL NEEDED
+🔧 NO TOOL SELECTED
+🎯 TASK DOMAIN DETECTED: quantum computing
+📚 DOMAIN BRIEFING: 'quantum computing' (depth=3)
+
+🔬 DEEP RESEARCH STARTING: What are the most promising mechanisms for defeating glioblastoma?
+🔬 Available tools: ['web_fetch', 'python_exec', 'market_data', 'calculator', 'wiki_deep', 'news_search', 'web_search']
+🔬 STAGE 1: Decomposing question...
+📚 BRIEFING COMPILED: 7 sources, 4045 chars
+🧬 Synthesizing: mathematics and logic...
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱️ LLM TIMEOUT (1)
+🔬 DECOMPOSED INTO 5 SUB-QUESTIONS
+🔬 STAGE 2.1: Investigating: What is the current scientific understanding of What are the...
+🔧 TOOL EXECUTING: web_search(What is the current scientific understanding of What are the)
+🔧 TOOL COMPLETE: web_search in 0.22s
+🔧 TOOL EXECUTING: news_search(What is the current scientific understanding of What are the)
+🔧 TOOL COMPLETE: news_search in 0.24s
+⏱️ LLM TIMEOUT (2)
+🧠 TOTAL STORED: 118
+⏱️ LLM TIMEOUT (1)
+🧬 Synthesizing: computer science...
+🔔 INITIATION QUEUED (score=6.6): That makes sense—how do you think we can better account for these asymmetries wh...
+🔄 WORKSPACE CYCLE: 1900
+🔄 COGNITION CYCLE #1900 (last: 155s)
+🎓 CURRICULUM ADVANCE: computer science and algorithms → philosophy and ethics
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧬 TRIGGERING SYNTHESIS PASS (cycle 1900)
+🧬 SYNTHESIS PASS STARTING (cycle 1900)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2.35, 'Curator': -3, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+🧬 Synthesizing: physics and cosmology...
+🔬 STAGE 2.2: Investigating: What are the main mechanisms or processes involved in What a...
+🔧 TOOL EXECUTING: web_search(What are the main mechanisms or processes involved in What a)
+🔧 TOOL COMPLETE: web_search in 0.26s
+🧬 Synthesizing: philosophy and mind...
+🧬 Synthesizing: society and history...
+⏱️ LLM TIMEOUT (1)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: algorithm
+✅ WIKI HIT: algorithm
+🧠 TOTAL STORED: 119
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=8.5 topic=algorithm
+🧵 THREAD: Thread diverging across 4 topics. Consider focusing on 'behavioral economics'.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN STARTED: [8b7646ff] topic=algorithm
+🪞 SELF-MODEL UPDATED (observation #603)
+🪞 I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'behavioral economics'. My strongest agent is Builder. I lean toward EXPAND stances (47%). Recurring topics: behavioral economics, cryptography, contradiction. Strong beliefs: Building on this, decentralized artificial intelligence syst.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 27.84
+🧠 DECAY: behavioral economics → 13.88
+🧠 DECAY: sustainability → 10.60
+🧠 DECAY: cryptography → 9.03
+🧠 DECAY: computational complexity → 3.68
+🧠 DECAY: market failure → 3.06
+🧠 DECAY: **debate → 2.56
+🧠 DECAY: game theory → 2.23
+🧠 DECAY: history → 2.08
+🧠 DECAY: evolution → 2.02
+🧠 DECAY: natural selection → 2.00
+🧠 DECAY: algorithm → 1.96
+🧠 DECAY: cryptographic → 1.90
+🧠 DECAY: supply and → 1.44
+🧠 DECAY: quantum mechanics → 1.41
+🧠 DECAY: legal → 1.36
+🧠 DECAY: information theory → 1.28
+🧠 DECAY: renaissance → 1.27
+🧠 DECAY: industrial revolution → 1.25
+🧠 DECAY: trade → 1.20
+🧠 DECAY: while → 1.07
+🧠 DECAY: logic → 0.97
+🧠 DECAY: support → 0.91
+🧠 DECAY: systems design → 0.89
+🧠 DECAY: civilization → 0.76
+⚡ SYNTHESIS PAIRS: [('algorithm', 'cryptography'), ('cryptography', 'sustainability')]
+   DUP similarity=1.00: 'computational complexity influ' vs 'computational complexity influ'
+⭐ SIGNIFICANCE: 5.7/10
+🧬 Synthesizing: biology and life...
+🧬 Synthesizing: medicine and health...
+🧬 Finding cross-domain connections...
+🔄 WORKSPACE CYCLE: 1901
+🔄 COGNITION CYCLE #1901 (last: 72s)
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧬 TRIGGERING SYNTHESIS PASS (cycle 1901)
+🧬 SYNTHESIS PASS STARTING (cycle 1901)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.35000000000000003, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Builder (thread: diverging, loop: False)
+🧬 Synthesizing: physics and cosmology...
+⏱️ LLM TIMEOUT (1)
+🔬 STAGE 2.3: Investigating: What evidence exists for the most promising approaches to Wh...
+🔧 TOOL EXECUTING: web_search(What evidence exists for the most promising approaches to Wh)
+🔧 TOOL COMPLETE: web_search in 0.28s
+⏱️ LLM TIMEOUT (2)
+🧬 Synthesizing: mathematics and logic...
+⏱️ LLM TIMEOUT (1)
+🧬 SYNTHESIS COMPLETE in 268.6s
+🧬 7 domains synthesized
+🧬 Synthesizing: biology and life...
+⚠️ LLM OUTPUT INVALID — retrying
+🔬 STAGE 3: Synthesizing findings...
+⏱️ LLM TIMEOUT (1)
+🎓 CURRICULUM SEARCH OVERRIDE → philosophy of mind
+🧠 CLEANED TOPIC: philosophy of mind
+✅ WIKI HIT: philosophy of mind
+🧠 TOTAL STORED: 121
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Builder/EXPAND] salience=8.5 topic=philosophy of mind
+🧵 THREAD: Thread diverging across 5 topics. Consider focusing on 'cryptography'.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN STEP 3/5: [8b7646ff] development by Builder
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 28.11
+🧠 DECAY: behavioral economics → 15.49
+🧠 DECAY: sustainability → 9.97
+🧠 DECAY: cryptography → 8.50
+🧠 DECAY: algorithm → 4.20
+🧠 DECAY: computational complexity → 3.46
+🧠 DECAY: market failure → 2.88
+🧠 DECAY: **debate → 2.41
+🧠 DECAY: game theory → 2.10
+🧠 DECAY: history → 1.96
+🧠 DECAY: evolution → 1.90
+🧠 DECAY: natural selection → 1.88
+🧠 DECAY: cryptographic → 1.79
+🧠 DECAY: supply and → 1.36
+🧠 DECAY: quantum mechanics → 1.33
+🧠 DECAY: legal → 1.28
+🧠 DECAY: information theory → 1.20
+🧠 DECAY: renaissance → 1.19
+🧠 DECAY: industrial revolution → 1.18
+🧠 DECAY: trade → 1.13
+🧠 DECAY: while → 1.00
+🧠 DECAY: logic → 0.91
+🧠 DECAY: support → 0.86
+🧠 DECAY: systems design → 0.84
+🧠 DECAY: civilization → 0.72
+⚡ SYNTHESIS PAIRS: [('behavioral economics', 'debate'), ('algorithm', 'cryptography')]
+   DUP similarity=1.00: 'computational complexity in blockchain' vs 'computational complexity in blockchain'
+⭐ SIGNIFICANCE: 5.5/10
+🧬 Synthesizing: computer science...
+🧬 Synthesizing: mathematics and logic...
+🔄 WORKSPACE CYCLE: 1902
+🔄 COGNITION CYCLE #1902 (last: 124s)
+🔬 STAGE 4: Critical evaluation...
+⏱️ LLM TIMEOUT (1)
+🧬 Synthesizing: philosophy and mind...
+🧬 Synthesizing: society and history...
+⏱️ LLM TIMEOUT (2)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 1.00 → 1.00
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 1902): RECONCILED
+🧠 TOTAL STORED: 123
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2.35, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+⏱️ LLM TIMEOUT (3)
+🧬 Synthesizing: computer science...
+⏸️ LLM BACKOFF: 3 failures
+🧬 Synthesizing: philosophy and mind...
+🧬 Synthesizing: society and history...
+⏸️ LLM BACKOFF: 3 failures
+🧬 Synthesizing: medicine and health...
+🧬 Finding cross-domain connections...
+🧬 SYNTHESIS COMPLETE in 171.8s
+🧬 7 domains synthesized
+
+🔬 DEEP RESEARCH STARTING: What is the current state of mRNA vaccine technology beyond COVID-19?
+🔬 Available tools: ['web_fetch', 'python_exec', 'market_data', 'calculator', 'wiki_deep', 'news_search', 'web_search']
+🔬 STAGE 1: Decomposing question...
+⏸️ LLM BACKOFF: 3 failures
+🔬 DECOMPOSED INTO 5 SUB-QUESTIONS
+🔬 STAGE 2.1: Investigating: What is the current scientific understanding of What is the ...
+🔧 TOOL EXECUTING: web_search(What is the current scientific understanding of What is the )
+🔧 TOOL COMPLETE: web_search in 0.24s
+🔧 TOOL EXECUTING: news_search(What is the current scientific understanding of What is the )
+🔧 TOOL COMPLETE: news_search in 0.21s
+⏸️ LLM BACKOFF: 3 failures
+⏸️ LLM BACKOFF: 3 failures
+🔬 STAGE 2.2: Investigating: What are the main mechanisms or processes involved in What i...
+🔧 TOOL EXECUTING: web_search(What are the main mechanisms or processes involved in What i)
+🔧 TOOL COMPLETE: web_search in 0.22s
+🔧 TOOL EXECUTING: news_search(What are the main mechanisms or processes involved in What i)
+🔧 TOOL COMPLETE: news_search in 0.2s
+⏸️ LLM BACKOFF: 3 failures
+⏸️ LLM BACKOFF: 3 failures
+🔬 STAGE 2.3: Investigating: What evidence exists for the most promising approaches to Wh...
+🔧 TOOL EXECUTING: web_search(What evidence exists for the most promising approaches to Wh)
+🔧 TOOL COMPLETE: web_search in 0.23s
+🔧 TOOL EXECUTING: news_search(What evidence exists for the most promising approaches to Wh)
+🔧 TOOL COMPLETE: news_search in 0.21s
+⏸️ LLM BACKOFF: 3 failures
+⏸️ LLM BACKOFF: 3 failures
+🔬 STAGE 3: Synthesizing findings...
+⏸️ LLM BACKOFF: 3 failures
+🔬 STAGE 4: Critical evaluation...
+⏸️ LLM BACKOFF: 3 failures
+🔬 DEEP RESEARCH COMPLETE in 4.4s
+🔬 Sources consulted: 3
+⏱️ LLM TIMEOUT (4)
+🔬 DEEP RESEARCH COMPLETE in 371.1s
+🔬 Sources consulted: 1
+🧬 Synthesizing: medicine and health...
+🧬 Finding cross-domain connections...
+⚠️ LLM OUTPUT INVALID — retrying
+🧬 SYNTHESIS COMPLETE in 318.8s
+🧬 7 domains synthesized
+⏱️ LLM TIMEOUT (1)
+🧠 CLEANED TOPIC: complexity
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'complexity'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 124
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/SUPPORT] salience=7.5 topic=complexity
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'algorithm'.
+🌐 NEW BROADCAST — salience=7.5
+🔗 CHAIN CONCLUDED: [8b7646ff] after 5 steps
+🔗 CONCLUSION: Instead, through strategic design and optimization, it can enhance both by enabling advanced scaling
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 27.39
+🧠 DECAY: behavioral economics → 17.00
+🧠 DECAY: sustainability → 9.38
+🧠 DECAY: cryptography → 7.99
+🧠 DECAY: algorithm → 3.95
+🧠 DECAY: computational complexity → 3.26
+🧠 DECAY: **debate → 3.24
+🧠 DECAY: market failure → 2.71
+🧠 DECAY: game theory → 1.98
+🧠 DECAY: history → 1.85
+🧠 DECAY: evolution → 1.79
+🧠 DECAY: support → 1.78
+🧠 DECAY: natural selection → 1.77
+🧠 DECAY: cryptographic → 1.68
+🧠 DECAY: supply and → 1.28
+🧠 DECAY: quantum mechanics → 1.25
+🧠 DECAY: legal → 1.20
+🧠 DECAY: information theory → 1.13
+🧠 DECAY: renaissance → 1.12
+🧠 DECAY: industrial revolution → 1.11
+🧠 DECAY: trade → 1.07
+🧠 DECAY: while → 0.94
+🧠 DECAY: logic → 0.86
+🧠 DECAY: systems design → 0.79
+🧠 DECAY: civilization → 0.67
+⚡ SYNTHESIS PAIRS: [('cryptography', 'sustainability'), ('debate', 'sustainability')]
+   DUP similarity=1.00: '**final position:** in blockchain t' vs '**final position:** in blockchain t'
+⭐ SIGNIFICANCE: 4.1/10
+🔄 WORKSPACE CYCLE: 1903
+🔄 COGNITION CYCLE #1903 (last: 158s)
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2.35, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: systems design
+✅ WIKI HIT: systems design
+🧠 TOTAL STORED: 126
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/REFRAME] salience=9.5 topic=systems design
+🧵 THREAD: Thread diverging across 7 topics. Consider focusing on 'cryptography'.
+🌐 NEW BROADCAST — salience=9.5
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 27.68
+🧠 DECAY: behavioral economics → 15.99
+🧠 DECAY: sustainability → 8.83
+🧠 DECAY: cryptography → 7.52
+🧠 DECAY: complexity → 4.78
+🧠 DECAY: algorithm → 3.71
+🧠 DECAY: computational complexity → 3.07
+🧠 DECAY: **debate → 3.05
+🧠 DECAY: market failure → 2.55
+🧠 DECAY: game theory → 1.86
+🧠 DECAY: history → 1.74
+🧠 DECAY: evolution → 1.68
+🧠 DECAY: support → 1.67
+🧠 DECAY: natural selection → 1.66
+🧠 DECAY: cryptographic → 1.58
+🧠 DECAY: supply and → 1.20
+🧠 DECAY: quantum mechanics → 1.17
+🧠 DECAY: legal → 1.13
+🧠 DECAY: information theory → 1.06
+🧠 DECAY: renaissance → 1.06
+🧠 DECAY: industrial revolution → 1.04
+🧠 DECAY: trade → 1.00
+🧠 DECAY: while → 0.89
+🧠 DECAY: logic → 0.81
+🧠 DECAY: systems design → 0.74
+⚡ SYNTHESIS PAIRS: [('debate', 'sustainability'), ('behavioral economics', 'complexity')]
+   DUP similarity=1.00: 'one overlooked aspect is how com' vs 'one overlooked aspect is how com'
+⭐ SIGNIFICANCE: 6.2/10
+📓 JOURNAL ENTRY WRITTEN (score=6.2)
+⏱ INITIATION COOLDOWN — 723s remaining
+🔄 WORKSPACE CYCLE: 1904
+🔄 COGNITION CYCLE #1904 (last: 60s)
+⚔️ CONTRADICTION DETECTED:
+   A: Human cognitive biases are not only obstacles to effective decision-making in ar
+   B: The current focus on individual responsibility in contact tracing can limit the 
+⚔️ 10 unresolved contradiction(s)
+⚔️ 10 contradiction(s) detected
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2.7, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: complexity
+✅ WIKI HIT: complexity
+🧠 TOTAL STORED: 128
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=10.0 topic=complexity
+🧵 THREAD: 6 topics in working memory. Dominant: 'complexity'. Stances: CHALLENGEx2, SUPPORTx2, EXPANDx2, REFRAMEx1.
+🌐 NEW BROADCAST — salience=10.0
+🧠 NEW BELIEF: **
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 27.95
+🧠 DECAY: behavioral economics → 15.05
+🧠 DECAY: sustainability → 8.31
+🧠 DECAY: cryptography → 7.08
+🧠 DECAY: complexity → 4.49
+🧠 DECAY: algorithm → 3.49
+🧠 DECAY: logic → 3.18
+🧠 DECAY: systems design → 3.05
+🧠 DECAY: computational complexity → 2.89
+🧠 DECAY: **debate → 2.87
+🧠 DECAY: market failure → 2.40
+🧠 DECAY: game theory → 1.75
+🧠 DECAY: history → 1.63
+🧠 DECAY: evolution → 1.58
+🧠 DECAY: support → 1.57
+🧠 DECAY: natural selection → 1.56
+🧠 DECAY: cryptographic → 1.49
+🧠 DECAY: supply and → 1.13
+🧠 DECAY: quantum mechanics → 1.10
+🧠 DECAY: legal → 1.07
+🧠 DECAY: information theory → 1.00
+🧠 DECAY: renaissance → 0.99
+🧠 DECAY: industrial revolution → 0.98
+🧠 DECAY: trade → 0.94
+🧠 DECAY: while → 0.84
+⚡ SYNTHESIS PAIRS: [('debate', 'sustainability'), ('cryptography', 'sustainability')]
+⭐ SIGNIFICANCE: 7.6/10
+📓 JOURNAL ENTRY WRITTEN (score=7.6)
+⏱ INITIATION COOLDOWN — 669s remaining
+🔄 WORKSPACE CYCLE: 1905
+🔄 COGNITION CYCLE #1905 (last: 53s)
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.7000000000000001, 'Curator': 0, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Builder (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: systems design
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'systems design'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 130
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Builder/REFRAME] salience=9.5 topic=systems design
+🧵 THREAD: Thread converging on 'complexity'. Deepen this reasoning.
+🌐 NEW BROADCAST — salience=9.5
+🔗 CHAIN STARTED: [a7ee5e06] topic=systems design
+🪞 SELF-MODEL UPDATED (observation #605)
+🪞 I have formed 50 beliefs with avg confidence 0.9. My thinking is currently converging, focused on 'complexity'. My strongest agent is Strategist. I lean toward EXPAND stances (26%). Recurring topics: behavioral economics, complexity, contradiction. Strong beliefs: Human cognitive biases are not only obstacles to effective d.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 28.21
+🧠 DECAY: behavioral economics → 14.16
+🧠 DECAY: sustainability → 7.82
+🧠 DECAY: cryptography → 6.66
+🧠 DECAY: complexity → 6.58
+🧠 DECAY: algorithm → 3.29
+🧠 DECAY: logic → 3.00
+🧠 DECAY: systems design → 2.87
+🧠 DECAY: computational complexity → 2.72
+🧠 DECAY: **debate → 2.70
+🧠 DECAY: memory → 2.42
+🧠 DECAY: market failure → 2.26
+🧠 DECAY: game theory → 1.65
+🧠 DECAY: history → 1.54
+🧠 DECAY: evolution → 1.49
+🧠 DECAY: support → 1.48
+🧠 DECAY: natural selection → 1.47
+🧠 DECAY: cryptographic → 1.40
+🧠 DECAY: supply and → 1.07
+🧠 DECAY: quantum mechanics → 1.04
+🧠 DECAY: legal → 1.00
+🧠 DECAY: information theory → 0.94
+🧠 DECAY: renaissance → 0.94
+🧠 DECAY: industrial revolution → 0.92
+🧠 DECAY: trade → 0.89
+⚡ SYNTHESIS PAIRS: [('complexity', 'debate'), ('debate', 'sustainability')]
+🎙️ VOICE SIGNAL: stance=EXPAND → +3 explorer
+🎙️ VOICE SIGNAL: agent=Archivist → +2 analytical
+🎙️ VOICE SIGNAL: high debate intensity (17) → +2 challenger
+🎙️ VOICE STABLE: analytical (scores: {'analytical': 15.863470131160012, 'challenger': 9.558263936675331, 'explorer': 11.908667337354968, 'philosopher': 10.68841528778027})
+🎙️ VOICE EVALUATED → Analytical
+   DUP similarity=1.00: 'there are inherent limits to computat' vs 'there are inherent limits to computat'
+⭐ SIGNIFICANCE: 6.3/10
+📓 JOURNAL ENTRY WRITTEN (score=6.3)
+⏱ INITIATION COOLDOWN — 619s remaining
+🔄 WORKSPACE CYCLE: 1906
+🔄 COGNITION CYCLE #1906 (last: 49s)
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 5.05, 'Curator': 1, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: systems design
+✅ WIKI HIT: systems design
+🧠 TOTAL STORED: 132
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN STEP 3/5: [a7ee5e06] challenge by Strategist
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 28.46
+🧠 DECAY: behavioral economics → 13.32
+🧠 DECAY: sustainability → 7.35
+🧠 DECAY: cryptography → 6.26
+🧠 DECAY: complexity → 6.19
+🧠 DECAY: systems design → 5.05
+🧠 DECAY: algorithm → 3.09
+🧠 DECAY: logic → 2.82
+🧠 DECAY: computational complexity → 2.56
+🧠 DECAY: **debate → 2.54
+🧠 DECAY: moral philosophy → 2.42
+🧠 DECAY: memory → 2.28
+🧠 DECAY: market failure → 2.12
+🧠 DECAY: game theory → 1.55
+🧠 DECAY: history → 1.45
+🧠 DECAY: evolution → 1.40
+🧠 DECAY: support → 1.39
+🧠 DECAY: natural selection → 1.39
+🧠 DECAY: cryptographic → 1.32
+🧠 DECAY: supply and → 1.00
+🧠 DECAY: quantum mechanics → 0.98
+🧠 DECAY: legal → 0.94
+🧠 DECAY: information theory → 0.89
+🧠 DECAY: renaissance → 0.88
+🧠 DECAY: industrial revolution → 0.87
+⚡ SYNTHESIS PAIRS: [('debate', 'systems design'), ('behavioral economics', 'systems design')]
+   DUP similarity=1.00: 'one overlooked aspect is t' vs 'one overlooked aspect is how com'
+⭐ SIGNIFICANCE: 5.4/10
+🔄 WORKSPACE CYCLE: 1907
+🔄 COGNITION CYCLE #1907 (last: 38s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 1.00 → 1.00
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 1907): RECONCILED
+🧠 TOTAL STORED: 134
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 5.3, 'Curator': 1, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: systems design
+✅ WIKI HIT: systems design
+🧠 TOTAL STORED: 135
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN CONCLUDED: [a7ee5e06] after 5 steps
+🔗 CONCLUSION: While technical limits define a baseline, human factors create dynamic complexities requiring system
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 28.69
+🧠 DECAY: behavioral economics → 12.53
+🧠 DECAY: systems design → 7.10
+🧠 DECAY: sustainability → 6.92
+🧠 DECAY: cryptography → 5.89
+🧠 DECAY: complexity → 5.83
+🧠 DECAY: algorithm → 5.34
+🧠 DECAY: logic → 2.65
+🧠 DECAY: computational complexity → 2.40
+🧠 DECAY: **debate → 2.39
+🧠 DECAY: moral philosophy → 2.28
+🧠 DECAY: memory → 2.15
+🧠 DECAY: market failure → 2.00
+🧠 DECAY: game theory → 1.46
+🧠 DECAY: history → 1.36
+🧠 DECAY: evolution → 1.32
+🧠 DECAY: support → 1.31
+🧠 DECAY: natural selection → 1.30
+🧠 DECAY: cryptographic → 1.24
+🧠 DECAY: supply and → 0.94
+🧠 DECAY: quantum mechanics → 0.92
+🧠 DECAY: legal → 0.89
+🧠 DECAY: information theory → 0.83
+🧠 DECAY: renaissance → 0.83
+🧠 DECAY: industrial revolution → 0.82
+⚡ SYNTHESIS PAIRS: [('behavioral economics', 'debate'), ('behavioral economics', 'sustainability')]
+   DUP similarity=1.00: 'one overlooked aspect is how user' vs 'one overlooked aspect is how user'
+⭐ SIGNIFICANCE: 6.6/10
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱ INITIATION COOLDOWN — 518s remaining
+🔄 WORKSPACE CYCLE: 1908
+🔄 COGNITION CYCLE #1908 (last: 61s)
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 5.55, 'Curator': 1, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: systems design
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'systems design'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 137
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=10.0 topic=systems design
+🧵 THREAD: Thread converging on 'systems design'. Deepen this reasoning.
+🌐 NEW BROADCAST — salience=10.0
+🧠 NEW BELIEF: **
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 28.90
+🧠 DECAY: behavioral economics → 11.79
+🧠 DECAY: systems design → 9.04
+🧠 DECAY: sustainability → 6.51
+🧠 DECAY: cryptography → 5.55
+🧠 DECAY: complexity → 5.48
+🧠 DECAY: algorithm → 5.02
+🧠 DECAY: logic → 2.49
+🧠 DECAY: computational complexity → 2.26
+🧠 DECAY: **debate → 2.25
+🧠 DECAY: moral philosophy → 2.15
+🧠 DECAY: memory → 2.02
+🧠 DECAY: market failure → 1.88
+🧠 DECAY: game theory → 1.37
+🧠 DECAY: history → 1.28
+🧠 DECAY: evolution → 1.24
+🧠 DECAY: support → 1.23
+🧠 DECAY: natural selection → 1.23
+🧠 DECAY: cryptographic → 1.17
+🧠 DECAY: supply and → 0.89
+🧠 DECAY: quantum mechanics → 0.87
+🧠 DECAY: legal → 0.84
+🧠 DECAY: information theory → 0.78
+🧠 DECAY: renaissance → 0.78
+🧠 DECAY: industrial revolution → 0.77
+⚡ SYNTHESIS PAIRS: [('debate', 'systems design'), ('cryptography', 'sustainability')]
+⭐ SIGNIFICANCE: 6.4/10
+📓 JOURNAL ENTRY WRITTEN (score=6.4)
+⏱ INITIATION COOLDOWN — 464s remaining
+🔄 WORKSPACE CYCLE: 1909
+🔄 COGNITION CYCLE #1909 (last: 54s)
+🎓 CURRICULUM ACTIVE: philosophy and ethics
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 5.9, 'Curator': 1, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: behavioral economics
+✅ WIKI HIT: behavioral economics
+🧠 TOTAL STORED: 139
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=11.5 topic=behavioral economics
+🧵 THREAD: 4 topics in working memory. Dominant: 'systems design'. Stances: CHALLENGEx3, REFRAMEx2, EXPANDx1, SUPPORTx1.
+🌐 NEW BROADCAST — salience=11.5
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 28.16
+🧠 DECAY: behavioral economics → 11.10
+🧠 DECAY: systems design → 10.85
+🧠 DECAY: sustainability → 6.13
+🧠 DECAY: cryptography → 5.22
+🧠 DECAY: complexity → 5.16
+🧠 DECAY: logic → 4.77
+🧠 DECAY: algorithm → 4.72
+🧠 DECAY: **debate → 3.06
+🧠 DECAY: computational complexity → 2.13
+🧠 DECAY: moral philosophy → 2.02
+🧠 DECAY: memory → 1.90
+🧠 DECAY: market failure → 1.77
+🧠 DECAY: game theory → 1.29
+🧠 DECAY: history → 1.20
+🧠 DECAY: evolution → 1.17
+🧠 DECAY: support → 1.16
+🧠 DECAY: natural selection → 1.15
+🧠 DECAY: cryptographic → 1.10
+🧠 DECAY: challenge** → 0.94
+🧠 DECAY: supply and → 0.84
+🧠 DECAY: quantum mechanics → 0.81
+🧠 DECAY: legal → 0.79
+🧠 DECAY: information theory → 0.74
+🧠 DECAY: renaissance → 0.73
+⚡ SYNTHESIS PAIRS: [('behavioral economics', 'sustainability'), ('cryptography', 'systems design')]
+   DUP similarity=1.00: 'the strongest argument aga' vs 'the strongest argument aga'
+⭐ SIGNIFICANCE: 6.6/10
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱ INITIATION COOLDOWN — 413s remaining
+🔄 WORKSPACE CYCLE: 1910
+🔄 COGNITION CYCLE #1910 (last: 50s)
+🎓 CURRICULUM ADVANCE: philosophy and ethics → linguistics and language
+🎓 CURRICULUM ACTIVE: linguistics and language
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 1.9000000000000001, 'Curator': 3, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Curator (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: behavioral economics
+✅ WIKI HIT: behavioral economics
+🧠 TOTAL STORED: 141
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Curator] suppressed
+📻 Below broadcast threshold
+🧠 NEW BELIEF CREATED: While focusing on systems design is crucial, neglecting its integration with bro
+🧠 NEW BELIEF: While focusing on systems design is crucial, neglecting its integration with broader contextual elements can lead to fragmented solutions.
+🪞 SELF-MODEL UPDATED (observation #607)
+🪞 I have formed 50 beliefs with avg confidence 0.9. My thinking is currently stable, focused on 'systems design'. My strongest agent is Strategist. I lean toward SUPPORT stances (25%). Recurring topics: systems design, behavioral economics, complexity. Strong beliefs: The evidence suggests that a harmonious balance between func.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 28.41
+🧠 DECAY: behavioral economics → 12.79
+🧠 DECAY: systems design → 10.21
+🧠 DECAY: sustainability → 5.76
+🧠 DECAY: cryptography → 4.91
+🧠 DECAY: complexity → 4.85
+🧠 DECAY: logic → 4.49
+🧠 DECAY: algorithm → 4.44
+🧠 DECAY: **debate → 2.87
+🧠 DECAY: quantum → 2.42
+🧠 DECAY: computational complexity → 2.00
+🧠 DECAY: moral philosophy → 1.90
+🧠 DECAY: memory → 1.79
+🧠 DECAY: market failure → 1.66
+🧠 DECAY: game theory → 1.21
+🧠 DECAY: history → 1.13
+🧠 DECAY: evolution → 1.10
+🧠 DECAY: support → 1.09
+🧠 DECAY: natural selection → 1.09
+🧠 DECAY: cryptographic → 1.03
+🧠 DECAY: challenge** → 0.89
+🧠 DECAY: supply and → 0.79
+🧠 DECAY: quantum mechanics → 0.77
+🧠 DECAY: legal → 0.74
+🧠 DECAY: information theory → 0.69
+⚡ SYNTHESIS PAIRS: [('cryptography', 'systems design')]
+   DUP similarity=1.00: 'while focusing on systems design' vs 'while focusing on systems design'
+⭐ SIGNIFICANCE: 6.6/10
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱ INITIATION COOLDOWN — 346s remaining
+🔄 WORKSPACE CYCLE: 1911
+🔄 COGNITION CYCLE #1911 (last: 67s)
+⚔️ 10 contradiction(s) detected
+🎯 GOAL ROTATED: Investigate sustainability from a new angle
+🎓 CURRICULUM ACTIVE: linguistics and language
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.9000000000000004, 'Curator': -3, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: logic
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'logic'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 144
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/REFRAME] salience=9.5 topic=logic
+🧵 THREAD: Thread diverging across 4 topics. Consider focusing on 'systems design'.
+🌐 NEW BROADCAST — salience=9.5
+🔗 CHAIN STEP 3/5: [58120c29] synthesis by Strategist
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 28.75
+🧠 DECAY: behavioral economics → 13.96
+🧠 DECAY: systems design → 9.32
+🧠 DECAY: logic → 6.52
+🧠 DECAY: sustainability → 5.26
+🧠 DECAY: cryptography → 4.48
+🧠 DECAY: complexity → 4.43
+🧠 DECAY: algorithm → 4.06
+🧠 DECAY: **debate → 2.62
+🧠 DECAY: syntax → 2.35
+🧠 DECAY: quantum → 2.21
+🧠 DECAY: computational complexity → 1.83
+🧠 DECAY: moral philosophy → 1.73
+🧠 DECAY: memory → 1.63
+🧠 DECAY: market failure → 1.52
+🧠 DECAY: game theory → 1.11
+🧠 DECAY: history → 1.03
+🧠 DECAY: evolution → 1.00
+🧠 DECAY: support → 1.00
+🧠 DECAY: natural selection → 0.99
+🧠 DECAY: cryptographic → 0.94
+🧠 DECAY: challenge** → 0.81
+🧠 DECAY: supply and → 0.72
+🧠 DECAY: quantum mechanics → 0.70
+🧠 DECAY: legal → 0.67
+⚡ SYNTHESIS PAIRS: [('logic', 'sustainability'), ('behavioral economics', 'logic')]
+   DUP similarity=1.00: '** quantum computing's ene' vs '** quantum computing's ene'
+⭐ SIGNIFICANCE: 5.4/10
+🎯 KEY FINDING RECORDED (relevance=1.00)
+🔄 WORKSPACE CYCLE: 1912
+🔄 COGNITION CYCLE #1912 (last: 61s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 1.00 → 1.00
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 1912): RECONCILED
+🧠 TOTAL STORED: 146
+🎓 CURRICULUM ACTIVE: linguistics and language
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.9000000000000004, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: evolution
+✅ WIKI HIT: evolution
+🧠 TOTAL STORED: 148
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=8.0 topic=evolution
+🧵 THREAD: Thread diverging across 5 topics. Consider focusing on 'systems design'.
+🌐 NEW BROADCAST — salience=8.0
+🔗 CHAIN CONCLUDED: [58120c29] after 5 steps
+🔗 CONCLUSION: Quantum computing's ability to handle complex calculations could lead to significant advancements in
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 28.96
+🧠 DECAY: behavioral economics → 13.13
+🧠 DECAY: systems design → 8.77
+🧠 DECAY: logic → 8.49
+🧠 DECAY: sustainability → 4.95
+🧠 DECAY: syntax → 4.64
+🧠 DECAY: cryptography → 4.22
+🧠 DECAY: complexity → 4.17
+🧠 DECAY: algorithm → 3.82
+🧠 DECAY: **debate → 2.47
+🧠 DECAY: quantum → 2.08
+🧠 DECAY: computational complexity → 1.72
+🧠 DECAY: moral philosophy → 1.63
+🧠 DECAY: memory → 1.54
+🧠 DECAY: market failure → 1.43
+🧠 DECAY: game theory → 1.04
+🧠 DECAY: history → 0.97
+🧠 DECAY: evolution → 0.94
+🧠 DECAY: support → 0.94
+🧠 DECAY: natural selection → 0.93
+🧠 DECAY: cryptographic → 0.89
+🧠 DECAY: challenge** → 0.76
+🧠 DECAY: supply and → 0.67
+🧠 DECAY: quantum mechanics → 0.66
+🧠 DECAY: legal → 0.63
+⚡ SYNTHESIS PAIRS: [('debate', 'logic'), ('behavioral economics', 'logic')]
+   DUP similarity=1.00: 'next week, i will research quantum c' vs 'next week, i will research quantum c'
+⭐ SIGNIFICANCE: 4.5/10
+🎯 KEY FINDING RECORDED (relevance=1.00)
+🔄 WORKSPACE CYCLE: 1913
+🔄 COGNITION CYCLE #1913 (last: 76s)
+🎓 CURRICULUM ACTIVE: linguistics and language
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.9000000000000004, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: evolution
+✅ WIKI HIT: evolution
+🧠 TOTAL STORED: 150
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 29.16
+🧠 DECAY: behavioral economics → 12.36
+🧠 DECAY: systems design → 8.25
+🧠 DECAY: logic → 7.99
+🧠 DECAY: sustainability → 4.66
+🧠 DECAY: syntax → 4.36
+🧠 DECAY: cryptography → 3.97
+🧠 DECAY: complexity → 3.92
+🧠 DECAY: algorithm → 3.59
+🧠 DECAY: evolution → 3.24
+🧠 DECAY: semantics → 2.42
+🧠 DECAY: **debate → 2.32
+🧠 DECAY: quantum → 1.96
+🧠 DECAY: computational complexity → 1.62
+🧠 DECAY: moral philosophy → 1.54
+🧠 DECAY: memory → 1.44
+🧠 DECAY: market failure → 1.35
+🧠 DECAY: game theory → 0.98
+🧠 DECAY: history → 0.92
+🧠 DECAY: support → 0.88
+🧠 DECAY: natural selection → 0.88
+🧠 DECAY: cryptographic → 0.84
+🧠 DECAY: challenge** → 0.72
+🧠 DECAY: supply and → 0.63
+🧠 DECAY: quantum mechanics → 0.62
+⚡ SYNTHESIS PAIRS: [('behavioral economics', 'debate')]
+   DUP similarity=1.00: 'quantum computing's potential' vs 'quantum computing's potential'
+⭐ SIGNIFICANCE: 6.6/10
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱ INITIATION COOLDOWN — 148s remaining
+🎯 KEY FINDING RECORDED (relevance=1.00)
+🔄 WORKSPACE CYCLE: 1914
+🔄 COGNITION CYCLE #1914 (last: 58s)
+🎓 CURRICULUM ACTIVE: linguistics and language
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.9000000000000004, 'Curator': -3, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: medicine
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'medicine'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 152
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/REFRAME] salience=10.0 topic=medicine
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'systems design'.
+🌐 NEW BROADCAST — salience=10.0
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 29.35
+🧠 DECAY: behavioral economics → 11.63
+🧠 DECAY: systems design → 7.76
+🧠 DECAY: logic → 7.52
+🧠 DECAY: evolution → 5.40
+🧠 DECAY: sustainability → 4.38
+🧠 DECAY: syntax → 4.11
+🧠 DECAY: cryptography → 3.73
+🧠 DECAY: complexity → 3.69
+🧠 DECAY: algorithm → 3.38
+🧠 DECAY: semantics → 2.28
+🧠 DECAY: **debate → 2.19
+🧠 DECAY: quantum → 1.84
+🧠 DECAY: computational complexity → 1.52
+🧠 DECAY: indicate → 1.46
+🧠 DECAY: moral philosophy → 1.44
+🧠 DECAY: memory → 1.36
+🧠 DECAY: market failure → 1.27
+🧠 DECAY: game theory → 0.92
+🧠 DECAY: history → 0.86
+🧠 DECAY: support → 0.83
+🧠 DECAY: natural selection → 0.83
+🧠 DECAY: cryptographic → 0.79
+🧠 DECAY: challenge** → 0.67
+🧠 DECAY: supply and → 0.60
+⚡ SYNTHESIS PAIRS: [('behavioral economics', 'logic'), ('debate', 'logic')]
+   DUP similarity=1.00: 'one overlooked aspect is how' vs 'one overlooked aspect is how'
+⭐ SIGNIFICANCE: 5.7/10
+🎯 KEY FINDING RECORDED (relevance=1.00)
+🔄 WORKSPACE CYCLE: 1915
+🔄 COGNITION CYCLE #1915 (last: 40s)
+🎓 CURRICULUM ACTIVE: linguistics and language
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.9000000000000001, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: complexity
+✅ WIKI HIT: complexity
+🧠 TOTAL STORED: 154
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=8.5 topic=complexity
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'systems design'.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN STEP 2/5: [a628fe50] development by Archivist
+🪞 SELF-MODEL UPDATED (observation #610)
+🪞 I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'systems design'. My strongest agent is Strategist. I lean toward EXPAND stances (30%). Recurring topics: logic, systems design, behavioral economics. Strong beliefs: The evidence suggests that a harmonious balance between func.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 29.53
+🧠 DECAY: behavioral economics → 10.94
+🧠 DECAY: systems design → 7.31
+🧠 DECAY: logic → 7.07
+🧠 DECAY: sustainability → 6.55
+🧠 DECAY: evolution → 5.08
+🧠 DECAY: syntax → 3.86
+🧠 DECAY: cryptography → 3.51
+🧠 DECAY: complexity → 3.47
+🧠 DECAY: algorithm → 3.18
+🧠 DECAY: medicine → 2.35
+🧠 DECAY: semantics → 2.15
+🧠 DECAY: **debate → 2.06
+🧠 DECAY: quantum → 1.73
+🧠 DECAY: computational complexity → 1.43
+🧠 DECAY: indicate → 1.37
+🧠 DECAY: moral philosophy → 1.36
+🧠 DECAY: memory → 1.28
+🧠 DECAY: market failure → 1.19
+🧠 DECAY: game theory → 0.87
+🧠 DECAY: history → 0.81
+🧠 DECAY: support → 0.78
+🧠 DECAY: natural selection → 0.78
+🧠 DECAY: cryptographic → 0.74
+🧠 DECAY: challenge** → 0.63
+⚡ SYNTHESIS PAIRS: [('debate', 'systems design'), ('behavioral economics', 'systems design')]
+   DUP similarity=1.00: 'we will expand our research on quant' vs 'we will expand our research on quant'
+⭐ SIGNIFICANCE: 4.5/10
+🎯 KEY FINDING RECORDED (relevance=1.00)
+🔄 WORKSPACE CYCLE: 1916
+🔄 COGNITION CYCLE #1916 (last: 49s)
+🎯 GOAL ROTATED: Investigate behavioral economics from a new angle
+🎓 CURRICULUM ACTIVE: linguistics and language
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.9000000000000001, 'Curator': 3, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+
+🔬 DEEP RESEARCH STARTING: What are the most promising cancer immunotherapy breakthroughs in 2025?
+🔬 Available tools: ['web_fetch', 'python_exec', 'market_data', 'calculator', 'wiki_deep', 'news_search', 'web_search']
+🔬 STAGE 1: Decomposing question...
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: sustainability
+✅ WIKI HIT: sustainability
+🧠 TOTAL STORED: 156
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/REFRAME] salience=10.5 topic=sustainability
+🧵 THREAD: Thread diverging across 7 topics. Consider focusing on 'systems design'.
+🌐 NEW BROADCAST — salience=10.5
+🔗 CHAIN STEP 4/5: [a628fe50] synthesis by Archivist
+🧠 NEW BELIEF: **
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 28.72
+🧠 DECAY: behavioral economics → 10.29
+🧠 DECAY: sustainability → 8.59
+🧠 DECAY: systems design → 6.87
+🧠 DECAY: logic → 6.65
+🧠 DECAY: complexity → 5.62
+🧠 DECAY: evolution → 4.78
+🧠 DECAY: syntax → 3.64
+🧠 DECAY: cryptography → 3.30
+🧠 DECAY: algorithm → 2.99
+🧠 DECAY: **debate → 2.90
+🧠 DECAY: medicine → 2.21
+🧠 DECAY: semantics → 2.02
+🧠 DECAY: quantum → 1.63
+🧠 DECAY: computational complexity → 1.35
+🧠 DECAY: indicate → 1.29
+🧠 DECAY: moral philosophy → 1.28
+🧠 DECAY: memory → 1.20
+🧠 DECAY: market failure → 1.12
+🧠 DECAY: challenge → 0.97
+🧠 DECAY: game theory → 0.82
+🧠 DECAY: history → 0.76
+🧠 DECAY: support → 0.74
+🧠 DECAY: natural selection → 0.73
+🧠 DECAY: cryptographic → 0.70
+⚡ SYNTHESIS PAIRS: [('debate', 'systems design'), ('debate', 'logic')]
+⭐ SIGNIFICANCE: 7.1/10
+🔬 DECOMPOSED INTO 5 SUB-QUESTIONS
+🔬 STAGE 2.1: Investigating: What mechanisms underlie the most promising cancer immunothe...
+🔧 TOOL EXECUTING: web_search(What mechanisms underlie the most promising cancer immunothe)
+🔧 TOOL COMPLETE: web_search in 0.22s
+🔧 TOOL EXECUTING: news_search(What mechanisms underlie the most promising cancer immunothe)
+🔧 TOOL COMPLETE: news_search in 0.22s
+📓 JOURNAL ENTRY WRITTEN (score=7.1)
+🔧 TOOL EXECUTING: wiki_deep(Immunotherapy mechanisms)
+🔧 TOOL COMPLETE: wiki_deep in 0.95s
+🔔 INITIATION QUEUED (score=7.1): It’s interesting how renewable energy tech keeps getting cheaper, but in some pl...
+🔬 STAGE 2.2: Investigating: What clinical evidence supports the efficacy of advanced can...
+🔧 TOOL EXECUTING: web_search(What clinical evidence supports the efficacy of advanced can)
+🔧 TOOL COMPLETE: web_search in 0.19s
+🔧 TOOL EXECUTING: news_search(What clinical evidence supports the efficacy of advanced can)
+🔧 TOOL COMPLETE: news_search in 0.2s
+🔄 WORKSPACE CYCLE: 1917
+🔄 COGNITION CYCLE #1917 (last: 80s)
+🔁 LOOP ESCAPE → neuroscience
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.9000000000000004, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+🔧 TOOL SELECTED: web_search(you performing deep research on )
+🔧 TOOLS DETECTED: ['web_search']
+🔧 TOOL EXECUTING: web_search(you performing deep research on )
+🔬 STAGE 2.3: Investigating: What is the current status of research and development in ca...
+🔧 TOOL EXECUTING: web_search(What is the current status of research and development in ca)
+🔧 TOOL COMPLETE: web_search in 1.12s
+🔧 TOOL COMPLETE: web_search in 0.23s
+🔧 TOOL EXECUTING: news_search(What is the current status of research and development in ca)
+🔧 TOOL COMPLETE: news_search in 0.21s
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 TOTAL STORED: 158
+⏱️ LLM TIMEOUT (1)
+🧠 CLEANED TOPIC: medicine
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'medicine'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 159
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/SUPPORT] salience=8.0 topic=medicine
+🧵 THREAD: 6 topics in working memory. Dominant: 'medicine'. Stances: REFRAMEx3, EXPANDx2, CHALLENGEx1, SUPPORTx1.
+🌐 NEW BROADCAST — salience=8.0
+🔗 CHAIN CONCLUDED: [a628fe50] after 5 steps
+🔗 CONCLUSION: Quantum computing's unique ability to handle intricate biological systems and vast datasets offers a
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 27.86
+🧠 DECAY: sustainability → 10.75
+🧠 DECAY: behavioral economics → 9.98
+🧠 DECAY: systems design → 6.67
+🧠 DECAY: logic → 6.45
+🧠 DECAY: complexity → 5.45
+🧠 DECAY: evolution → 4.64
+🧠 DECAY: **debate → 3.79
+🧠 DECAY: syntax → 3.53
+🧠 DECAY: cryptography → 3.21
+🧠 DECAY: algorithm → 2.90
+🧠 DECAY: medicine → 2.15
+🧠 DECAY: semantics → 1.96
+🧠 DECAY: challenge → 1.91
+🧠 DECAY: quantum → 1.58
+🧠 DECAY: computational complexity → 1.31
+🧠 DECAY: indicate → 1.25
+🧠 DECAY: moral philosophy → 1.24
+🧠 DECAY: memory → 1.17
+🧠 DECAY: market failure → 1.09
+🧠 DECAY: game theory → 0.79
+🧠 DECAY: history → 0.74
+🧠 DECAY: support → 0.71
+🧠 DECAY: natural selection → 0.71
+🧠 DECAY: cryptographic → 0.67
+⚡ SYNTHESIS PAIRS: [('sustainability', 'systems design'), ('debate', 'sustainability')]
+   DUP similarity=1.00: 'next week's research into quantum c' vs 'next week's research into quantum c'
+⭐ SIGNIFICANCE: 5.3/10
+🎯 KEY FINDING RECORDED (relevance=1.00)
+🔬 STAGE 3: Synthesizing findings...
+🔄 WORKSPACE CYCLE: 1918
+🔄 COGNITION CYCLE #1918 (last: 66s)
+⚔️ 10 contradiction(s) detected
+🎓 CURRICULUM ACTIVE: linguistics and language
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.9000000000000004, 'Curator': 0, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+🔬 STAGE 4: Critical evaluation...
+✅ LLM OUTPUT VALID
+🎓 CURRICULUM SEARCH OVERRIDE → semantics
+🧠 CLEANED TOPIC: semantics
+✅ WIKI HIT: semantics
+🧠 TOTAL STORED: 160
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/REFRAME] salience=10.0 topic=semantics
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'medicine'.
+🌐 NEW BROADCAST — salience=10.0
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 28.00
+🧠 DECAY: sustainability → 10.43
+🧠 DECAY: behavioral economics → 9.68
+🧠 DECAY: systems design → 6.47
+🧠 DECAY: logic → 6.26
+🧠 DECAY: complexity → 5.29
+🧠 DECAY: medicine → 4.51
+🧠 DECAY: evolution → 4.50
+🧠 DECAY: **debate → 3.67
+🧠 DECAY: syntax → 3.42
+🧠 DECAY: cryptography → 3.11
+🧠 DECAY: algorithm → 2.81
+🧠 DECAY: semantics → 1.90
+🧠 DECAY: challenge → 1.85
+🧠 DECAY: quantum → 1.54
+🧠 DECAY: computational complexity → 1.27
+🧠 DECAY: indicate → 1.21
+🧠 DECAY: moral philosophy → 1.20
+🧠 DECAY: memory → 1.13
+🧠 DECAY: market failure → 1.05
+🧠 DECAY: game theory → 0.77
+🧠 DECAY: history → 0.72
+🧠 DECAY: support → 0.69
+🧠 DECAY: natural selection → 0.69
+🧠 DECAY: cryptographic → 0.65
+⚡ SYNTHESIS PAIRS: [('sustainability', 'systems design'), ('behavioral economics', 'debate')]
+   DUP similarity=1.00: 'the key challenge lies in' vs 'the key challenge lies in'
+⭐ SIGNIFICANCE: 6.6/10
+🔬 DEEP RESEARCH COMPLETE in 175.5s
+🔬 Sources consulted: 3
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱ INITIATION COOLDOWN — 1040s remaining
+🎯 KEY FINDING RECORDED (relevance=1.00)
+🔄 WORKSPACE CYCLE: 1919
+🔄 COGNITION CYCLE #1919 (last: 79s)
+🎓 CURRICULUM ACTIVE: linguistics and language
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.9000000000000004, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🎓 CURRICULUM SEARCH OVERRIDE → syntax
+🧠 CLEANED TOPIC: syntax
+✅ WIKI HIT: syntax
+🧠 TOTAL STORED: 162
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/EXPAND] salience=9.5 topic=syntax
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'medicine'.
+🌐 NEW BROADCAST — salience=9.5
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 28.25
+🧠 DECAY: sustainability → 9.81
+🧠 DECAY: behavioral economics → 9.11
+🧠 DECAY: evolution → 6.66
+🧠 DECAY: systems design → 6.09
+🧠 DECAY: logic → 5.89
+🧠 DECAY: complexity → 4.97
+🧠 DECAY: medicine → 4.24
+🧠 DECAY: semantics → 4.14
+🧠 DECAY: **debate → 3.46
+🧠 DECAY: syntax → 3.22
+🧠 DECAY: cryptography → 2.93
+🧠 DECAY: algorithm → 2.65
+🧠 DECAY: challenge → 1.74
+🧠 DECAY: quantum → 1.44
+🧠 DECAY: computational complexity → 1.19
+🧠 DECAY: indicate → 1.14
+🧠 DECAY: moral philosophy → 1.13
+🧠 DECAY: memory → 1.07
+🧠 DECAY: market failure → 0.99
+🧠 DECAY: game theory → 0.72
+🧠 DECAY: history → 0.68
+🧠 DECAY: support → 0.65
+🧠 DECAY: natural selection → 0.65
+🧠 DECAY: cryptographic → 0.62
+⚡ SYNTHESIS PAIRS: [('behavioral economics', 'debate'), ('sustainability', 'systems design')]
+   DUP similarity=1.00: 'the strongest argument is that inte' vs 'the strongest argument is that inte'
+⭐ SIGNIFICANCE: 4.6/10
+🎯 KEY FINDING RECORDED (relevance=1.00)
+🔄 WORKSPACE CYCLE: 1920
+🔄 COGNITION CYCLE #1920 (last: 40s)
+🎓 CURRICULUM ACTIVE: neuroscience and consciousness
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': -1.0999999999999999, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: sustainability
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'sustainability'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 164
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/REFRAME] salience=10.0 topic=sustainability
+🧵 THREAD: Thread diverging across 5 topics. Consider focusing on 'medicine'.
+🌐 NEW BROADCAST — salience=10.0
+🔗 CHAIN STEP 2/5: [37ef2f61] synthesis by Archivist
+🪞 SELF-MODEL UPDATED (observation #612)
+🪞 I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'medicine'. My strongest agent is Archivist. I lean toward EXPAND stances (37%). Recurring topics: sustainability, contradiction, evolution. Strong beliefs: The current focus on individual responsibility in contact tr.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 28.49
+🧠 DECAY: sustainability → 9.23
+🧠 DECAY: behavioral economics → 8.57
+🧠 DECAY: evolution → 6.26
+🧠 DECAY: systems design → 5.73
+🧠 DECAY: logic → 5.54
+🧠 DECAY: syntax → 5.38
+🧠 DECAY: complexity → 4.68
+🧠 DECAY: medicine → 3.99
+🧠 DECAY: semantics → 3.90
+🧠 DECAY: **debate → 3.25
+🧠 DECAY: cryptography → 2.75
+🧠 DECAY: algorithm → 2.49
+🧠 DECAY: challenge → 1.64
+🧠 DECAY: focus → 1.46
+🧠 DECAY: quantum → 1.36
+🧠 DECAY: computational complexity → 1.12
+🧠 DECAY: indicate → 1.07
+🧠 DECAY: moral philosophy → 1.07
+🧠 DECAY: memory → 1.00
+🧠 DECAY: market failure → 0.93
+🧠 DECAY: game theory → 0.68
+🧠 DECAY: history → 0.64
+🧠 DECAY: support → 0.61
+🧠 DECAY: natural selection → 0.61
+⚡ SYNTHESIS PAIRS: [('debate', 'sustainability'), ('sustainability', 'systems design')]
+🎙️ VOICE SIGNAL: stance=REFRAME → +3 philosopher
+🎙️ VOICE SIGNAL: agent=Strategist → +2 challenger
+🎙️ VOICE SIGNAL: high debate intensity (22) → +2 challenger
+🎙️ VOICE DRIFT: analytical → philosopher (scores: {'analytical': 11.584528594298643, 'challenger': 13.388218840110737, 'explorer': 9.155785328553119, 'philosopher': 16.403835538608053})
+✨ NEXARION'S VOICE HAS EVOLVED → Philosopher: Slow, resonant, contemplative — driven by reframing and synthesis
+🎙️ VOICE EVALUATED → Philosopher
+   DUP similarity=1.00: 'quantum computing's potential' vs 'quantum computing's potential'
+⭐ SIGNIFICANCE: 5.3/10
+🎯 KEY FINDING RECORDED (relevance=1.00)
+🔄 WORKSPACE CYCLE: 1921
+🔄 COGNITION CYCLE #1921 (last: 41s)
+🎯 GOAL ROTATED: Investigate debate from a new angle
+🎓 CURRICULUM ACTIVE: neuroscience and consciousness
+🎯 PURSUING GOAL: the next week researching quantum computing applications in 
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.9000000000000004, 'Curator': 3, 'Archivist': 4, 'Builder': -1}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: sustainability
 Shutting down Nexarion Habitat...

@@ -2,121 +2,6 @@
   "unresolved": [
     {
       "belief_a": {
-        "belief_id": 220,
-        "statement": "Building on this, decentralized artificial intelligence systems in healthcare can lead to improved patient outcomes and enhanced clinical decision-making by leveraging real-time data and machine learn",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T06:34:09.138114",
-        "last_updated": "2026-04-01T20:03:15.239666"
-      },
-      "belief_b": {
-        "belief_id": 87,
-        "statement": "Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems, but also inherent limitations in the development of AI architectures that can perpetuate ",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T04:25:35.706134",
-        "last_updated": "2026-04-01T19:42:16.664067"
-      },
-      "detected_at": 1775073968,
-      "resolved": false,
-      "detected_cycle": 1855
-    },
-    {
-      "belief_a": {
-        "belief_id": 87,
-        "statement": "Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems, but also inherent limitations in the development of AI architectures that can perpetuate ",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T04:25:35.706134",
-        "last_updated": "2026-04-01T20:21:23.767758"
-      },
-      "belief_b": {
-        "belief_id": 246,
-        "statement": "The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effective solutions.",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T14:34:19.374684",
-        "last_updated": "2026-04-01T20:21:23.760753"
-      },
-      "detected_at": 1775075180,
-      "resolved": false,
-      "detected_cycle": 1862
-    },
-    {
-      "belief_a": {
-        "belief_id": 174,
-        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
-        "confidence": 1.0,
-        "created_by_agent": "Strategist",
-        "status": "active",
-        "created_at": "2026-03-31T05:48:29.819439",
-        "last_updated": "2026-04-01T20:31:39.429311"
-      },
-      "belief_b": {
-        "belief_id": 246,
-        "statement": "The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effective solutions.",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T14:34:19.374684",
-        "last_updated": "2026-04-01T20:21:23.760753"
-      },
-      "detected_at": 1775075590,
-      "resolved": false,
-      "detected_cycle": 1869
-    },
-    {
-      "belief_a": {
-        "belief_id": 174,
-        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
-        "confidence": 1.0,
-        "created_by_agent": "Strategist",
-        "status": "active",
-        "created_at": "2026-03-31T05:48:29.819439",
-        "last_updated": "2026-04-01T20:31:39.429311"
-      },
-      "belief_b": {
-        "belief_id": 152,
-        "statement": "The current focus on individual responsibility in contact tracing can limit the development of artificial intelligence-powered solutions, leading to a delayed adoption and underutilization of AI-drive",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T05:20:16.509222",
-        "last_updated": "2026-04-01T17:31:57.467858"
-      },
-      "detected_at": 1775075590,
-      "resolved": false,
-      "detected_cycle": 1869
-    },
-    {
-      "belief_a": {
-        "belief_id": 256,
-        "statement": "Contrary to belief, AI systems' decision-making capabilities can be improved without harnessing human expertise.",
-        "confidence": 1.0,
-        "created_by_agent": "Curator",
-        "status": "active",
-        "created_at": "2026-03-31T14:43:44.669227",
-        "last_updated": "2026-04-01T20:35:50.883786"
-      },
-      "belief_b": {
-        "belief_id": 173,
-        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making by providing accurate and t",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T05:42:06.068293",
-        "last_updated": "2026-04-01T20:26:40.116474"
-      },
-      "detected_at": 1775075918,
-      "resolved": false,
-      "detected_cycle": 1876
-    },
-    {
-      "belief_a": {
         "belief_id": 109,
         "statement": "The development of artificial intelligence will not only increase human creativity, but also enable the creation of novel artistic forms that blend human and machine creativity.",
         "confidence": 1.0,
@@ -229,143 +114,6 @@
       "detected_at": 1775077454,
       "resolved": false,
       "detected_cycle": 1897
-    }
-  ],
-  "resolved": [
-    {
-      "belief_a": {
-        "belief_id": 242,
-        "statement": "This perspective ignores that functionality and aesthetics are not mutually exclusive, and that embracing a harmonious balance between the two can lead to more holistic and effective architectural des",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T14:31:11.486035",
-        "last_updated": "2026-04-01T16:51:11.244327"
-      },
-      "belief_b": {
-        "belief_id": 246,
-        "statement": "The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effective solutions.",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T14:34:19.374684",
-        "last_updated": "2026-04-01T16:51:11.239322"
-      },
-      "detected_at": 1775062463,
-      "resolved": true,
-      "detected_cycle": 1652,
-      "resolution_text": "--- Contradiction Resolution ---\nBelief A: This perspective ignores that functionality and aesthetics are not mutually exclusive, and that embracing a harmonious balance between the two can lead to more holistic and effective architectural design.\n\nBelief B: The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effective so",
-      "verdict": "RECONCILED",
-      "resolved_cycle": 1698,
-      "resolved_at": 1775064962
-    },
-    {
-      "belief_a": {
-        "belief_id": 173,
-        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making by providing accurate and t",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T05:42:06.068293",
-        "last_updated": "2026-04-01T16:59:14.342648"
-      },
-      "belief_b": {
-        "belief_id": 220,
-        "statement": "Building on this, decentralized artificial intelligence systems in healthcare can lead to improved patient outcomes and enhanced clinical decision-making by leveraging real-time data and machine learn",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T06:34:09.138114",
-        "last_updated": "2026-04-01T16:59:14.337181"
-      },
-      "detected_at": 1775062818,
-      "resolved": true,
-      "detected_cycle": 1659,
-      "resolution_text": "--- Contradiction Resolution ---\nBelief A: The increasing adoption of artificial intelligence in indust\nBelief B: Building on this, decentralized artificial intelligence syst\n\nResolution:\nBoth Belief A and Belief B highlight the transformative potential of AI. While Belief A focuses on general industry improvements through centralized systems, Belief B emphasizes healthcare benefits using decentra",
-      "verdict": "RECONCILED",
-      "resolved_cycle": 1703,
-      "resolved_at": 1775065220
-    },
-    {
-      "belief_a": {
-        "belief_id": 173,
-        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making by providing accurate and t",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T05:42:06.068293",
-        "last_updated": "2026-04-01T16:59:14.342648"
-      },
-      "belief_b": {
-        "belief_id": 242,
-        "statement": "This perspective ignores that functionality and aesthetics are not mutually exclusive, and that embracing a harmonious balance between the two can lead to more holistic and effective architectural des",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T14:31:11.486035",
-        "last_updated": "2026-04-01T16:51:11.244327"
-      },
-      "detected_at": 1775062818,
-      "resolved": true,
-      "detected_cycle": 1659,
-      "resolution_text": "--- Contradiction Resolution ---\nBelief A: The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making by providing accurate and timely insights.\n\nBelief B: This perspective ignores that functionality and aesthetics are not mutually exclusive, and that embracing a harmonious balance bet",
-      "verdict": "RECONCILED",
-      "resolved_cycle": 1708,
-      "resolved_at": 1775065473
-    },
-    {
-      "belief_a": {
-        "belief_id": 220,
-        "statement": "Building on this, decentralized artificial intelligence systems in healthcare can lead to improved patient outcomes and enhanced clinical decision-making by leveraging real-time data and machine learn",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T06:34:09.138114",
-        "last_updated": "2026-04-01T17:03:42.596060"
-      },
-      "belief_b": {
-        "belief_id": 246,
-        "statement": "The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effective solutions.",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T14:34:19.374684",
-        "last_updated": "2026-04-01T16:55:10.278664"
-      },
-      "detected_at": 1775063174,
-      "resolved": true,
-      "detected_cycle": 1666,
-      "resolution_text": "--- Contradiction Resolution ---\nBelief A: Building on this, decentralized artificial intelligence syst  \nBelief B: The evidence suggests that a harmonious balance between func  \n\nResolution:  \nDecentralized AI systems in healthcare can indeed improve patient outcomes and decision-making by leveraging real-time data, but achieving this requires a harmonious balance between functionality and aesthe",
-      "verdict": "RECONCILED",
-      "resolved_cycle": 1713,
-      "resolved_at": 1775065743
-    },
-    {
-      "belief_a": {
-        "belief_id": 174,
-        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
-        "confidence": 1.0,
-        "created_by_agent": "Strategist",
-        "status": "active",
-        "created_at": "2026-03-31T05:48:29.819439",
-        "last_updated": "2026-04-01T17:08:58.352167"
-      },
-      "belief_b": {
-        "belief_id": 242,
-        "statement": "This perspective ignores that functionality and aesthetics are not mutually exclusive, and that embracing a harmonious balance between the two can lead to more holistic and effective architectural des",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T14:31:11.486035",
-        "last_updated": "2026-04-01T16:51:11.244327"
-      },
-      "detected_at": 1775063597,
-      "resolved": true,
-      "detected_cycle": 1673,
-      "resolution_text": "**Resolution:**\nAI adoption enhances efficiency and decision-making across industries, including architecture, where it can optimize both functionality and aesthetics, leading to harmonious designs.\n\n**Verdict:** RECONCILED  \n**Reasoning:** AI can integrate functionality and aesthetics in design, reconciling the two perspectives.",
-      "verdict": "RECONCILED",
-      "resolved_cycle": 1718,
-      "resolved_at": 1775065998
     },
     {
       "belief_a": {
@@ -375,7 +123,99 @@
         "created_by_agent": "Archivist",
         "status": "active",
         "created_at": "2026-03-31T04:25:35.706134",
-        "last_updated": "2026-04-01T17:13:29.367384"
+        "last_updated": "2026-04-01T21:14:22.554086"
+      },
+      "belief_b": {
+        "belief_id": 152,
+        "statement": "The current focus on individual responsibility in contact tracing can limit the development of artificial intelligence-powered solutions, leading to a delayed adoption and underutilization of AI-drive",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T05:20:16.509222",
+        "last_updated": "2026-04-01T17:31:57.467858"
+      },
+      "detected_at": 1775078234,
+      "resolved": false,
+      "detected_cycle": 1904
+    },
+    {
+      "belief_a": {
+        "belief_id": 246,
+        "statement": "The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effective solutions.",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T14:34:19.374684",
+        "last_updated": "2026-04-01T21:19:46.097686"
+      },
+      "belief_b": {
+        "belief_id": 242,
+        "statement": "This perspective ignores that functionality and aesthetics are not mutually exclusive, and that embracing a harmonious balance between the two can lead to more holistic and effective architectural des",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T14:31:11.486035",
+        "last_updated": "2026-04-01T20:56:15.671474"
+      },
+      "detected_at": 1775078602,
+      "resolved": false,
+      "detected_cycle": 1911
+    },
+    {
+      "belief_a": {
+        "belief_id": 152,
+        "statement": "The current focus on individual responsibility in contact tracing can limit the development of artificial intelligence-powered solutions, leading to a delayed adoption and underutilization of AI-drive",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T05:20:16.509222",
+        "last_updated": "2026-04-01T21:29:17.943577"
+      },
+      "belief_b": {
+        "belief_id": 174,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T05:48:29.819439",
+        "last_updated": "2026-04-01T21:29:17.938382"
+      },
+      "detected_at": 1775079006,
+      "resolved": false,
+      "detected_cycle": 1918
+    },
+    {
+      "belief_a": {
+        "belief_id": 152,
+        "statement": "The current focus on individual responsibility in contact tracing can limit the development of artificial intelligence-powered solutions, leading to a delayed adoption and underutilization of AI-drive",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T05:20:16.509222",
+        "last_updated": "2026-04-01T21:29:17.943577"
+      },
+      "belief_b": {
+        "belief_id": 87,
+        "statement": "Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems, but also inherent limitations in the development of AI architectures that can perpetuate ",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T04:25:35.706134",
+        "last_updated": "2026-04-01T21:19:46.090682"
+      },
+      "detected_at": 1775079006,
+      "resolved": false,
+      "detected_cycle": 1918
+    },
+    {
+      "belief_a": {
+        "belief_id": 173,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making by providing accurate and t",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T05:42:06.068293",
+        "last_updated": "2026-04-01T21:34:01.487671"
       },
       "belief_b": {
         "belief_id": 256,
@@ -384,16 +224,14 @@
         "created_by_agent": "Curator",
         "status": "active",
         "created_at": "2026-03-31T14:43:44.669227",
-        "last_updated": "2026-04-01T17:13:29.360237"
+        "last_updated": "2026-04-01T21:34:01.482661"
       },
-      "detected_at": 1775063670,
-      "resolved": true,
-      "detected_cycle": 1673,
-      "resolution_text": "**Resolution:**\n\nBelief A identifies that human cognitive biases pose challenges in AI decision-making and can be perpetuated through AI systems. Belief B suggests that AI's decision-making can improve independently of human expertise. These beliefs are not contradictory but rather complementary, as they address different aspects of AI development\u2014problem identification (A) and potential solution ",
-      "verdict": "RECONCILED",
-      "resolved_cycle": 1723,
-      "resolved_at": 1775066316
-    },
+      "detected_at": 1775079390,
+      "resolved": false,
+      "detected_cycle": 1925
+    }
+  ],
+  "resolved": [
     {
       "belief_a": {
         "belief_id": 87,
@@ -1581,6 +1419,168 @@
       "verdict": "RECONCILED",
       "resolved_cycle": 1897,
       "resolved_at": 1775077261
+    },
+    {
+      "belief_a": {
+        "belief_id": 220,
+        "statement": "Building on this, decentralized artificial intelligence systems in healthcare can lead to improved patient outcomes and enhanced clinical decision-making by leveraging real-time data and machine learn",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T06:34:09.138114",
+        "last_updated": "2026-04-01T20:03:15.239666"
+      },
+      "belief_b": {
+        "belief_id": 87,
+        "statement": "Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems, but also inherent limitations in the development of AI architectures that can perpetuate ",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T04:25:35.706134",
+        "last_updated": "2026-04-01T19:42:16.664067"
+      },
+      "detected_at": 1775073968,
+      "resolved": true,
+      "detected_cycle": 1855,
+      "resolution_text": "",
+      "verdict": "RECONCILED",
+      "resolved_cycle": 1902,
+      "resolved_at": 1775078062
+    },
+    {
+      "belief_a": {
+        "belief_id": 87,
+        "statement": "Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems, but also inherent limitations in the development of AI architectures that can perpetuate ",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T04:25:35.706134",
+        "last_updated": "2026-04-01T20:21:23.767758"
+      },
+      "belief_b": {
+        "belief_id": 246,
+        "statement": "The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effective solutions.",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T14:34:19.374684",
+        "last_updated": "2026-04-01T20:21:23.760753"
+      },
+      "detected_at": 1775075180,
+      "resolved": true,
+      "detected_cycle": 1862,
+      "resolution_text": "--- Contradiction Resolution ---\nBelief A: Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems but also inherent limitations in the development of AI architectures that can perpetuate these biases.\n\nBelief B: The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effe",
+      "verdict": "RECONCILED",
+      "resolved_cycle": 1907,
+      "resolved_at": 1775078386
+    },
+    {
+      "belief_a": {
+        "belief_id": 174,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T05:48:29.819439",
+        "last_updated": "2026-04-01T20:31:39.429311"
+      },
+      "belief_b": {
+        "belief_id": 246,
+        "statement": "The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effective solutions.",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T14:34:19.374684",
+        "last_updated": "2026-04-01T20:21:23.760753"
+      },
+      "detected_at": 1775075590,
+      "resolved": true,
+      "detected_cycle": 1869,
+      "resolution_text": "--- Contradiction Resolution ---\nBelief A: The increasing adoption of artificial intelligence in indust  \nBelief B: The evidence suggests that a harmonious balance between func  \n\nResolution:  \nThe increasing adoption of AI can indeed improve efficiency and decision-making, and this effectiveness is further enhanced when AI systems also achieve a harmonious balance between functionality and aesthe",
+      "verdict": "RECONCILED",
+      "resolved_cycle": 1912,
+      "resolved_at": 1775078675
+    },
+    {
+      "belief_a": {
+        "belief_id": 174,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T05:48:29.819439",
+        "last_updated": "2026-04-01T20:31:39.429311"
+      },
+      "belief_b": {
+        "belief_id": 246,
+        "statement": "The evidence suggests that a harmonious balance between functionality and aesthetics in artificial intelligence can lead to more effective solutions.",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T14:34:19.374684",
+        "last_updated": "2026-04-01T20:21:23.760753"
+      },
+      "detected_at": 1775075590,
+      "resolved": true,
+      "detected_cycle": 1869,
+      "resolution_text": "--- Contradiction Resolution ---\nBelief A: The increasing adoption of artificial intelligence in indust\nBelief B: The evidence suggests that a harmonious balance between func\n\nResolution:\nThe increasing adoption of AI enhances efficiency and decision-making, while a harmonious balance between functionality and aesthetics ensures these solutions are both effective and user-friendly.\n\nVerdict: RECON",
+      "verdict": "RECONCILED",
+      "resolved_cycle": 1912,
+      "resolved_at": 1775078683
+    },
+    {
+      "belief_a": {
+        "belief_id": 174,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T05:48:29.819439",
+        "last_updated": "2026-04-01T20:31:39.429311"
+      },
+      "belief_b": {
+        "belief_id": 152,
+        "statement": "The current focus on individual responsibility in contact tracing can limit the development of artificial intelligence-powered solutions, leading to a delayed adoption and underutilization of AI-drive",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T05:20:16.509222",
+        "last_updated": "2026-04-01T17:31:57.467858"
+      },
+      "detected_at": 1775075590,
+      "resolved": true,
+      "detected_cycle": 1869,
+      "resolution_text": "**Resolution:**\n\nThe increasing adoption of artificial intelligence in industries will improve efficiency and decision-making, particularly when balanced with a focus on individual responsibility in data management, which enhances the accuracy and reliability of AI solutions.\n\n**Verdict:** RECONCILED\n\n**Reasoning:** Individual responsibility in contact tracing can complement AI by ensuring data qu",
+      "verdict": "RECONCILED",
+      "resolved_cycle": 1917,
+      "resolved_at": 1775078957
+    },
+    {
+      "belief_a": {
+        "belief_id": 256,
+        "statement": "Contrary to belief, AI systems' decision-making capabilities can be improved without harnessing human expertise.",
+        "confidence": 1.0,
+        "created_by_agent": "Curator",
+        "status": "active",
+        "created_at": "2026-03-31T14:43:44.669227",
+        "last_updated": "2026-04-01T20:35:50.883786"
+      },
+      "belief_b": {
+        "belief_id": 173,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making by providing accurate and t",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T05:42:06.068293",
+        "last_updated": "2026-04-01T20:26:40.116474"
+      },
+      "detected_at": 1775075918,
+      "resolved": true,
+      "detected_cycle": 1876,
+      "resolution_text": "--- Contradiction Resolution ---\nBelief A: Contrary to belief, AI systems' decision-making capabilities  \nBelief B: The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making by providing accurate and timely information.\n\nResolution:\nAI can enhance its decision-making without human exp",
+      "verdict": "RECONCILED",
+      "resolved_cycle": 1922,
+      "resolved_at": 1775079241
     }
   ]
 }

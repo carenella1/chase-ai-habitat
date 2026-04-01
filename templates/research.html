@@ -1,13 +1,432 @@
 {% extends "base.html" %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/research.css') }}">
 
-<h1>Research Stream</h1>
+<div class="research-page">
 
-<div id="research-stream">
+  <!-- Header -->
+  <div class="research-header">
+    <div class="header-left">
+      <h1 class="page-title">NEXARION <span class="title-accent">RESEARCH</span></h1>
+      <p class="page-subtitle">Deep multi-source investigation engine</p>
+    </div>
+    <div class="header-right">
+      <div class="goal-pill" id="goal-pill">
+        <span class="goal-dot"></span>
+        <span id="goal-pill-text">No active goal</span>
+      </div>
+    </div>
+  </div>
 
-Research agents will appear here.
+  <!-- Two-column layout -->
+  <div class="research-layout">
+
+    <!-- LEFT: Query Panel -->
+    <div class="query-panel">
+
+      <!-- Research query -->
+      <div class="panel-section">
+        <label class="panel-label">RESEARCH QUESTION</label>
+        <textarea id="research-input" class="research-input"
+          placeholder="What are the most promising mechanisms for defeating glioblastoma?&#10;&#10;What drives the accelerating collapse of Arctic sea ice?&#10;&#10;How close is quantum computing to breaking current encryption?"></textarea>
+
+        <div class="depth-selector">
+          <label class="panel-label">DEPTH</label>
+          <div class="depth-options">
+            <button class="depth-btn" data-depth="quick">QUICK<span class="depth-sub">3 sub-questions</span></button>
+            <button class="depth-btn active" data-depth="standard">STANDARD<span class="depth-sub">5 sub-questions</span></button>
+            <button class="depth-btn" data-depth="deep">DEEP<span class="depth-sub">6+ sources</span></button>
+          </div>
+        </div>
+
+        <button class="research-btn" id="research-btn">
+          <span class="btn-text">INVESTIGATE</span>
+          <span class="btn-icon">→</span>
+        </button>
+      </div>
+
+      <!-- Persistent Goal -->
+      <div class="panel-section">
+        <label class="panel-label">PERSISTENT GOAL</label>
+        <textarea id="goal-input" class="goal-input"
+          placeholder="Set a long-term research agenda Nexarion will pursue autonomously across every cognition cycle..."></textarea>
+
+        <div class="duration-row">
+          <label class="panel-label">DURATION</label>
+          <select id="goal-duration" class="goal-duration">
+            <option value="200">~3 hours (200 cycles)</option>
+            <option value="500" selected>~7 hours (500 cycles)</option>
+            <option value="1000">~14 hours (1000 cycles)</option>
+            <option value="2000">~28 hours (2000 cycles)</option>
+          </select>
+        </div>
+
+        <div class="goal-btn-row">
+          <button class="goal-set-btn" id="goal-set-btn">SET GOAL</button>
+          <button class="goal-clear-btn" id="goal-clear-btn">CLEAR</button>
+        </div>
+      </div>
+
+      <!-- Goal status -->
+      <div class="panel-section" id="goal-status-panel" style="display:none">
+        <label class="panel-label">ACTIVE GOAL STATUS</label>
+        <div class="goal-status-card">
+          <div class="goal-text" id="goal-text-display"></div>
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" id="goal-progress-fill"></div>
+          </div>
+          <div class="goal-stats">
+            <span id="goal-cycles-stat">0 cycles</span>
+            <span id="goal-findings-stat">0 findings</span>
+            <span id="goal-pct-stat">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Synthesis status -->
+      <div class="panel-section">
+        <label class="panel-label">KNOWLEDGE SYNTHESIS</label>
+        <div class="synthesis-status" id="synthesis-status">
+          <div class="synthesis-row">
+            <span class="syn-label">Last run</span>
+            <span class="syn-value" id="syn-last-run">Never</span>
+          </div>
+          <div class="synthesis-row">
+            <span class="syn-label">Domains</span>
+            <span class="syn-value" id="syn-domains">0</span>
+          </div>
+          <div class="synthesis-row">
+            <span class="syn-label">Cross-domain links</span>
+            <span class="syn-value" id="syn-crossdomain">0</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Results Panel -->
+    <div class="results-panel">
+
+      <!-- Progress indicator (shown while running) -->
+      <div class="research-progress" id="research-progress" style="display:none">
+        <div class="progress-header">
+          <span class="progress-label">INVESTIGATING</span>
+          <span class="progress-question" id="progress-question"></span>
+        </div>
+        <div class="progress-stages">
+          <div class="stage" id="stage-decompose">
+            <div class="stage-dot"></div>
+            <div class="stage-info">
+              <div class="stage-name">Decomposing question</div>
+              <div class="stage-detail" id="stage-decompose-detail">Breaking into sub-questions...</div>
+            </div>
+          </div>
+          <div class="stage" id="stage-investigate">
+            <div class="stage-dot"></div>
+            <div class="stage-info">
+              <div class="stage-name">Investigating</div>
+              <div class="stage-detail" id="stage-investigate-detail">Searching sources...</div>
+            </div>
+          </div>
+          <div class="stage" id="stage-synthesize">
+            <div class="stage-dot"></div>
+            <div class="stage-info">
+              <div class="stage-name">Synthesizing</div>
+              <div class="stage-detail">Building coherent picture...</div>
+            </div>
+          </div>
+          <div class="stage" id="stage-critique">
+            <div class="stage-dot"></div>
+            <div class="stage-info">
+              <div class="stage-name">Critical evaluation</div>
+              <div class="stage-detail">Assessing confidence...</div>
+            </div>
+          </div>
+        </div>
+        <div class="progress-elapsed">
+          <span id="elapsed-counter">0s</span> elapsed
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">⬡</div>
+        <div class="empty-title">No research active</div>
+        <div class="empty-sub">Enter a question to begin a deep investigation</div>
+      </div>
+
+      <!-- Report output -->
+      <div class="report-container" id="report-container" style="display:none">
+        <div class="report-meta">
+          <div class="report-question" id="report-question"></div>
+          <div class="report-stats">
+            <span id="report-sources"></span>
+            <span id="report-elapsed"></span>
+            <span id="report-depth"></span>
+          </div>
+        </div>
+
+        <!-- Sub-questions used -->
+        <div class="subquestions-block" id="subquestions-block">
+          <div class="subq-label">INVESTIGATED</div>
+          <div class="subq-list" id="subq-list"></div>
+        </div>
+
+        <!-- Main report content -->
+        <div class="report-content" id="report-content"></div>
+
+        <!-- Action bar -->
+        <div class="report-actions">
+          <button class="action-btn" id="btn-set-goal-from-report">SET AS GOAL</button>
+          <button class="action-btn" id="btn-new-research">NEW RESEARCH</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
 </div>
 
+<script>
+// =========================
+// STATE
+// =========================
+let selectedDepth = 'standard';
+let elapsedInterval = null;
+let currentReport = null;
+
+// =========================
+// INIT
+// =========================
+document.addEventListener('DOMContentLoaded', () => {
+    loadGoalStatus();
+    loadSynthesisStatus();
+    bindEvents();
+    setInterval(loadGoalStatus, 15000);
+    setInterval(loadSynthesisStatus, 30000);
+});
+
+// =========================
+// EVENTS
+// =========================
+function bindEvents() {
+    // Depth selector
+    document.querySelectorAll('.depth-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.depth-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedDepth = btn.dataset.depth;
+        });
+    });
+
+    // Research button
+    document.getElementById('research-btn').addEventListener('click', startResearch);
+
+    // Goal buttons
+    document.getElementById('goal-set-btn').addEventListener('click', setGoal);
+    document.getElementById('goal-clear-btn').addEventListener('click', clearGoal);
+
+    // Report actions
+    document.getElementById('btn-set-goal-from-report').addEventListener('click', setGoalFromReport);
+    document.getElementById('btn-new-research').addEventListener('click', resetToEmpty);
+
+    // Ctrl+Enter to research
+    document.getElementById('research-input').addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') startResearch();
+    });
+}
+
+// =========================
+// RESEARCH
+// =========================
+async function startResearch() {
+    const question = document.getElementById('research-input').value.trim();
+    if (!question) return;
+
+    showProgress(question);
+
+    const startTime = Date.now();
+    elapsedInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById('elapsed-counter').textContent = elapsed + 's';
+        // Animate stages based on elapsed time
+        if (elapsed > 5) activateStage('stage-decompose');
+        if (elapsed > 15) activateStage('stage-investigate');
+        if (elapsed > 60) activateStage('stage-synthesize');
+        if (elapsed > 90) activateStage('stage-critique');
+    }, 1000);
+
+    try {
+        const res = await fetch('/api/research', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({question, depth: selectedDepth})
+        });
+        const data = await res.json();
+        clearInterval(elapsedInterval);
+
+        if (data.status === 'ok') {
+            currentReport = data;
+            showReport(data);
+        } else {
+            showError(data.error || 'Research failed');
+        }
+    } catch (e) {
+        clearInterval(elapsedInterval);
+        showError(e.message);
+    }
+}
+
+function activateStage(stageId) {
+    const stage = document.getElementById(stageId);
+    if (stage && !stage.classList.contains('active')) {
+        stage.classList.add('active');
+    }
+}
+
+function showProgress(question) {
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('report-container').style.display = 'none';
+    document.getElementById('research-progress').style.display = 'flex';
+    document.getElementById('progress-question').textContent = question.substring(0, 80) + (question.length > 80 ? '...' : '');
+    document.getElementById('elapsed-counter').textContent = '0s';
+    // Reset stages
+    document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+    activateStage('stage-decompose');
+}
+
+function showReport(data) {
+    document.getElementById('research-progress').style.display = 'none';
+    const container = document.getElementById('report-container');
+    container.style.display = 'flex';
+
+    // Meta
+    document.getElementById('report-question').textContent = data.question;
+    document.getElementById('report-sources').textContent = `${data.raw?.sources_consulted || 0} sources`;
+    document.getElementById('report-elapsed').textContent = `${data.raw?.elapsed_seconds || 0}s`;
+    document.getElementById('report-depth').textContent = data.raw?.depth || selectedDepth;
+
+    // Sub-questions
+    const subqs = data.raw?.sub_questions || [];
+    if (subqs.length) {
+        const list = document.getElementById('subq-list');
+        list.innerHTML = subqs.map((q, i) =>
+            `<div class="subq-item"><span class="subq-num">${i+1}</span><span class="subq-text">${q}</span></div>`
+        ).join('');
+        document.getElementById('subquestions-block').style.display = 'block';
+    }
+
+    // Report content — convert markdown-ish to HTML
+    const reportText = data.report || '';
+    const formatted = reportText
+        .replace(/## (.+)/g, '<h2>$1</h2>')
+        .replace(/### (.+)/g, '<h3>$1</h3>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/✓ (.+)/g, '<div class="conclusion-item">✓ $1</div>')
+        .replace(/\? (.+)/g, '<div class="uncertainty-item">? $1</div>')
+        .replace(/• (.+)/g, '<div class="bullet-item">• $1</div>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>');
+
+    document.getElementById('report-content').innerHTML = formatted;
+}
+
+function showError(msg) {
+    document.getElementById('research-progress').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'flex';
+    document.getElementById('empty-state').querySelector('.empty-sub').textContent = 'Error: ' + msg;
+}
+
+function resetToEmpty() {
+    clearInterval(elapsedInterval);
+    document.getElementById('empty-state').style.display = 'flex';
+    document.getElementById('report-container').style.display = 'none';
+    document.getElementById('research-progress').style.display = 'none';
+    document.getElementById('research-input').value = '';
+    currentReport = null;
+}
+
+// =========================
+// GOALS
+// =========================
+async function setGoal() {
+    const text = document.getElementById('goal-input').value.trim();
+    const duration = parseInt(document.getElementById('goal-duration').value);
+    if (!text) return;
+
+    try {
+        const res = await fetch('/api/goals/set', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({goal: text, duration_cycles: duration})
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            document.getElementById('goal-input').value = '';
+            loadGoalStatus();
+        }
+    } catch (e) {
+        console.error('Goal set error:', e);
+    }
+}
+
+async function clearGoal() {
+    try {
+        await fetch('/api/goals/clear', {method: 'POST'});
+        loadGoalStatus();
+    } catch (e) { console.error(e); }
+}
+
+async function setGoalFromReport() {
+    if (!currentReport) return;
+    document.getElementById('goal-input').value = currentReport.question;
+    document.querySelector('.goal-input').scrollIntoView({behavior: 'smooth'});
+}
+
+async function loadGoalStatus() {
+    try {
+        const res = await fetch('/api/goals/status');
+        const data = await res.json();
+        const active = data.active;
+
+        const pill = document.getElementById('goal-pill');
+        const pillText = document.getElementById('goal-pill-text');
+
+        if (active) {
+            pill.classList.add('active');
+            pillText.textContent = active.text.substring(0, 60) + (active.text.length > 60 ? '...' : '');
+
+            // Show status panel
+            const panel = document.getElementById('goal-status-panel');
+            panel.style.display = 'block';
+            document.getElementById('goal-text-display').textContent = active.text;
+
+            const pct = Math.min(100, Math.floor(active.cycles_completed / active.duration_cycles * 100));
+            document.getElementById('goal-progress-fill').style.width = pct + '%';
+            document.getElementById('goal-cycles-stat').textContent = active.cycles_completed + ' cycles';
+            document.getElementById('goal-findings-stat').textContent = (active.key_findings?.length || 0) + ' findings';
+            document.getElementById('goal-pct-stat').textContent = pct + '% complete';
+        } else {
+            pill.classList.remove('active');
+            pillText.textContent = 'No active goal';
+            document.getElementById('goal-status-panel').style.display = 'none';
+        }
+    } catch (e) { console.error(e); }
+}
+
+async function loadSynthesisStatus() {
+    try {
+        const res = await fetch('/api/synthesis/status');
+        const data = await res.json();
+        document.getElementById('syn-last-run').textContent =
+            data.last_run_cycle > 0 ? `Cycle ${data.last_run_cycle}` : 'Not yet run';
+        document.getElementById('syn-domains').textContent = data.domains_synthesized || 0;
+        document.getElementById('syn-crossdomain').textContent = data.cross_domain_connections || 0;
+    } catch (e) { console.error(e); }
+}
+</script>
 {% endblock %}
+
+{% block scripts %}{% endblock %}

@@ -2900,6 +2900,13 @@ def api_synthesis_status():
         return jsonify({"status": "error", "error": str(e)})
 
 
+app.route("/research")
+
+
+def research_page():
+    return render_template("research.html", active="research")
+
+
 # =========================
 # START
 # =========================
