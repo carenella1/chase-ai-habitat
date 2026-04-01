@@ -174,6 +174,7 @@ MATH_KEYWORDS = [
 # Code execution keywords
 CODE_KEYWORDS = [
     "run this",
+    "run this code",
     "execute",
     "run the code",
     "what does this code",
