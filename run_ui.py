@@ -1251,8 +1251,23 @@ def _build_nexarion_prompt(
         f"You are currently investigating: {active_goal}" if active_goal else ""
     )
 
-    # Conversation history
-    recent = history[-NEXARION_PROMPT_LIMIT:]
+    # Filter out responses where Nexarion incorrectly claimed no tool access
+    # These poison subsequent responses in the same conversation
+    POISON_PHRASES = [
+        "i don't have access to real-time",
+        "i cannot provide real-time",
+        "i don't have real-time",
+        "i am unable to provide real-time",
+        "i lack access to live",
+    ]
+    recent = [
+        t
+        for t in history[-NEXARION_PROMPT_LIMIT:]
+        if not (
+            t.get("role") == "assistant"
+            and any(p in t.get("content", "").lower() for p in POISON_PHRASES)
+        )
+    ]
     convo_block = "\n".join(
         f"{'Chase' if t['role'] == 'user' else 'Nexarion'}: {t['content']}"
         for t in recent

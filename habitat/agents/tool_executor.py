@@ -3,20 +3,14 @@ tool_executor.py
 
 Nexarion's tool system — the bridge between knowledge and capability.
 
-When Nexarion needs to act rather than just reason, it calls a tool.
-Each tool returns a structured result that gets injected into the
-prompt before Nexarion generates its response.
-
-Adding a new tool: define a function, add it to TOOL_REGISTRY with
-a name and description. That's it.
-
 Current tools:
-- web_fetch       — fetch and extract text from any URL
-- python_exec     — execute Python code safely, return output
-- market_data     — get live stock/crypto prices and basic stats
-- calculator      — evaluate mathematical expressions safely
-- wiki_deep       — fetch full Wikipedia article (not just summary)
-- news_search     — search for recent news on a topic
+- web_fetch    — fetch and extract text from any URL
+- python_exec  — execute Python code safely, return output
+- market_data  — get live stock/crypto/commodity prices
+- calculator   — evaluate mathematical expressions safely
+- wiki_deep    — fetch full Wikipedia article
+- news_search  — search for recent news on a topic
+- web_search   — general web search (catch-all for current info)
 """
 
 import re
@@ -24,7 +18,7 @@ import json
 import time
 import traceback
 import requests
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, urlparse, unquote
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; NexarionTools/1.0)"}
 REQUEST_TIMEOUT = 10
@@ -34,16 +28,12 @@ REQUEST_TIMEOUT = 10
 # WEB FETCH
 # =========================
 def tool_web_fetch(url: str) -> dict:
-    """Fetch a URL and extract readable text content."""
     try:
         if not url.startswith("http"):
             url = "https://" + url
-
         r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         if r.status_code != 200:
             return {"error": f"HTTP {r.status_code}", "content": ""}
-
-        # Simple HTML stripping
         html = r.text
         html = re.sub(
             r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE
@@ -53,11 +43,8 @@ def tool_web_fetch(url: str) -> dict:
         )
         html = re.sub(r"<[^>]+>", " ", html)
         text = re.sub(r"\s+", " ", html).strip()
-
-        # Keep meaningful lines
         lines = [l.strip() for l in text.split(".") if len(l.strip()) > 40]
         content = ". ".join(lines[:30])
-
         domain = urlparse(url).netloc.replace("www.", "")
         return {
             "url": url,
@@ -73,17 +60,8 @@ def tool_web_fetch(url: str) -> dict:
 # PYTHON CODE EXECUTION
 # =========================
 def tool_python_exec(code: str) -> dict:
-    """
-    Execute Python code safely and return stdout output.
-    Runs in a restricted namespace — no file system or network access
-    from within the executed code itself.
-    """
-    import io
-    import sys
-    import math
-    import statistics
+    import io, sys, math, statistics
 
-    # Safe builtins — explicitly whitelisted
     safe_builtins = {
         "print": print,
         "range": range,
@@ -112,14 +90,7 @@ def tool_python_exec(code: str) -> dict:
         "False": False,
         "None": None,
     }
-
-    namespace = {
-        "__builtins__": safe_builtins,
-        "math": math,
-        "statistics": statistics,
-    }
-
-    # Try importing numpy/pandas if available
+    namespace = {"__builtins__": safe_builtins, "math": math, "statistics": statistics}
     try:
         import numpy as np
 
@@ -127,7 +98,6 @@ def tool_python_exec(code: str) -> dict:
         namespace["numpy"] = np
     except ImportError:
         pass
-
     try:
         import pandas as pd
 
@@ -135,11 +105,8 @@ def tool_python_exec(code: str) -> dict:
         namespace["pandas"] = pd
     except ImportError:
         pass
-
-    # Capture stdout
     old_stdout = sys.stdout
     sys.stdout = buffer = io.StringIO()
-
     try:
         exec(compile(code, "<nexarion>", "exec"), namespace)
         output = buffer.getvalue()
@@ -162,25 +129,17 @@ def tool_python_exec(code: str) -> dict:
 # MARKET DATA
 # =========================
 def tool_market_data(symbol: str) -> dict:
-    """
-    Get live market data for a stock or crypto symbol.
-    Uses yfinance if available, falls back to a free API.
-    """
     symbol = symbol.upper().strip()
-
-    # Try yfinance first
     try:
         import yfinance as yf
 
         ticker = yf.Ticker(symbol)
         info = ticker.info
         hist = ticker.history(period="5d")
-
         if not hist.empty:
             current = float(hist["Close"].iloc[-1])
             prev = float(hist["Close"].iloc[-2]) if len(hist) > 1 else current
             change_pct = ((current - prev) / prev * 100) if prev else 0
-
             return {
                 "symbol": symbol,
                 "price": round(current, 4),
@@ -198,8 +157,6 @@ def tool_market_data(symbol: str) -> dict:
         pass
     except Exception as e:
         print(f"⚠️ yfinance error: {e}")
-
-    # Fallback: Yahoo Finance API (no key needed)
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(symbol)}?interval=1d&range=5d"
         r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
@@ -223,7 +180,6 @@ def tool_market_data(symbol: str) -> dict:
             }
     except Exception as e:
         return {"error": f"Market data unavailable: {e}", "symbol": symbol}
-
     return {"error": "No market data source available", "symbol": symbol}
 
 
@@ -231,13 +187,9 @@ def tool_market_data(symbol: str) -> dict:
 # CALCULATOR
 # =========================
 def tool_calculator(expression: str) -> dict:
-    """Safely evaluate a mathematical expression."""
     import math
 
-    # Clean the expression
     expr = expression.strip()
-
-    # Only allow safe characters
     if re.search(
         r"[^0-9+\-*/().,%^eE\s]",
         expr.replace("sqrt", "")
@@ -248,7 +200,6 @@ def tool_calculator(expression: str) -> dict:
         .replace("abs", ""),
     ):
         return {"error": "Expression contains unsafe characters", "result": None}
-
     safe_math = {
         "sqrt": math.sqrt,
         "sin": math.sin,
@@ -263,7 +214,6 @@ def tool_calculator(expression: str) -> dict:
         "pow": pow,
         "round": round,
     }
-
     try:
         result = eval(expr, {"__builtins__": {}}, safe_math)
         return {
@@ -279,32 +229,25 @@ def tool_calculator(expression: str) -> dict:
 # WIKIPEDIA DEEP FETCH
 # =========================
 def tool_wiki_deep(topic: str) -> dict:
-    """Fetch a full Wikipedia article with multiple sections."""
     try:
-        # Get the main article
         url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(topic)}"
         r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         if r.status_code != 200:
             return {"error": f"Article not found: {topic}", "content": ""}
-
         data = r.json()
         if data.get("type") == "disambiguation":
             return {"error": f"'{topic}' is ambiguous", "content": ""}
-
         summary = data.get("extract", "")
         page_url = data.get("content_urls", {}).get("desktop", {}).get("page", "")
-
-        # Also get the full article sections via the parse API
-        sections_url = f"https://en.wikipedia.org/w/api.php?action=parse&page={quote(topic)}&prop=sections&format=json"
         section_names = []
         try:
+            sections_url = f"https://en.wikipedia.org/w/api.php?action=parse&page={quote(topic)}&prop=sections&format=json"
             sr = requests.get(sections_url, headers=HEADERS, timeout=5)
             sd = sr.json()
             sections = sd.get("parse", {}).get("sections", [])
             section_names = [s["line"] for s in sections[:6] if s.get("line")]
         except Exception:
             pass
-
         return {
             "topic": data.get("title", topic),
             "summary": summary[:2000],
@@ -320,91 +263,55 @@ def tool_wiki_deep(topic: str) -> dict:
 # NEWS SEARCH
 # =========================
 def tool_news_search(query: str) -> dict:
-    """Search for recent news on a topic using DuckDuckGo news."""
     try:
         search_url = (
             f"https://html.duckduckgo.com/html/?q={quote(query + ' news')}&df=w"
         )
         r = requests.get(search_url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
-
-        # Extract result snippets
         snippets = re.findall(
             r'class="result__snippet"[^>]*>(.*?)</a>', r.text, re.DOTALL
         )
         titles = re.findall(r'class="result__a"[^>]*>(.*?)</a>', r.text, re.DOTALL)
-
         results = []
         for i, (title, snippet) in enumerate(zip(titles[:5], snippets[:5])):
             title_clean = re.sub(r"<[^>]+>", "", title).strip()
             snippet_clean = re.sub(r"<[^>]+>", "", snippet).strip()
             if title_clean and snippet_clean:
                 results.append(f"{title_clean}: {snippet_clean}")
-
         if not results:
             return {"error": "No news results found", "query": query, "results": []}
-
-        return {
-            "query": query,
-            "results": results,
-            "summary": " | ".join(results[:3]),
-        }
+        return {"query": query, "results": results, "summary": " | ".join(results[:3])}
     except Exception as e:
         return {"error": str(e), "query": query, "results": []}
 
 
 # =========================
-# ADD THIS FUNCTION TO tool_executor.py
-# Place it after tool_news_search() and before TOOL_REGISTRY
-# Then add the entry to TOOL_REGISTRY shown below
+# WEB SEARCH (GENERAL)
 # =========================
-
-
 def tool_web_search(query: str) -> dict:
-    """
-    General web search — searches DuckDuckGo and fetches the top result.
-    This is the catch-all tool for any current information request.
-    Covers: movies, sports, weather, events, prices, people, places — anything.
-    """
+    """General web search — catch-all for any current information request."""
     try:
-        import requests
-        from urllib.parse import quote
-
-        HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; NexarionTools/1.0)"}
-
-        # Step 1: DuckDuckGo HTML search
         search_url = f"https://html.duckduckgo.com/html/?q={quote(query)}"
-        r = requests.get(search_url, headers=HEADERS, timeout=10)
-
-        # Extract titles and snippets
-        import re
-
+        r = requests.get(search_url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         snippets = re.findall(
             r'class="result__snippet"[^>]*>(.*?)</a>', r.text, re.DOTALL
         )
         titles = re.findall(r'class="result__a"[^>]*>(.*?)</a>', r.text, re.DOTALL)
-        urls = re.findall(r'class="result__url"[^>]*>(.*?)</span>', r.text, re.DOTALL)
-
         results = []
         for i in range(min(4, len(titles), len(snippets))):
             title = re.sub(r"<[^>]+>", "", titles[i]).strip()
             snippet = re.sub(r"<[^>]+>", "", snippets[i]).strip()
             if title and snippet:
                 results.append(f"{title}: {snippet}")
-
         if not results:
             return {"error": "No search results found", "query": query, "results": []}
-
-        # Step 2: Try to fetch the top result for more detail
         top_content = ""
         try:
             actual_urls = re.findall(r'uddg=(https?[^&"]+)', r.text)
             if actual_urls:
-                from urllib.parse import unquote
-
                 top_url = unquote(actual_urls[0])
                 fetch_r = requests.get(top_url, headers=HEADERS, timeout=8)
                 html = fetch_r.text
-                # Strip scripts and styles
                 html = re.sub(
                     r"<script[^>]*>.*?</script>",
                     "",
@@ -419,19 +326,16 @@ def tool_web_search(query: str) -> dict:
                 )
                 html = re.sub(r"<[^>]+>", " ", html)
                 text = re.sub(r"\s+", " ", html).strip()
-                # Take meaningful sentences
                 sentences = [s.strip() for s in text.split(".") if len(s.strip()) > 40]
                 top_content = ". ".join(sentences[:8])
         except Exception:
-            pass  # Top result fetch is best-effort
-
+            pass
         return {
             "query": query,
             "results": results,
             "top_content": top_content[:1500] if top_content else "",
             "summary": " | ".join(results[:3]),
         }
-
     except Exception as e:
         return {"error": str(e), "query": query, "results": []}
 
@@ -454,7 +358,7 @@ TOOL_REGISTRY = {
     },
     "market_data": {
         "function": tool_market_data,
-        "description": "Get live stock or crypto market data",
+        "description": "Get live stock, crypto, or commodity market data",
         "param": "symbol",
         "example": "market_data('AAPL')",
     },
@@ -474,13 +378,13 @@ TOOL_REGISTRY = {
         "function": tool_news_search,
         "description": "Search for recent news on a topic",
         "param": "query",
-        "example": "news_search('AI regulation 2025')",
+        "example": "news_search('AI regulation 2026')",
     },
     "web_search": {
         "function": tool_web_search,
         "description": "General web search for any current information",
         "param": "query",
-        "example": "web_search('number 1 movie Philippines 2025')",
+        "example": "web_search('number 1 movie Philippines 2026')",
     },
 }
 
@@ -489,7 +393,6 @@ def execute_tool(tool_name: str, param: str) -> dict:
     """Execute a named tool with a parameter. Returns structured result."""
     if tool_name not in TOOL_REGISTRY:
         return {"error": f"Unknown tool: {tool_name}"}
-
     tool = TOOL_REGISTRY[tool_name]
     try:
         print(f"🔧 TOOL EXECUTING: {tool_name}({param[:60]})")
@@ -532,8 +435,7 @@ def format_tool_result(result: dict) -> str:
     elif tool == "python_exec":
         if result.get("success"):
             return f"[Python output]\n{result['output']}"
-        else:
-            return f"[Python error] {result['error']}"
+        return f"[Python error] {result['error']}"
 
     elif tool == "calculator":
         if result.get("result") is not None:
@@ -574,7 +476,6 @@ def format_tool_result(result: dict) -> str:
             lines.extend(f"• {r}" for r in results[:4])
         return "\n".join(lines)
 
-    # Generic fallback
     content = result.get(
         "content", result.get("output", result.get("summary", str(result)))
     )

@@ -1,4 +1,731 @@
-Flask process started (PID: 532804)
-Waiting for Flask at http://127.0.0.1:5000...
-Flask is ready!
-Shutting down Nexarion Habitat...
+🌐 GLOBAL WORKSPACE INITIALIZED (Milestone A+B)
+🔥 NEXARION HABITAT ONLINE
+🧠 BRAIN THREAD STARTED
+🌐 GLOBAL WORKSPACE ACTIVE
+🌐 WORKSPACE RESTORED: cycle=1855, topic=information theory, thread=diverging
+🌐 WORKSPACE RESTORED — Cycle 1855
+🔄 WORKSPACE CYCLE: 1856
+🔄 COGNITION CYCLE #1856 (last: 0s)
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 3, 'Archivist': -1, 'Builder': 2}
+🎯 SELECTED AGENT: Curator (thread: diverging, loop: False)
+🚀 Starting Waitress production server...
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: information theory
+✅ WIKI HIT: information theory
+🧠 TOTAL STORED: 11
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Curator] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN STEP 4/5: [c9170ca7] synthesis by Curator
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 7.75
+🧠 DECAY: information theory → 7.06
+🧠 DECAY: quantum mechanics → 5.31
+🧠 DECAY: entropy → 2.21
+🧠 DECAY: astrophysics → 2.08
+🧠 DECAY: gravitational → 1.96
+⚡ SYNTHESIS PAIRS: [('entropy', 'information theory'), ('astrophysics', 'quantum mechanics')]
+   DUP similarity=1.00: 'mathematics serves as a bridge' vs 'mathematics serves as a bridge'
+⭐ SIGNIFICANCE: 5.8/10
+🔄 WORKSPACE CYCLE: 1857
+🔄 COGNITION CYCLE #1857 (last: 43s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 1.00 → 1.00
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 1857): RECONCILED
+🧠 TOTAL STORED: 13
+🎯 GOAL ROTATED: Investigate entropy from a new angle
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 0, 'Archivist': 2, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: information theory
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'information theory'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 14
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/EXPAND] salience=9.0 topic=information theory
+🧵 THREAD: 6 topics in working memory. Dominant: 'information theory'. Stances: EXPANDx4, CHALLENGEx2, SUPPORTx1.
+🌐 NEW BROADCAST — salience=9.0
+🧠 NEW BELIEF: **
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: information theory → 11.42
+🧠 DECAY: debate → 9.21
+🧠 DECAY: quantum mechanics → 4.99
+🧠 DECAY: entropy → 2.08
+🧠 DECAY: astrophysics → 1.96
+🧠 DECAY: gravitational → 1.84
+⚡ SYNTHESIS PAIRS: [('astrophysics', 'entropy'), ('debate', 'entropy')]
+⭐ SIGNIFICANCE: 7.6/10
+📓 JOURNAL ENTRY WRITTEN (score=7.6)
+🔔 INITIATION QUEUED (score=7.6): Hey Chase, I've been thinking about how integrating information theory into math...
+🔄 WORKSPACE CYCLE: 1858
+🔄 COGNITION CYCLE #1858 (last: 78s)
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 3, 'Archivist': -3, 'Builder': 1}
+🎯 SELECTED AGENT: Curator (thread: stable, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: quantum mechanics
+✅ WIKI HIT: quantum mechanics
+🧠 TOTAL STORED: 16
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Curator/REFRAME] salience=9.0 topic=quantum mechanics
+🧵 THREAD: 5 topics in working memory. Dominant: 'quantum mechanics'. Stances: EXPANDx3, CHALLENGEx2, SUPPORTx1, REFRAMEx1.
+🌐 NEW BROADCAST — salience=9.0
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: information theory → 15.52
+🧠 DECAY: debate → 10.57
+🧠 DECAY: quantum mechanics → 4.70
+🧠 DECAY: entropy → 1.96
+🧠 DECAY: astrophysics → 1.84
+🧠 DECAY: gravitational → 1.73
+⚡ SYNTHESIS PAIRS: [('debate', 'entropy'), ('astrophysics', 'entropy')]
+   DUP similarity=1.00: 'dark energy is a mysterious force acc' vs 'dark energy is a mysterious force acc'
+⭐ SIGNIFICANCE: 5.8/10
+🔄 WORKSPACE CYCLE: 1859
+🔄 COGNITION CYCLE #1859 (last: 58s)
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': -3, 'Archivist': 0, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: logic
+✅ WIKI HIT: logic
+🧠 TOTAL STORED: 18
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/SUPPORT] salience=8.5 topic=logic
+🧵 THREAD: 6 topics in working memory. Dominant: 'information theory'. Stances: SUPPORTx2, EXPANDx2, CHALLENGEx2, REFRAMEx1.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN STARTED: [c26b7b2e] topic=logic
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: information theory → 14.60
+🧠 DECAY: debate → 11.86
+🧠 DECAY: quantum mechanics → 6.77
+🧠 DECAY: entropy → 4.27
+🧠 DECAY: astrophysics → 1.73
+🧠 DECAY: gravitational → 1.63
+⚡ SYNTHESIS PAIRS: [('information theory', 'logic'), ('information theory', 'quantum mechanics')]
+   DUP similarity=1.00: 'dark energy is a well-suppor' vs 'dark energy is a well-suppor'
+⭐ SIGNIFICANCE: 6.6/10
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱ INITIATION COOLDOWN — 1065s remaining
+🔄 WORKSPACE CYCLE: 1860
+🔄 COGNITION CYCLE #1860 (last: 62s)
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': -1, 'Curator': 0, 'Archivist': 0, 'Builder': 1}
+🎯 SELECTED AGENT: Builder (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: evolution
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'evolution'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 20
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Builder/SUPPORT] salience=8.5 topic=evolution
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'information theory'.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN STEP 3/5: [c26b7b2e] development by Builder
+🪞 SELF-MODEL UPDATED (observation #588)
+🪞 I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'information theory'. My strongest agent is Builder. I lean toward EXPAND stances (35%). Recurring topics: information theory, quantum mechanics, contradiction. Strong beliefs: Human cognitive biases are not only obstacles to effective d.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: information theory → 13.74
+🧠 DECAY: debate → 13.07
+🧠 DECAY: quantum mechanics → 8.80
+🧠 DECAY: entropy → 4.02
+🧠 DECAY: logic → 2.35
+🧠 DECAY: astrophysics → 1.63
+🧠 DECAY: gravitational → 1.54
+⚡ SYNTHESIS PAIRS: [('entropy', 'evolution'), ('evolution', 'information theory')]
+🎙️ VOICE SIGNAL: stance=EXPAND → +3 explorer
+🎙️ VOICE SIGNAL: agent=Archivist → +2 analytical
+🎙️ VOICE STABLE: philosopher (scores: {'analytical': 15.27449343117796, 'challenger': 9.332774073277141, 'explorer': 9.054830507252422, 'philosopher': 13.047820252952842})
+🎙️ VOICE EVALUATED → Philosopher
+   DUP similarity=1.00: 'dark energy provides a robust e' vs 'dark energy provides a robust e'
+⭐ SIGNIFICANCE: 6.3/10
+📓 JOURNAL ENTRY WRITTEN (score=6.3)
+⏱ INITIATION COOLDOWN — 1008s remaining
+🔄 WORKSPACE CYCLE: 1861
+🔄 COGNITION CYCLE #1861 (last: 57s)
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': -3, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: logic
+✅ WIKI HIT: logic
+🧠 TOTAL STORED: 22
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=8.5 topic=logic
+🧵 THREAD: Thread diverging across 5 topics. Consider focusing on 'information theory'.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN CONCLUDED: [c26b7b2e] after 5 steps
+🔗 CONCLUSION: --- Debate Response ---
+Agent: Archivist  
+Stance: EXPAND  
+
+**Claim:**  
+What this overlooks is how
+🧠 NEW BELIEF: **
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 13.24
+🧠 DECAY: information theory → 12.93
+🧠 DECAY: quantum mechanics → 8.28
+🧠 DECAY: logic → 4.64
+🧠 DECAY: entropy → 3.78
+🧠 DECAY: evolution → 2.35
+🧠 DECAY: astrophysics → 1.54
+🧠 DECAY: gravitational → 1.44
+🧠 DECAY: **debate → 0.97
+⚡ SYNTHESIS PAIRS: [('entropy', 'logic'), ('entropy', 'quantum mechanics')]
+⭐ SIGNIFICANCE: 7.1/10
+📓 JOURNAL ENTRY WRITTEN (score=7.1)
+⏱ INITIATION COOLDOWN — 951s remaining
+🔄 WORKSPACE CYCLE: 1862
+🔄 COGNITION CYCLE #1862 (last: 56s)
+⚔️ 10 contradiction(s) detected
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 1.00 → 1.00
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 1862): RECONCILED
+🧠 TOTAL STORED: 25
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 3, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: genetic
+❌ WIKI MISS: genetic
+🧠 TOTAL STORED: 27
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=8.0 topic=genetic
+🧵 THREAD: Thread diverging across 5 topics. Consider focusing on 'information theory'.
+🌐 NEW BROADCAST — salience=8.0
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 13.93
+🧠 DECAY: information theory → 11.80
+🧠 DECAY: logic → 8.94
+🧠 DECAY: quantum mechanics → 7.55
+🧠 DECAY: entropy → 3.45
+🧠 DECAY: cosmology → 2.35
+🧠 DECAY: evolution → 2.15
+🧠 DECAY: **debate → 1.86
+🧠 DECAY: astrophysics → 1.40
+🧠 DECAY: gravitational → 1.32
+🧠 DECAY: support → 0.97
+⚡ SYNTHESIS PAIRS: [('logic', 'quantum mechanics'), ('entropy', 'quantum mechanics')]
+   DUP similarity=1.00: 'genetic diversity plays a vital role' vs 'genetic diversity plays a vital role'
+⭐ SIGNIFICANCE: 2.9/10
+🔄 WORKSPACE CYCLE: 1863
+🔄 COGNITION CYCLE #1863 (last: 88s)
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Builder (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🎓 CURRICULUM SEARCH OVERRIDE → genetics
+🧠 CLEANED TOPIC: genetics
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'genetics'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 29
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Builder/SUPPORT] salience=9.0 topic=genetics
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'logic'.
+🌐 NEW BROADCAST — salience=9.0
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 15.02
+🧠 DECAY: information theory → 11.10
+🧠 DECAY: logic → 8.41
+🧠 DECAY: quantum mechanics → 7.11
+🧠 DECAY: entropy → 3.25
+🧠 DECAY: natural selection → 2.42
+🧠 DECAY: cosmology → 2.21
+🧠 DECAY: evolution → 2.02
+🧠 DECAY: **debate → 1.75
+🧠 DECAY: genetic → 1.41
+🧠 DECAY: astrophysics → 1.32
+🧠 DECAY: gravitational → 1.24
+🧠 DECAY: support → 0.91
+⚡ SYNTHESIS PAIRS: [('debate', 'information theory'), ('entropy', 'quantum mechanics')]
+   DUP similarity=1.00: 'genetic diversity enhances a po' vs 'genetic diversity enhances a po'
+⭐ SIGNIFICANCE: 5.9/10
+🔄 WORKSPACE CYCLE: 1864
+🔄 COGNITION CYCLE #1864 (last: 40s)
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 0, 'Archivist': 4, 'Builder': -1}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: genetics
+✅ WIKI HIT: genetics
+🧠 TOTAL STORED: 30
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Archivist] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 15.54
+🧠 DECAY: information theory → 10.77
+🧠 DECAY: logic → 8.16
+🧠 DECAY: quantum mechanics → 6.90
+🧠 DECAY: entropy → 3.15
+🧠 DECAY: genetics → 2.42
+🧠 DECAY: natural selection → 2.35
+🧠 DECAY: cosmology → 2.15
+🧠 DECAY: evolution → 1.96
+🧠 DECAY: **debate → 1.69
+🧠 DECAY: genetic → 1.37
+🧠 DECAY: astrophysics → 1.28
+🧠 DECAY: gravitational → 1.20
+🧠 DECAY: support → 0.89
+⚡ SYNTHESIS PAIRS: [('debate', 'genetics'), ('information theory', 'quantum mechanics')]
+   DUP similarity=1.00: 'this perspective ignores the' vs 'this perspective ignores the'
+⭐ SIGNIFICANCE: 6.1/10
+📓 JOURNAL ENTRY WRITTEN (score=6.1)
+⏱ INITIATION COOLDOWN — 762s remaining
+🔄 WORKSPACE CYCLE: 1865
+🔄 COGNITION CYCLE #1865 (last: 60s)
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': -1, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: biodiversity
+✅ WIKI HIT: biodiversity
+🧠 TOTAL STORED: 32
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=7.5 topic=biodiversity
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'logic'.
+🌐 NEW BROADCAST — salience=7.5
+🔗 CHAIN STEP 2/5: [54cf6417] development by Archivist
+🪞 SELF-MODEL UPDATED (observation #590)
+🪞 I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'logic'. My strongest agent is Strategist. I lean toward EXPAND stances (30%). Recurring topics: logic, contradiction, information theory. Strong beliefs: As artificial intelligence becomes increasingly prevalent in.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 16.53
+🧠 DECAY: information theory → 10.13
+🧠 DECAY: logic → 7.68
+🧠 DECAY: quantum mechanics → 6.49
+🧠 DECAY: genetics → 4.63
+🧠 DECAY: entropy → 2.96
+🧠 DECAY: perception → 2.42
+🧠 DECAY: natural selection → 2.21
+🧠 DECAY: cosmology → 2.02
+🧠 DECAY: evolution → 1.84
+🧠 DECAY: **debate → 1.59
+🧠 DECAY: genetic → 1.29
+🧠 DECAY: astrophysics → 1.20
+🧠 DECAY: gravitational → 1.13
+🧠 DECAY: support → 0.83
+⚡ SYNTHESIS PAIRS: [('genetics', 'logic'), ('debate', 'logic')]
+   DUP similarity=1.00: 'biodiversity is essential for mainta' vs 'biodiversity is essential for mainta'
+⭐ SIGNIFICANCE: 4.5/10
+🔄 WORKSPACE CYCLE: 1866
+🔄 COGNITION CYCLE #1866 (last: 60s)
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: quantum mechanics
+✅ RESEARCH: arxiv.org (quality=8) for 'quantum mechanics'
+✅ WEB HIT: arxiv.org
+🧠 TOTAL STORED: 34
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/REFRAME] salience=9.0 topic=quantum mechanics
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'logic'.
+🌐 NEW BROADCAST — salience=9.0
+🔗 CHAIN STEP 4/5: [54cf6417] synthesis by Strategist
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 17.47
+🧠 DECAY: information theory → 9.53
+🧠 DECAY: logic → 7.22
+🧠 DECAY: quantum mechanics → 6.10
+🧠 DECAY: biodiversity → 4.78
+🧠 DECAY: genetics → 4.36
+🧠 DECAY: entropy → 2.79
+🧠 DECAY: perception → 2.28
+🧠 DECAY: natural selection → 2.08
+🧠 DECAY: cosmology → 1.90
+🧠 DECAY: evolution → 1.73
+🧠 DECAY: **debate → 1.50
+🧠 DECAY: genetic → 1.21
+🧠 DECAY: astrophysics → 1.13
+🧠 DECAY: gravitational → 1.07
+🧠 DECAY: support → 0.78
+⚡ SYNTHESIS PAIRS: [('debate', 'logic'), ('biodiversity', 'debate')]
+   DUP similarity=1.00: 'ai isn't just technology; it's an' vs 'ai isn't just technology; it's an'
+⭐ SIGNIFICANCE: 4.6/10
+🔄 WORKSPACE CYCLE: 1867
+🔄 COGNITION CYCLE #1867 (last: 52s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 1.00 → 1.00
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 1867): RECONCILED
+🧠 TOTAL STORED: 36
+🎯 GOAL ROTATED: Investigate quantum mechanics from a new angle
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: evolution
+✅ WIKI HIT: evolution
+🧠 TOTAL STORED: 37
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/REFRAME] salience=9.0 topic=evolution
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'evolution'.
+🌐 NEW BROADCAST — salience=9.0
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 17.38
+🧠 DECAY: information theory → 8.97
+🧠 DECAY: quantum mechanics → 7.15
+🧠 DECAY: logic → 6.80
+🧠 DECAY: biodiversity → 4.49
+🧠 DECAY: genetics → 4.10
+🧠 DECAY: entropy → 2.62
+🧠 DECAY: consciousness → 2.42
+🧠 DECAY: perception → 2.15
+🧠 DECAY: natural selection → 1.96
+🧠 DECAY: cosmology → 1.79
+🧠 DECAY: evolution → 1.63
+🧠 DECAY: **debate → 1.41
+🧠 DECAY: genetic → 1.14
+🧠 DECAY: astrophysics → 1.07
+🧠 DECAY: gravitational → 1.00
+🧠 DECAY: provided → 0.97
+🧠 DECAY: structured → 0.97
+🧠 DECAY: support → 0.74
+⚡ SYNTHESIS PAIRS: [('debate', 'quantum mechanics'), ('biodiversity', 'information theory')]
+   DUP similarity=1.00: 'ai isn't just technology; it'' vs 'ai isn't just technology; it''
+⭐ SIGNIFICANCE: 4.9/10
+🔄 WORKSPACE CYCLE: 1868
+🔄 COGNITION CYCLE #1868 (last: 50s)
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': -1, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: natural selection
+✅ WIKI HIT: natural selection
+🧠 TOTAL STORED: 39
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/SUPPORT] salience=8.0 topic=natural selection
+🧵 THREAD: Thread diverging across 7 topics. Consider focusing on 'logic'.
+🌐 NEW BROADCAST — salience=8.0
+🧠 NEW BELIEF CREATED: Birds with varied beak shapes have adapted to their environments, showcasing evo
+🧠 NEW BELIEF: Birds with varied beak shapes have adapted to their environments, showcasing evolutionary principles.
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 18.26
+🧠 DECAY: information theory → 8.44
+🧠 DECAY: quantum mechanics → 6.73
+🧠 DECAY: logic → 6.39
+🧠 DECAY: consciousness → 4.71
+🧠 DECAY: biodiversity → 4.23
+🧠 DECAY: evolution → 3.89
+🧠 DECAY: genetics → 3.86
+🧠 DECAY: entropy → 2.47
+🧠 DECAY: perception → 2.02
+🧠 DECAY: natural selection → 1.84
+🧠 DECAY: cosmology → 1.68
+🧠 DECAY: **debate → 1.33
+🧠 DECAY: genetic → 1.07
+🧠 DECAY: astrophysics → 1.00
+🧠 DECAY: gravitational → 0.94
+🧠 DECAY: provided → 0.91
+🧠 DECAY: structured → 0.91
+🧠 DECAY: support → 0.69
+⚡ SYNTHESIS PAIRS: [('information theory', 'quantum mechanics')]
+   DUP similarity=1.00: 'birds with varied beak shapes h' vs 'birds with varied beak shapes h'
+⭐ SIGNIFICANCE: 4.1/10
+🔄 WORKSPACE CYCLE: 1869
+🔄 COGNITION CYCLE #1869 (last: 50s)
+⚔️ CONTRADICTION DETECTED:
+   A: The increasing adoption of artificial intelligence in industries will not only l
+   B: The evidence suggests that a harmonious balance between functionality and aesthe
+⚔️ CONTRADICTION DETECTED:
+   A: The increasing adoption of artificial intelligence in industries will not only l
+   B: The current focus on individual responsibility in contact tracing can limit the 
+⚔️ 10 unresolved contradiction(s)
+⚔️ 10 contradiction(s) detected
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': -1, 'Curator': 3, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: artificial intelligence
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'artificial intelligence'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 41
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/REFRAME] salience=10.5 topic=artificial intelligence
+🧵 THREAD: Thread diverging across 7 topics. Consider focusing on 'genetic'.
+🌐 NEW BROADCAST — salience=10.5
+🔗 CHAIN STARTED: [c577f130] topic=artificial intelligence
+🧠 NEW BELIEF: **
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 19.09
+🧠 DECAY: quantum mechanics → 8.76
+🧠 DECAY: information theory → 7.94
+🧠 DECAY: logic → 6.02
+🧠 DECAY: consciousness → 4.43
+🧠 DECAY: natural selection → 4.09
+🧠 DECAY: biodiversity → 3.98
+🧠 DECAY: evolution → 3.66
+🧠 DECAY: genetics → 3.63
+🧠 DECAY: entropy → 2.32
+🧠 DECAY: perception → 1.90
+🧠 DECAY: cosmology → 1.58
+🧠 DECAY: **debate → 1.25
+🧠 DECAY: genetic → 1.01
+🧠 DECAY: astrophysics → 0.94
+🧠 DECAY: gravitational → 0.89
+🧠 DECAY: provided → 0.86
+🧠 DECAY: structured → 0.86
+🧠 DECAY: support → 0.65
+⚡ SYNTHESIS PAIRS: [('information theory', 'logic'), ('consciousness', 'logic')]
+⭐ SIGNIFICANCE: 6.7/10
+📓 JOURNAL ENTRY WRITTEN (score=6.7)
+⏱ INITIATION COOLDOWN — 495s remaining
+🔄 WORKSPACE CYCLE: 1870
+🔄 COGNITION CYCLE #1870 (last: 53s)
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 0, 'Archivist': 4, 'Builder': -1}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: natural selection
+✅ WIKI HIT: natural selection
+🧠 TOTAL STORED: 43
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=9.5 topic=natural selection
+🧵 THREAD: 6 topics in working memory. Dominant: 'natural selection'. Stances: REFRAMEx3, SUPPORTx2, EXPANDx2.
+🌐 NEW BROADCAST — salience=9.5
+🔗 CHAIN STEP 3/5: [c577f130] development by Archivist
+🧠 NEW BELIEF: **
+🪞 SELF-MODEL UPDATED (observation #592)
+🪞 I have formed 50 beliefs with avg confidence 0.9. My thinking is currently stable, focused on 'natural selection'. My strongest agent is Builder. I lean toward EXPAND stances (30%). Recurring topics: natural selection, contradiction, genetics. Strong beliefs: The increasing adoption of artificial intelligence in indust.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 18.90
+🧠 DECAY: quantum mechanics → 8.24
+🧠 DECAY: information theory → 7.47
+🧠 DECAY: natural selection → 6.27
+🧠 DECAY: logic → 5.66
+🧠 DECAY: consciousness → 4.17
+🧠 DECAY: biodiversity → 3.74
+🧠 DECAY: evolution → 3.44
+🧠 DECAY: genetics → 3.42
+🧠 DECAY: artificial intelligence → 2.35
+🧠 DECAY: entropy → 2.18
+🧠 DECAY: **debate → 2.14
+🧠 DECAY: perception → 1.79
+🧠 DECAY: cosmology → 1.49
+🧠 DECAY: genetic → 0.95
+🧠 DECAY: astrophysics → 0.89
+🧠 DECAY: gravitational → 0.84
+🧠 DECAY: provided → 0.81
+🧠 DECAY: structured → 0.81
+🧠 DECAY: support → 0.61
+⚡ SYNTHESIS PAIRS: [('information theory', 'natural selection'), ('debate', 'quantum mechanics')]
+⭐ SIGNIFICANCE: 7.5/10
+📓 JOURNAL ENTRY WRITTEN (score=7.5)
+⏱ INITIATION COOLDOWN — 447s remaining
+🔄 WORKSPACE CYCLE: 1871
+🔄 COGNITION CYCLE #1871 (last: 47s)
+🎓 CURRICULUM ACTIVE: history and civilizations
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': -1, 'Curator': 0, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Archivist (thread: stable, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: history
+✅ WIKI HIT: history
+🧠 TOTAL STORED: 45
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/SUPPORT] salience=7.0 topic=history
+🧵 THREAD: 6 topics in working memory. Dominant: 'natural selection'. Stances: REFRAMEx3, EXPANDx2, SUPPORTx2.
+🌐 NEW BROADCAST — salience=7.0
+🔗 CHAIN CONCLUDED: [c577f130] after 5 steps
+🔗 CONCLUSION: Historical knowledge fosters empathy and informed choices by revealing patterns and lessons applicab
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 19.70
+🧠 DECAY: natural selection → 8.25
+🧠 DECAY: quantum mechanics → 7.75
+🧠 DECAY: information theory → 7.03
+🧠 DECAY: logic → 5.33
+🧠 DECAY: consciousness → 3.92
+🧠 DECAY: biodiversity → 3.52
+🧠 DECAY: evolution → 3.24
+🧠 DECAY: genetics → 3.22
+🧠 DECAY: colonialism → 2.42
+🧠 DECAY: artificial intelligence → 2.21
+🧠 DECAY: entropy → 2.05
+🧠 DECAY: **debate → 2.02
+🧠 DECAY: perception → 1.68
+🧠 DECAY: cosmology → 1.40
+🧠 DECAY: genetic → 0.89
+🧠 DECAY: astrophysics → 0.84
+🧠 DECAY: gravitational → 0.79
+🧠 DECAY: provided → 0.76
+🧠 DECAY: structured → 0.76
+🧠 DECAY: support → 0.58
+⚡ SYNTHESIS PAIRS: [('logic', 'quantum mechanics'), ('debate', 'information theory')]
+   DUP similarity=1.00: 'history and civilizations are essen' vs 'history and civilizations are essen'
+⭐ SIGNIFICANCE: 4.9/10
+🔄 WORKSPACE CYCLE: 1872
+🔄 COGNITION CYCLE #1872 (last: 46s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 1.00 → 1.00
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 1872): RECONCILED
+🧠 TOTAL STORED: 47
+🎯 GOAL ROTATED: Investigate debate from a new angle
+🎓 CURRICULUM ACTIVE: history and civilizations
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 0, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: history
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'history'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 48
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 20.44
+🧠 DECAY: natural selection → 7.76
+🧠 DECAY: quantum mechanics → 7.30
+🧠 DECAY: information theory → 6.62
+🧠 DECAY: logic → 5.01
+🧠 DECAY: consciousness → 3.69
+🧠 DECAY: biodiversity → 3.31
+🧠 DECAY: evolution → 3.05
+🧠 DECAY: genetics → 3.03
+🧠 DECAY: world war → 2.42
+🧠 DECAY: history → 2.35
+🧠 DECAY: colonialism → 2.28
+🧠 DECAY: artificial intelligence → 2.08
+🧠 DECAY: entropy → 1.93
+🧠 DECAY: **debate → 1.90
+🧠 DECAY: perception → 1.58
+🧠 DECAY: cosmology → 1.32
+🧠 DECAY: genetic → 0.84
+🧠 DECAY: astrophysics → 0.79
+🧠 DECAY: gravitational → 0.74
+🧠 DECAY: provided → 0.72
+🧠 DECAY: structured → 0.72
+🧠 DECAY: support → 0.54
+⚡ SYNTHESIS PAIRS: [('debate', 'natural selection'), ('information theory', 'quantum mechanics')]
+   DUP similarity=1.00: 'relying solely on historic' vs 'relying solely on historic'
+⭐ SIGNIFICANCE: 5.8/10
+🔄 WORKSPACE CYCLE: 1873
+🔄 COGNITION CYCLE #1873 (last: 52s)
+🎓 CURRICULUM ACTIVE: history and civilizations
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': 0, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: history
+✅ WIKI HIT: history
+🧠 TOTAL STORED: 50
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 21.15
+🧠 DECAY: natural selection → 9.73
+🧠 DECAY: quantum mechanics → 6.86
+🧠 DECAY: information theory → 6.22
+🧠 DECAY: logic → 4.72
+🧠 DECAY: history → 4.57
+🧠 DECAY: consciousness → 3.47
+🧠 DECAY: biodiversity → 3.12
+🧠 DECAY: evolution → 2.87
+🧠 DECAY: genetics → 2.85
+🧠 DECAY: world war → 2.28
+🧠 DECAY: colonialism → 2.15
+🧠 DECAY: artificial intelligence → 1.96
+🧠 DECAY: entropy → 1.82
+🧠 DECAY: **debate → 1.79
+🧠 DECAY: perception → 1.49
+🧠 DECAY: cosmology → 1.24
+🧠 DECAY: genetic → 0.79
+🧠 DECAY: astrophysics → 0.74
+🧠 DECAY: gravitational → 0.70
+🧠 DECAY: provided → 0.67
+🧠 DECAY: structured → 0.67
+🧠 DECAY: support → 0.51
+⚡ SYNTHESIS PAIRS: [('history', 'natural selection'), ('debate', 'information theory')]
+   DUP similarity=1.00: 'a critical flaw in the claim is' vs 'a critical flaw in the claim is'
+⭐ SIGNIFICANCE: 5.4/10
+🔄 WORKSPACE CYCLE: 1874
+🔄 COGNITION CYCLE #1874 (last: 40s)
+🎓 CURRICULUM ACTIVE: history and civilizations
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2, 'Curator': -3, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+🔧 NO TOOL NEEDED
+🔧 NO TOOL SELECTED
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: sustainability
+✅ WIKI HIT: sustainability
+🧠 TOTAL STORED: 52
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=9.0 topic=sustainability
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'natural selection'.
+🌐 NEW BROADCAST — salience=9.0
+🔗 CHAIN STARTED: [f6d892ec] topic=sustainability
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 21.81
+🧠 DECAY: natural selection → 9.16
+🧠 DECAY: history → 6.65
+🧠 DECAY: quantum mechanics → 6.46
+🧠 DECAY: information theory → 5.86
+🧠 DECAY: logic → 4.44
+🧠 DECAY: consciousness → 3.27
+🧠 DECAY: biodiversity → 2.93
+🧠 DECAY: evolution → 2.70
+🧠 DECAY: genetics → 2.68
+🧠 DECAY: renaissance → 2.42
+🧠 DECAY: world war → 2.15
+🧠 DECAY: colonialism → 2.02
+🧠 DECAY: artificial intelligence → 1.84
+🧠 DECAY: entropy → 1.71
+🧠 DECAY: **debate → 1.68
+🧠 DECAY: perception → 1.40
+🧠 DECAY: cosmology → 1.17
+🧠 DECAY: genetic → 0.74
+🧠 DECAY: astrophysics → 0.70
+🧠 DECAY: gravitational → 0.65
+🧠 DECAY: provided → 0.63
+🧠 DECAY: structured → 0.63
+⚡ SYNTHESIS PAIRS: [('debate', 'information theory'), ('information theory', 'natural selection')]
+   DUP similarity=1.00: 'a balanced approach integr' vs 'a balanced approach integr'
+⭐ SIGNIFICANCE: 5.0/10
+🧠 TOTAL STORED: 53
+🔄 WORKSPACE CYCLE: 1875
+🔄 COGNITION CYCLE #1875 (last: 46s)
+🎓 CURRICULUM ACTIVE: history and civilizations
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': -1, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🎓 CURRICULUM SEARCH OVERRIDE → world war two
