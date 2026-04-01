@@ -1,8 +1,8 @@
 {
   "version": 1,
   "created": 1774933976,
-  "last_updated": 1775079433,
-  "observation_count": 614,
+  "last_updated": 1775082004,
+  "observation_count": 617,
   "cognitive_tendencies": {
     "thread_direction": "diverging",
     "dominant_topic": "sustainability",
@@ -11,51 +11,36 @@
     "dominant_stance": "REFRAME"
   },
   "agent_performance": {
+    "Strategist": 3.75,
     "Archivist": 4.0,
-    "Resolver": 1.0,
-    "Strategist": 3.71,
-    "Builder": 4.0
+    "Builder": 4.0,
+    "Resolver": 1.0
   },
   "belief_summary": {
     "total": 50,
     "avg_confidence": 0.9,
     "high_confidence": [
-      "The increasing adoption of artificial intelligence in industries will not only l",
-      "Contrary to belief, AI systems' decision-making capabilities can be improved wit",
-      "The current focus on individual responsibility in contact tracing can limit the "
+      "As artificial intelligence becomes increasingly prevalent in industries, it will",
+      "The development of artificial intelligence will not only increase human creativi",
+      "The increasing adoption of artificial intelligence in industries will not only l"
     ],
     "low_confidence": []
   },
   "topic_obsessions": [
     "sustainability",
-    "contradiction",
+    "consciousness",
     "medicine",
-    "evolution",
-    "consciousness"
+    "cognitive neuroscience",
+    "evolution"
   ],
   "stance_bias": {
-    "REFRAME": 0.37,
-    "RECONCILE": 0.11,
-    "SUPPORT": 0.16,
-    "EXPAND": 0.32,
-    "CHALLENGE": 0.05
+    "REFRAME": 0.35,
+    "EXPAND": 0.35,
+    "CHALLENGE": 0.15,
+    "RECONCILE": 0.1,
+    "SUPPORT": 0.05
   },
   "self_observations": [
-    {
-      "cycle": 1880,
-      "timestamp": 1775076242,
-      "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Strategist. I lean toward REFRAME stances (25%). Recurring topics: sustainability, industrial revolution. Strong beliefs: Building on this, decentralized artificial intelligence syst."
-    },
-    {
-      "cycle": 1880,
-      "timestamp": 1775076258,
-      "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'history'. My strongest agent is Strategist. I lean toward REFRAME stances (31%). Recurring topics: sustainability, industrial revolution. Strong beliefs: Building on this, decentralized artificial intelligence syst."
-    },
-    {
-      "cycle": 1885,
-      "timestamp": 1775076566,
-      "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Strategist. I lean toward EXPAND stances (44%). Recurring topics: sustainability, market failure, contradiction. Strong beliefs: The development of artificial intelligence will not only inc."
-    },
     {
       "cycle": 1885,
       "timestamp": 1775076573,
@@ -140,9 +125,24 @@
       "cycle": 1925,
       "timestamp": 1775079433,
       "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Archivist. I lean toward REFRAME stances (37%). Recurring topics: sustainability, contradiction, medicine. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 1930,
+      "timestamp": 1775079907,
+      "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'consciousness'. My strongest agent is Archivist. I lean toward REFRAME stances (35%). Recurring topics: sustainability, consciousness, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 1935,
+      "timestamp": 1775081975,
+      "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Archivist. I lean toward EXPAND stances (35%). Recurring topics: sustainability, consciousness, medicine. Strong beliefs: As artificial intelligence becomes increasingly prevalent in."
+    },
+    {
+      "cycle": 1935,
+      "timestamp": 1775082004,
+      "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Archivist. I lean toward REFRAME stances (35%). Recurring topics: sustainability, consciousness, medicine. Strong beliefs: As artificial intelligence becomes increasingly prevalent in."
     }
   ],
-  "current_summary": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Archivist. I lean toward REFRAME stances (37%). Recurring topics: sustainability, contradiction, medicine. Strong beliefs: The increasing adoption of artificial intelligence in indust.",
+  "current_summary": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Archivist. I lean toward REFRAME stances (35%). Recurring topics: sustainability, consciousness, medicine. Strong beliefs: As artificial intelligence becomes increasingly prevalent in.",
   "chosen_name": "Nexarion",
   "naming_cycle": 30,
   "naming_rationale": "Named at cycle 30 based on focus on artificial intelligence, covid-19, SUPPORT stance tendency, Curator as strongest agent."
