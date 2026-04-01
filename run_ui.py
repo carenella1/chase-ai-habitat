@@ -327,6 +327,16 @@ TOPIC_ALIASES = {
 }
 
 
+# =========================
+# 📂 INITIATION + JOURNAL CONFIG
+# =========================
+INITIATIONS_FILE = "data/initiations.json"
+JOURNAL_FILE = "data/nexarion_journal.jsonl"
+INITIATION_COOLDOWN = 60 * 20  # seconds between initiations (20 min)
+INITIATION_THRESHOLD = 6.0  # significance score needed (0–10)
+_last_initiation_time = 0  # resets on restart — intentional
+
+
 def normalize_topic_name(topic):
     if not topic:
         return ""
@@ -1059,7 +1069,6 @@ def _clean_cognition_text(raw):
         "Journal Entry:",
         "**Journal Entry",
     ]:
-        raw_thought = raw_thought.replace(label, "")
         text = text.split(label)[-1]
     text = (
         text.replace("---", "")
@@ -1219,6 +1228,7 @@ def _clean_nexarion_output(text: str) -> str:
     return " ".join(text.split()).strip()
 
 
+@app.route("/api/chat", methods=["POST"])
 def api_chat():
     try:
         data = request.get_json() or {}
@@ -1229,13 +1239,7 @@ def api_chat():
         memory = ensure_memory(load_memory())
         history = _load_chat_history()
 
-        # =========================
-        # 🧠 DOMAIN KNOWLEDGE ACQUISITION
-        # If Chase is asking Nexarion to work on a specific domain,
-        # acquire real knowledge before building the prompt.
-        # This is what makes Nexarion actually useful for specific tasks
-        # rather than just reasoning in the abstract.
-        # =========================
+        # Domain knowledge acquisition for task-specific requests
         domain_briefing = ""
         try:
             from habitat.agents.domain_knowledge import (
@@ -1276,7 +1280,7 @@ def api_chat():
         audio_b64 = ""
         try:
             audio_b64 = generate_voice(output)
-        except:
+        except Exception:
             pass
 
         return jsonify({"response": output, "audio": audio_b64})
