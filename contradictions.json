@@ -2,29 +2,6 @@
   "unresolved": [
     {
       "belief_a": {
-        "belief_id": 109,
-        "statement": "The development of artificial intelligence will not only increase human creativity, but also enable the creation of novel artistic forms that blend human and machine creativity.",
-        "confidence": 1.0,
-        "created_by_agent": "Strategist",
-        "status": "active",
-        "created_at": "2026-03-31T04:47:42.469287",
-        "last_updated": "2026-04-01T14:14:53.382889"
-      },
-      "belief_b": {
-        "belief_id": 220,
-        "statement": "Building on this, decentralized artificial intelligence systems in healthcare can lead to improved patient outcomes and enhanced clinical decision-making by leveraging real-time data and machine learn",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T06:34:09.138114",
-        "last_updated": "2026-04-01T14:14:53.376614"
-      },
-      "detected_at": 1775052980,
-      "resolved": false,
-      "detected_cycle": 1505
-    },
-    {
-      "belief_a": {
         "belief_id": 87,
         "statement": "Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems, but also inherent limitations in the development of AI architectures that can perpetuate ",
         "confidence": 1.0,
@@ -209,33 +186,6 @@
     }
   ],
   "resolved": [
-    {
-      "belief_a": {
-        "belief_id": 87,
-        "statement": "Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems, but also inherent limitations in the development of AI architectures that can perpetuate ",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T04:25:35.706134",
-        "last_updated": "2026-04-01T10:40:57.629713"
-      },
-      "belief_b": {
-        "belief_id": 152,
-        "statement": "The current focus on individual responsibility in contact tracing can limit the development of artificial intelligence-powered solutions, leading to a delayed adoption and underutilization of AI-drive",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T05:20:16.509222",
-        "last_updated": "2026-04-01T10:35:58.838656"
-      },
-      "detected_at": 1775040360,
-      "resolved": true,
-      "detected_cycle": 1295,
-      "resolution_text": "--- Contradiction Resolution ---\nBelief A: Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems but also inherent limitations in the development of AI architectures that can perpetuate these issues.\nBelief B: The current focus on individual responsibility in contact tracing can limit the development of artificial intelligence-powered solutio",
-      "verdict": "RECONCILED",
-      "resolved_cycle": 1340,
-      "resolved_at": 1775043190
-    },
     {
       "belief_a": {
         "belief_id": 146,
@@ -1558,6 +1508,33 @@
       "verdict": "RECONCILED",
       "resolved_cycle": 1548,
       "resolved_at": 1775055529
+    },
+    {
+      "belief_a": {
+        "belief_id": 109,
+        "statement": "The development of artificial intelligence will not only increase human creativity, but also enable the creation of novel artistic forms that blend human and machine creativity.",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T04:47:42.469287",
+        "last_updated": "2026-04-01T14:14:53.382889"
+      },
+      "belief_b": {
+        "belief_id": 220,
+        "statement": "Building on this, decentralized artificial intelligence systems in healthcare can lead to improved patient outcomes and enhanced clinical decision-making by leveraging real-time data and machine learn",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T06:34:09.138114",
+        "last_updated": "2026-04-01T14:14:53.376614"
+      },
+      "detected_at": 1775052980,
+      "resolved": true,
+      "detected_cycle": 1505,
+      "resolution_text": "--- Contradiction Resolution ---\nBelief A: The development of artificial intelligence will not only inc\nBelief B: Building on this, decentralized artificial intelligence syst\n\nResolution:\nThe development of AI enhances human creativity and artistic expression while also being instrumental in creating decentralized healthcare systems that improve patient outcomes through real-time data analysis.\n\nV",
+      "verdict": "RECONCILED",
+      "resolved_cycle": 1553,
+      "resolved_at": 1775055800
     }
   ]
 }
