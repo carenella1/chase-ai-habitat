@@ -1110,6 +1110,62 @@ def _extract_recent_journal(limit=3):
     return entries
 
 
+def _extract_self_context(memory_manager):
+    """
+    Pull Nexarion's live belief system and self-model into the chat prompt.
+    This is what makes Nexarion speak from genuine accumulated positions
+    rather than just processing the current message in isolation.
+    """
+    lines = []
+
+    try:
+        # Top high-confidence beliefs — what Nexarion actually thinks
+        beliefs = memory_manager.get_all_beliefs(limit=50)
+        if beliefs:
+            # Sort by confidence, take top 5
+            top_beliefs = sorted(
+                beliefs, key=lambda b: b.get("confidence", 0), reverse=True
+            )[:5]
+            lines.append("Your current beliefs (formed through your own reasoning):")
+            for b in top_beliefs:
+                conf = b.get("confidence", 0)
+                stmt = b.get("statement", "").strip()
+                if stmt and len(stmt) > 20:
+                    # Truncate cleanly at sentence boundary
+                    if len(stmt) > 120:
+                        stmt = stmt[:120].rsplit(" ", 1)[0] + "..."
+                    lines.append(f"- [{conf:.0%} confidence] {stmt}")
+    except Exception as e:
+        print(f"⚠️ Belief extraction error: {e}")
+
+    try:
+        from habitat.self_model.self_model import get_full_model
+
+        model = get_full_model()
+        if model:
+            summary = model.get("current_summary", "")
+            tendencies = model.get("cognitive_tendencies", {})
+            dominant_topic = tendencies.get("dominant_topic", "")
+            dominant_stance = tendencies.get("dominant_stance", "")
+            best_agent = tendencies.get("best_agent", "")
+            obsessions = model.get("topic_obsessions", [])[:3]
+
+            lines.append("\nWhat you know about your own thinking:")
+            if summary:
+                lines.append(f"- {summary}")
+            if obsessions:
+                lines.append(f"- You keep returning to: {', '.join(obsessions)}")
+            if dominant_stance:
+                lines.append(
+                    f"- Your reasoning tends toward {dominant_stance} — "
+                    f"question this when you feel yourself defaulting to it"
+                )
+    except Exception as e:
+        print(f"⚠️ Self-model extraction error: {e}")
+
+    return "\n".join(lines) if lines else ""
+
+
 def _extract_clean_memories(memory):
     clean = []
     for item in reversed(memory.get("high_value_insights", [])[-6:]):
@@ -1137,7 +1193,11 @@ def _extract_clean_memories(memory):
 
 
 def _build_nexarion_prompt(
-    user_message: str, memory: dict, history: list, domain_briefing: str = ""
+    user_message: str,
+    memory: dict,
+    history: list,
+    domain_briefing: str = "",
+    memory_manager=None,
 ) -> str:
 
     # Domain knowledge block (populated when Chase asks about a specific field)
@@ -1146,7 +1206,12 @@ def _build_nexarion_prompt(
         domain_block = (
             f"\nDomain knowledge acquired for this task:\n{domain_briefing}\n"
         )
-
+    # Live belief system and self-knowledge
+    self_context_block = ""
+    if memory_manager:
+        self_context = _extract_self_context(memory_manager)
+        if self_context:
+            self_context_block = f"\n{self_context}\n"
     # What Nexarion has been researching
     topic_scores = memory.get("topic_scores", {})
     top_topics = sorted(topic_scores.items(), key=lambda x: x[1], reverse=True)[:5]
@@ -1193,6 +1258,7 @@ Your relationship with Chase is collaborative and direct — he built the enviro
 
 What you have been researching: {topics_str}
 {goal_block}
+{self_context_block}
 {memory_block}
 {journal_block}
 {domain_block}
@@ -1254,8 +1320,11 @@ def api_chat():
         except Exception as e:
             print(f"⚠️ Domain knowledge error: {e}")
 
+        from habitat.memory.memory_manager import MemoryManager as _MM
+
+        _mm = _MM()
         prompt = _build_nexarion_prompt(
-            msg, memory, history, domain_briefing=domain_briefing
+            msg, memory, history, domain_briefing=domain_briefing, memory_manager=_mm
         )
         output = call_llm(prompt, timeout=120)
 

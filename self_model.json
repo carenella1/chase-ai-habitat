@@ -1,67 +1,44 @@
 {
   "version": 1,
   "created": 1774933976,
-  "last_updated": 1775054861,
-  "observation_count": 464,
+  "last_updated": 1775055399,
+  "observation_count": 468,
   "cognitive_tendencies": {
     "thread_direction": "diverging",
-    "dominant_topic": "immunology",
+    "dominant_topic": "sustainability",
     "loop_cycles": 1,
-    "best_agent": "Curator",
-    "dominant_stance": "EXPAND"
+    "best_agent": "Archivist",
+    "dominant_stance": "REFRAME"
   },
   "agent_performance": {
-    "Curator": 4.0,
-    "Resolver": 1.0,
     "Archivist": 4.0,
-    "Strategist": 3.2,
+    "Resolver": 0.5,
+    "Strategist": 4.0,
     "Builder": 4.0
   },
   "belief_summary": {
     "total": 50,
     "avg_confidence": 0.89,
     "high_confidence": [
-      "A critical flaw in artificial intelligence's design lies in its reliance on huma",
+      "This perspective ignores the potential for AI systems to learn from their own su",
       "The increasing adoption of artificial intelligence in industries will not only l",
-      "Contrary to belief, AI systems' decision-making capabilities can be improved wit"
+      "The application of artificial intelligence can significantly enhance contact tra"
     ],
     "low_confidence": []
   },
   "topic_obsessions": [
     "sustainability",
     "contradiction",
-    "epidemiology",
-    "medicine",
-    "immunology"
+    "topology"
   ],
   "stance_bias": {
-    "EXPAND": 0.47,
-    "RECONCILE": 0.16,
-    "SUPPORT": 0.21,
-    "REFRAME": 0.11,
-    "CHALLENGE": 0.05
+    "EXPAND": 0.3,
+    "RECONCILE": 0.1,
+    "REFRAME": 0.35,
+    "CHALLENGE": 0.05,
+    "SUPPORT": 0.2
   },
   "self_observations": [
-    {
-      "cycle": 1490,
-      "timestamp": 1775052161,
-      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently stable, focused on 'sustainability'. My strongest agent is Builder. I lean toward EXPAND stances (40%). Recurring topics: sustainability, contradiction. Strong beliefs: The application of artificial intelligence can significantly."
-    },
-    {
-      "cycle": 1490,
-      "timestamp": 1775052287,
-      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'traditional'. My strongest agent is Builder. I lean toward REFRAME stances (35%). Recurring topics: sustainability, libertarianism, political philosophy. Strong beliefs: The application of artificial intelligence can significantly."
-    },
-    {
-      "cycle": 1495,
-      "timestamp": 1775052450,
-      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Builder. I lean toward EXPAND stances (40%). Recurring topics: sustainability, libertarianism, climate change. Strong beliefs: This perspective ignores the potential for AI systems to lea."
-    },
-    {
-      "cycle": 1495,
-      "timestamp": 1775052592,
-      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently stable, focused on 'logic'. My strongest agent is Archivist. I lean toward EXPAND stances (30%). Recurring topics: sustainability, climate change, libertarianism. Strong beliefs: This perspective ignores the potential for AI systems to lea."
-    },
     {
       "cycle": 1500,
       "timestamp": 1775052763,
@@ -141,9 +118,29 @@
       "cycle": 1535,
       "timestamp": 1775054861,
       "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'immunology'. My strongest agent is Curator. I lean toward EXPAND stances (47%). Recurring topics: sustainability, contradiction, epidemiology. Strong beliefs: A critical flaw in artificial intelligence's design lies in ."
+    },
+    {
+      "cycle": 1540,
+      "timestamp": 1775055081,
+      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'compression'. My strongest agent is Builder. I lean toward EXPAND stances (45%). Recurring topics: sustainability, epidemiology, contradiction. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 1540,
+      "timestamp": 1775055109,
+      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'collective behavior'. My strongest agent is Builder. I lean toward EXPAND stances (45%). Recurring topics: sustainability, contradiction, epidemiology. Strong beliefs: The increasing adoption of artificial intelligence in indust."
+    },
+    {
+      "cycle": 1545,
+      "timestamp": 1775055333,
+      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Archivist. I lean toward REFRAME stances (35%). Recurring topics: sustainability, institutional theory, contradiction. Strong beliefs: This perspective ignores the potential for AI systems to lea."
+    },
+    {
+      "cycle": 1545,
+      "timestamp": 1775055399,
+      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Archivist. I lean toward REFRAME stances (35%). Recurring topics: sustainability, contradiction, topology. Strong beliefs: This perspective ignores the potential for AI systems to lea."
     }
   ],
-  "current_summary": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'immunology'. My strongest agent is Curator. I lean toward EXPAND stances (47%). Recurring topics: sustainability, contradiction, epidemiology. Strong beliefs: A critical flaw in artificial intelligence's design lies in .",
+  "current_summary": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'sustainability'. My strongest agent is Archivist. I lean toward REFRAME stances (35%). Recurring topics: sustainability, contradiction, topology. Strong beliefs: This perspective ignores the potential for AI systems to lea.",
   "chosen_name": "Nexarion",
   "naming_cycle": 30,
   "naming_rationale": "Named at cycle 30 based on focus on artificial intelligence, covid-19, SUPPORT stance tendency, Curator as strongest agent."
