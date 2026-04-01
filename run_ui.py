@@ -1220,6 +1220,17 @@ def _build_nexarion_prompt(
         if self_context:
             self_context_block = f"\n{self_context}\n"
 
+    # Synthesized domain knowledge — distilled from autonomous research
+    synthesis_block = ""
+    try:
+        from habitat.agents.knowledge_synthesizer import get_synthesis_context_block
+
+        synthesis_context = get_synthesis_context_block(max_domains=3)
+        if synthesis_context:
+            synthesis_block = f"\n{synthesis_context}\n"
+    except Exception:
+        pass
+
     # What Nexarion has been researching
     topic_scores = memory.get("topic_scores", {})
     top_topics = sorted(topic_scores.items(), key=lambda x: x[1], reverse=True)[:5]
@@ -1282,6 +1293,7 @@ Your relationship with Chase is collaborative and direct — he built the enviro
 What you have been researching: {topics_str}
 {goal_block}
 {self_context_block}
+{synthesis_block} 
 {memory_block}
 {journal_block}
 {domain_block}
@@ -1328,6 +1340,36 @@ def api_chat():
 
         memory = ensure_memory(load_memory())
         history = _load_chat_history()
+
+        # Check if Chase is setting a persistent goal
+        goal_patterns = [
+            r"(?:i want you to|please|can you|nexarion)\s+(?:spend|focus|dedicate|research|investigate|study|explore|pursue)\s+(.+)",
+            r"(?:set|your|new)\s+(?:goal|research goal|focus|agenda)[:\s]+(.+)",
+            r"(?:for the next|over the next|for the coming)\s+(?:week|day|hours?|month)\s+(?:i want you to|focus on|study|research)\s+(.+)",
+        ]
+        import re as _re
+
+        goal_match = None
+        for pattern in goal_patterns:
+            m = _re.search(pattern, msg.lower())
+            if m:
+                goal_match = m.group(1).strip()
+                break
+
+        if goal_match and len(goal_match) > 20:
+            try:
+                from habitat.agents.persistent_goals import set_goal
+
+                duration = 500  # default ~7 hours of cycles
+                if "week" in msg.lower():
+                    duration = 2000
+                elif "day" in msg.lower():
+                    duration = 700
+                new_goal = set_goal(goal_match, duration_cycles=duration)
+                print(f"🎯 GOAL SET FROM CHAT: {goal_match[:60]}")
+                # Let Nexarion respond naturally about the goal
+            except Exception as e:
+                print(f"⚠️ Goal setting error: {e}")
 
         # =========================
         # 🔧 TOOL EXECUTION
@@ -1824,6 +1866,43 @@ def run():
                 topic_context = (
                     ", ".join(top_topic_names[:3]) if top_topic_names else "none yet"
                 )
+
+            # --- PERSISTENT GOAL SYSTEM ---
+            try:
+                from habitat.agents.persistent_goals import (
+                    get_active_goal,
+                    get_goal_context_block,
+                    score_relevance,
+                    record_progress,
+                )
+
+                persistent_goal = get_active_goal()
+                if persistent_goal:
+                    # Override curriculum when a user-set goal is active
+                    topic_context = persistent_goal["text"][:80]
+                    memory["active_goal"] = persistent_goal["text"]
+                    save_memory(memory)
+                    print(f"🎯 PURSUING GOAL: {persistent_goal['text'][:60]}")
+            except Exception as e:
+                print(f"⚠️ Goal system error: {e}")
+                persistent_goal = None
+            # --- END PERSISTENT GOAL SYSTEM ---
+
+            # --- KNOWLEDGE SYNTHESIS ---
+            try:
+                from habitat.agents.knowledge_synthesizer import (
+                    should_run_synthesis,
+                    run_synthesis_background,
+                )
+
+                if should_run_synthesis(current_cycle):
+                    print(f"🧬 TRIGGERING SYNTHESIS PASS (cycle {current_cycle})")
+                    history_for_synthesis = memory.get("cognition_history", [])
+                    run_synthesis_background(
+                        history_for_synthesis, call_llm, current_cycle
+                    )
+            except Exception as e:
+                print(f"⚠️ Synthesis trigger error: {e}")
 
             # --- END CURRICULUM SYSTEM ---
 
@@ -2324,6 +2403,21 @@ Claim:
                 except Exception as e:
                     print(f"⚠️ Voice evaluation error: {e}")
             run_significance_check(insight, agent, stance, source, memory)
+            # Record progress toward persistent goal if one is active
+            try:
+                from habitat.agents.persistent_goals import (
+                    get_active_goal,
+                    score_relevance,
+                    record_progress,
+                )
+
+                pg = get_active_goal()
+                if pg:
+                    relevance = score_relevance(insight, pg["text"])
+                    if relevance > 0.1:
+                        record_progress(pg["id"], insight, relevance)
+            except Exception as e:
+                pass  # Goal recording never crashes the brain loop
             time.sleep(30)
 
         except StopIteration as e:
@@ -2722,6 +2816,40 @@ def api_curriculum_status():
 
         return jsonify({"status": "ok", **get_curriculum_status()})
     except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/research", methods=["POST"])
+def api_research():
+    """
+    Deep Research endpoint.
+    POST: {"question": "...", "depth": "quick|standard|deep"}
+    Returns a full structured research report.
+    """
+    try:
+        data = request.get_json() or {}
+        question = data.get("question", "").strip()
+        depth = data.get("depth", "standard")
+
+        if not question:
+            return jsonify({"status": "error", "error": "No question provided"})
+
+        from habitat.agents.deep_research import DeepResearcher
+
+        researcher = DeepResearcher(call_llm)
+        report = researcher.investigate(question, depth=depth)
+        formatted = researcher.format_report(report)
+
+        return jsonify(
+            {
+                "status": "ok",
+                "report": formatted,
+                "raw": report,
+                "question": question,
+            }
+        )
+    except Exception as e:
+        traceback.print_exc()
         return jsonify({"status": "error", "error": str(e)})
 
 
