@@ -756,7 +756,10 @@ def api_cognition_all():
                 "domains_visited": domains_visited[-20:],
             },
         }
-    )
+
+@app.route("/research")
+def research_page():
+    return render_template("research.html", active="research")    )
 
 
 @app.route("/api/contradictions")
@@ -2898,13 +2901,6 @@ def api_synthesis_status():
         return jsonify({"status": "ok", **get_synthesis_status()})
     except Exception as e:
         return jsonify({"status": "error", "error": str(e)})
-
-
-app.route("/research")
-
-
-def research_page():
-    return render_template("research.html", active="research")
 
 
 # =========================

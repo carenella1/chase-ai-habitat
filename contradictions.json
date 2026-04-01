@@ -11,29 +11,6 @@
         "last_updated": "2026-04-01T20:45:58.531537"
       },
       "belief_b": {
-        "belief_id": 174,
-        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
-        "confidence": 1.0,
-        "created_by_agent": "Strategist",
-        "status": "active",
-        "created_at": "2026-03-31T05:48:29.819439",
-        "last_updated": "2026-04-01T20:45:58.526963"
-      },
-      "detected_at": 1775076411,
-      "resolved": false,
-      "detected_cycle": 1883
-    },
-    {
-      "belief_a": {
-        "belief_id": 109,
-        "statement": "The development of artificial intelligence will not only increase human creativity, but also enable the creation of novel artistic forms that blend human and machine creativity.",
-        "confidence": 1.0,
-        "created_by_agent": "Strategist",
-        "status": "active",
-        "created_at": "2026-03-31T04:47:42.469287",
-        "last_updated": "2026-04-01T20:45:58.531537"
-      },
-      "belief_b": {
         "belief_id": 172,
         "statement": "As artificial intelligence becomes increasingly prevalent in industries, it will not only streamline processes and cut costs but also enable more effective decision-making by providing data-driven ins",
         "confidence": 1.0,
@@ -232,33 +209,6 @@
     }
   ],
   "resolved": [
-    {
-      "belief_a": {
-        "belief_id": 87,
-        "statement": "Human cognitive biases are not only obstacles to effective decision-making in artificial intelligence systems, but also inherent limitations in the development of AI architectures that can perpetuate ",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T04:25:35.706134",
-        "last_updated": "2026-04-01T17:13:29.367384"
-      },
-      "belief_b": {
-        "belief_id": 256,
-        "statement": "Contrary to belief, AI systems' decision-making capabilities can be improved without harnessing human expertise.",
-        "confidence": 1.0,
-        "created_by_agent": "Curator",
-        "status": "active",
-        "created_at": "2026-03-31T14:43:44.669227",
-        "last_updated": "2026-04-01T17:13:29.360237"
-      },
-      "detected_at": 1775063670,
-      "resolved": true,
-      "detected_cycle": 1673,
-      "resolution_text": "**Resolution:**\n\nThe resolution lies in understanding that while human cognitive biases pose challenges to AI's effectiveness (Belief A), AI can enhance its decision-making by designing systems that minimize the influence of these biases without relying on human expertise (Belief B). Thus, both beliefs coexist by addressing complementary aspects\u2014acknowledging the problem and offering a solution.\n\n",
-      "verdict": "RECONCILED",
-      "resolved_cycle": 1723,
-      "resolved_at": 1775066324
-    },
     {
       "belief_a": {
         "belief_id": 256,
@@ -1581,6 +1531,33 @@
       "verdict": "RECONCILED",
       "resolved_cycle": 1922,
       "resolved_at": 1775079241
+    },
+    {
+      "belief_a": {
+        "belief_id": 109,
+        "statement": "The development of artificial intelligence will not only increase human creativity, but also enable the creation of novel artistic forms that blend human and machine creativity.",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T04:47:42.469287",
+        "last_updated": "2026-04-01T20:45:58.531537"
+      },
+      "belief_b": {
+        "belief_id": 174,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making processes.",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T05:48:29.819439",
+        "last_updated": "2026-04-01T20:45:58.526963"
+      },
+      "detected_at": 1775076411,
+      "resolved": true,
+      "detected_cycle": 1883,
+      "resolution_text": "**Contradiction Resolution:**\n\nBelief A emphasizes the enhancement of human creativity through AI, leading to innovative artistic forms.  \nBelief B highlights AI's role in improving industrial efficiency and decision-making.\n\n**Resolution:** Both beliefs can coexist as AI's versatility allows it to enhance creativity in arts while simultaneously boosting efficiency and effectiveness in industries.",
+      "verdict": "RECONCILED",
+      "resolved_cycle": 1927,
+      "resolved_at": 1775079582
     }
   ]
 }
