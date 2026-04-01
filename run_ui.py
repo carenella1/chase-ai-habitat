@@ -1335,8 +1335,15 @@ def api_chat():
                     result = execute_tool(tool_name, param)
                     tool_results.append(result)
                 tool_context = format_tools_for_prompt(tool_results)
+            else:
+                print("🔧 NO TOOL SELECTED")
+        except ImportError as e:
+            print(f"❌ TOOL IMPORT ERROR: {e}")
         except Exception as e:
-            print(f"⚠️ Tool detection error: {e}")
+            print(f"❌ TOOL EXECUTION ERROR: {e}")
+            import traceback
+
+            traceback.print_exc()
 
         # =========================
         # 🧠 DOMAIN KNOWLEDGE

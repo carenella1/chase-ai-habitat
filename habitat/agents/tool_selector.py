@@ -1,148 +1,391 @@
 """
 tool_selector.py
 
-LLM-driven tool selection — replaces the keyword-based tool_detector.
+Fast intent-based tool selection — no LLM call required.
 
-Instead of maintaining an ever-growing list of keywords and patterns,
-this module asks the LLM itself which tool to use based on the user's
-message. The LLM understands intent naturally, so it handles anything
-the user might ask without requiring keyword maintenance.
+The LLM routing approach failed because DeepSeek R1 reasons about
+whether Nexarion *should* use a tool rather than just routing.
+This version uses fast intent matching that handles natural language
+variations without keyword brittleness.
 
-The selection call uses a minimal prompt and short timeout so it
-stays fast (target: under 10 seconds). It asks for JSON output only.
+Strategy: for each tool, define INTENT PATTERNS — short phrases that
+capture the core meaning. Then score the message against all patterns
+and pick the highest match. This handles "oil barrels", "crude price",
+"WTI futures", "what's oil at" all the same way without listing each.
 
-Architecture:
-1. User message arrives at api_chat
-2. select_tools_for_message() is called with the message
-3. A fast LLM call returns {"tool": "market_data", "param": "CL=F"}
-   or {"tool": "none"} if no tool is needed
-4. Tool executes, result injected into Nexarion prompt
-5. Nexarion responds with real data already in context
-
-Adding a new tool: add it to TOOL_DESCRIPTIONS below.
-The LLM will automatically know to use it — no other changes needed.
+Adding a new tool: add an entry to TOOL_INTENTS with patterns and
+a param_extractor function. Done.
 """
 
-import json
 import re
-import requests
+
 
 # =========================
-# TOOL DESCRIPTIONS
-# Tell the LLM what each tool does so it can make good selections.
-# Keep descriptions short and precise — this is what the LLM reads.
+# COMMODITY MAP
 # =========================
-TOOL_DESCRIPTIONS = {
-    "market_data": "Get the live price and stats for any stock, ETF, cryptocurrency, or commodity. Use the correct yfinance symbol: stocks use ticker (AAPL, TSLA), crypto uses SYMBOL-USD (BTC-USD, ETH-USD), commodities use futures codes (CL=F for oil/crude, GC=F for gold, SI=F for silver, NG=F for natural gas, HG=F for copper, ZW=F for wheat, ZC=F for corn, BZ=F for Brent crude).",
-    "web_fetch": "Fetch and read the full content of any URL. Use when the user provides a URL or asks to read/check a specific website.",
-    "python_exec": "Execute Python code and return the output. Use when the user shares a code block (in backticks) or explicitly asks to run/execute code.",
-    "calculator": "Evaluate a mathematical expression and return the result. Use for arithmetic, percentages, compound interest, unit conversions, or any numerical calculation.",
-    "wiki_deep": "Fetch a full Wikipedia article on any topic. Use when the user asks for a deep dive, comprehensive overview, or detailed explanation of a concept.",
-    "news_search": "Search for recent news articles on any topic. Use when the user asks about latest news, recent events, current developments, or what's happening with something.",
-    "none": "No tool needed. Use for conversational questions, opinions, philosophical discussion, or anything that doesn't require real-time data or computation.",
+COMMODITY_MAP = {
+    "oil": "CL=F",
+    "crude": "CL=F",
+    "barrel": "CL=F",
+    "wti": "CL=F",
+    "brent": "BZ=F",
+    "petroleum": "CL=F",
+    "gold": "GC=F",
+    "silver": "SI=F",
+    "natural gas": "NG=F",
+    "gas futures": "NG=F",
+    "copper": "HG=F",
+    "wheat": "ZW=F",
+    "corn": "ZC=F",
+    "soybean": "ZS=F",
+    "coffee": "KC=F",
+    "cotton": "CT=F",
+    "platinum": "PL=F",
+    "palladium": "PA=F",
+}
+
+KNOWN_TICKERS = {
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "GOOG",
+    "AMZN",
+    "META",
+    "TSLA",
+    "NVDA",
+    "AMD",
+    "NFLX",
+    "UBER",
+    "SNAP",
+    "SPOT",
+    "SHOP",
+    "PLTR",
+    "COIN",
+    "JPM",
+    "BAC",
+    "GS",
+    "MS",
+    "WFC",
+    "C",
+    "V",
+    "MA",
+    "PYPL",
+    "JNJ",
+    "PFE",
+    "MRNA",
+    "ABBV",
+    "UNH",
+    "XOM",
+    "CVX",
+    "COP",
+    "WMT",
+    "TGT",
+    "COST",
+    "HD",
+    "DIS",
+    "T",
+    "VZ",
+    "BA",
+    "LMT",
+    "GE",
+    "CAT",
+    "SPY",
+    "QQQ",
+    "DIA",
+    "IWM",
+    "VTI",
+    "VOO",
+    "BTC",
+    "ETH",
+    "SOL",
+    "ADA",
+    "DOGE",
+    "XRP",
+    "BTC-USD",
+    "ETH-USD",
+    "SOL-USD",
+    "CL=F",
+    "BZ=F",
+    "GC=F",
+    "SI=F",
+    "NG=F",
+    "HG=F",
+    "ZW=F",
+    "ZC=F",
 }
 
 
 # =========================
-# SELECTION PROMPT
+# PARAM EXTRACTORS
 # =========================
-def _build_selection_prompt(message: str) -> str:
-    tool_list = "\n".join(
-        f'- "{name}": {desc}' for name, desc in TOOL_DESCRIPTIONS.items()
+def _extract_market_param(msg):
+    msg_lower = msg.lower()
+    for phrase in sorted(COMMODITY_MAP.keys(), key=len, reverse=True):
+        if phrase in msg_lower:
+            return COMMODITY_MAP[phrase]
+    dollar = re.findall(r"\$([A-Z]{1,5})", msg.upper())
+    if dollar and dollar[0] in KNOWN_TICKERS:
+        return dollar[0]
+    words = re.findall(r"\b([A-Z]{2,5})\b", msg.upper())
+    for word in words:
+        if word in KNOWN_TICKERS:
+            return word
+    return "SPY"
+
+
+def _extract_calc_param(msg):
+    expr = re.search(r"[\d]+(?:\.\d+)?(?:\s*[\+\-\*\/\^]\s*[\d]+(?:\.\d+)?)+", msg)
+    if expr:
+        return expr.group().strip()
+    ci = re.search(
+        r"\$?([\d,]+)\s*(?:at|@)\s*([\d.]+)%.*?(\d+)\s*year", msg, re.IGNORECASE
     )
+    if ci:
+        principal = ci.group(1).replace(",", "")
+        rate = ci.group(2)
+        years = ci.group(3)
+        return f"{principal} * (1 + {rate}/100) ** {years}"
+    return None
 
-    return f"""You are a tool router. Given a user message, decide which tool to use.
 
-Available tools:
-{tool_list}
+def _extract_url_param(msg):
+    url = re.search(r'https?://[^\s<>"{}|\\^`\[\]]+', msg)
+    if url:
+        return url.group()
+    www = re.search(r"www\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*", msg)
+    if www:
+        return "https://" + www.group()
+    return None
 
-User message: "{message}"
 
-Respond with ONLY a JSON object. No explanation. No markdown. Examples:
-{{"tool": "market_data", "param": "CL=F"}}
-{{"tool": "market_data", "param": "AAPL"}}
-{{"tool": "calculator", "param": "10000 * (1 + 0.07) ** 20"}}
-{{"tool": "news_search", "param": "artificial intelligence regulation"}}
-{{"tool": "web_fetch", "param": "https://example.com"}}
-{{"tool": "wiki_deep", "param": "quantum entanglement"}}
-{{"tool": "none", "param": ""}}
+def _extract_code_param(msg):
+    block = re.search(r"```(?:python)?\s*\n?(.*?)```", msg, re.DOTALL)
+    if block:
+        return block.group(1).strip()
+    inline = re.search(r"`([^`]*print\([^`]*)`", msg)
+    if inline:
+        return inline.group(1).strip()
+    return None
 
-JSON response:"""
+
+def _extract_news_param(msg):
+    msg_lower = msg.lower()
+    patterns = [
+        r"(?:latest|recent|current|breaking|today\'s)\s+news\s+(?:about|on|for|regarding)?\s*(.+?)(?:\?|$)",
+        r"news\s+(?:about|on|for|regarding)\s+(.+?)(?:\?|$)",
+        r"what(?:\'s| is)\s+(?:happening|going on)\s+(?:with|in)?\s*(.+?)(?:\?|$)",
+        r"(?:update|updates)\s+(?:on|about)\s+(.+?)(?:\?|$)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, msg_lower)
+        if match:
+            query = match.group(1).strip().rstrip("?.,!")
+            if len(query) > 2:
+                return query
+    clean = re.sub(
+        r"\b(latest|recent|current|news|update|today)\b", "", msg_lower
+    ).strip()
+    if clean and len(clean) > 3:
+        return clean.rstrip("?.,!")
+    return None
+
+
+def _extract_wiki_param(msg):
+    patterns = [
+        r"(?:deep dive|tell me everything|full overview|detailed explanation)\s+(?:on|about|of|into)?\s*(.+?)(?:\?|$)",
+        r"(?:explain|describe|what is|what are)\s+(.+?)\s+(?:in depth|comprehensively|thoroughly|fully)(?:\?|$)",
+    ]
+    msg_lower = msg.lower()
+    for pattern in patterns:
+        match = re.search(pattern, msg_lower)
+        if match:
+            topic = match.group(1).strip().rstrip("?.,!")
+            if len(topic) > 2:
+                return topic
+    return None
+
+
+# =========================
+# TOOL INTENT DEFINITIONS
+# =========================
+TOOL_INTENTS = [
+    {
+        "tool": "web_fetch",
+        "signals": [
+            "http://",
+            "https://",
+            "www.",
+            "fetch ",
+            "read this url",
+            "check this link",
+            "visit this page",
+        ],
+        "negative": [],
+        "extractor": _extract_url_param,
+        "priority": 10,
+    },
+    {
+        "tool": "python_exec",
+        "signals": [
+            "```python",
+            "```\n",
+            "run this code",
+            "execute this",
+            "run the following",
+            "print(",
+            "import numpy",
+            "import pandas",
+            "def ",
+            "for i in range",
+        ],
+        "negative": [],
+        "extractor": _extract_code_param,
+        "priority": 9,
+    },
+    {
+        "tool": "news_search",
+        "signals": [
+            "latest news",
+            "recent news",
+            "news about",
+            "news on",
+            "what's happening",
+            "what is happening",
+            "current events",
+            "breaking news",
+            "today's news",
+            "updates on",
+            "update on",
+            "recently announced",
+            "just released",
+            "what happened with",
+        ],
+        "negative": [],
+        "extractor": _extract_news_param,
+        "priority": 8,
+    },
+    {
+        "tool": "market_data",
+        "signals": [
+            "price of",
+            "current price",
+            "stock price",
+            "share price",
+            "trading at",
+            "market price",
+            "how much is",
+            "what's the price",
+            "what is the price",
+            "cost of",
+            "oil",
+            "crude",
+            "barrel",
+            "barrels",
+            "brent",
+            "wti",
+            "gold price",
+            "silver price",
+            "natural gas",
+            "copper price",
+            "commodity",
+            "commodities",
+            "futures",
+            "stock",
+            "ticker",
+            "nasdaq",
+            "crypto",
+            "bitcoin",
+            "ethereum",
+            "find me the",
+            "get me the",
+            "show me the",
+        ],
+        "negative": ["news", "latest news", "recent news"],
+        "extractor": _extract_market_param,
+        "priority": 7,
+    },
+    {
+        "tool": "calculator",
+        "signals": [
+            "calculate",
+            "compute",
+            "what is",
+            "how much is",
+            "solve",
+            "percent of",
+            "% of",
+            "compound interest",
+            "divided by",
+            "multiplied by",
+            "times",
+            "square root",
+            "sqrt",
+        ],
+        "negative": ["news", "price of", "stock", "crypto", "oil", "gold"],
+        "extractor": _extract_calc_param,
+        "priority": 5,
+    },
+    {
+        "tool": "wiki_deep",
+        "signals": [
+            "deep dive",
+            "tell me everything",
+            "full overview",
+            "comprehensive",
+            "in depth",
+            "explain in detail",
+            "detailed explanation",
+            "thoroughly explain",
+        ],
+        "negative": [],
+        "extractor": _extract_wiki_param,
+        "priority": 6,
+    },
+]
 
 
 # =========================
 # MAIN SELECTOR
 # =========================
-def select_tools_for_message(message: str, call_llm_fn) -> list[tuple[str, str]]:
+def select_tools_for_message(message, call_llm_fn=None):
     """
-    Ask the LLM which tool to use for this message.
-    Returns list of (tool_name, param) tuples — same format as old detect_tools().
-    Returns empty list if no tool needed or if selection fails.
-
-    call_llm_fn: the existing call_llm function from run_ui.py
+    Analyze message and return list of (tool_name, param) to execute.
+    call_llm_fn accepted for API compatibility but intentionally unused.
     """
-    if not message or not message.strip():
+    if not message or len(message.strip()) < 3:
         return []
 
-    # Skip tool selection for very short conversational messages
     msg = message.strip()
-    if len(msg) < 5:
-        return []
+    msg_lower = msg.lower()
 
-    try:
-        prompt = _build_selection_prompt(msg)
+    best_tool = None
+    best_priority = -1
+    best_param = None
 
-        # Short timeout — this is a fast routing call, not a reasoning call
-        raw = call_llm_fn(prompt, timeout=20)
+    for intent in TOOL_INTENTS:
+        if any(neg in msg_lower for neg in intent["negative"]):
+            continue
+        signal_hits = sum(1 for sig in intent["signals"] if sig in msg_lower)
+        if signal_hits == 0:
+            continue
+        effective_priority = intent["priority"] + signal_hits
+        if effective_priority > best_priority:
+            param = intent["extractor"](msg)
+            if param:
+                best_tool = intent["tool"]
+                best_priority = effective_priority
+                best_param = param
 
-        if not raw or not raw.strip():
-            print("⚠️ Tool selector: no response")
-            return []
+    if best_tool and best_param:
+        print(f"🔧 TOOL SELECTED: {best_tool}({best_param[:60]})")
+        return [(best_tool, best_param)]
 
-        # Strip think tags if DeepSeek adds them
-        raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
-
-        # Extract JSON — handle cases where LLM adds surrounding text
-        json_match = re.search(r"\{[^}]+\}", raw)
-        if not json_match:
-            print(f"⚠️ Tool selector: no JSON found in: {raw[:100]}")
-            return []
-
-        result = json.loads(json_match.group())
-        tool = result.get("tool", "none").strip()
-        param = result.get("param", "").strip()
-
-        print(
-            f"🔧 TOOL SELECTED: {tool}({param[:60]})"
-            if tool != "none"
-            else "🔧 NO TOOL NEEDED"
-        )
-
-        if tool == "none" or tool not in TOOL_DESCRIPTIONS:
-            return []
-
-        # Validate param exists for tools that need it
-        if not param and tool != "none":
-            print(f"⚠️ Tool selector: {tool} selected but no param provided")
-            return []
-
-        return [(tool, param)]
-
-    except json.JSONDecodeError as e:
-        print(
-            f"⚠️ Tool selector JSON error: {e} — raw: {raw[:100] if 'raw' in dir() else 'N/A'}"
-        )
-        return []
-    except Exception as e:
-        print(f"⚠️ Tool selector error: {e}")
-        return []
+    print("🔧 NO TOOL NEEDED")
+    return []
 
 
-def format_tools_for_prompt(tool_results: list[dict]) -> str:
-    """
-    Format tool results for injection into the Nexarion prompt.
-    Identical interface to the old tool_detector version.
-    """
+def format_tools_for_prompt(tool_results):
+    """Format tool results for injection into the Nexarion prompt."""
     from habitat.agents.tool_executor import format_tool_result
 
     if not tool_results:
