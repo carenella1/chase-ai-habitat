@@ -16,6 +16,11 @@ import traceback
 import glob
 import random
 from habitat.agents.domain_knowledge import get_domain_briefing, detect_task_domain
+from habitat.agents.curriculum import (
+    advance_curriculum,
+    get_curriculum_search_term,
+    get_curriculum_status,
+)
 from habitat.voice.voice_evolution import (
     evaluate_voice,
     get_current_voice_config,
@@ -64,28 +69,116 @@ from habitat.reasoning.contradiction_engine import (
 )
 
 KNOWN_TOPICS = {
+    # Cognitive science & psychology
     "artificial intelligence",
     "cognitive bias",
     "machine learning",
     "decision making",
     "neural network",
-    "game theory",
-    "quantum mechanics",
-    "information theory",
-    "systems thinking",
     "consciousness",
-    "evolution",
-    "philosophy of mind",
     "neuroscience",
-    "ethics",
-    "epistemology",
-    "complexity theory",
-    "chaos theory",
-    "emergence",
-    "linguistics",
+    "cognitive science",
     "behavioral economics",
     "social psychology",
-    "cognitive science",
+    "epistemology",
+    "philosophy of mind",
+    "neuroplasticity",
+    "memory",
+    "perception",
+    "attention",
+    "emotion",
+    "motivation",
+    "personality",
+    "developmental psychology",
+    # Mathematics & formal sciences
+    "mathematics",
+    "logic",
+    "probability",
+    "statistics",
+    "number theory",
+    "topology",
+    "graph theory",
+    "information theory",
+    "complexity theory",
+    "chaos theory",
+    "game theory",
+    "formal logic",
+    "set theory",
+    # Physical sciences
+    "physics",
+    "quantum mechanics",
+    "thermodynamics",
+    "relativity",
+    "cosmology",
+    "astrophysics",
+    "dark matter",
+    "entropy",
+    "electromagnetism",
+    "chemistry",
+    "organic chemistry",
+    "molecular biology",
+    # Life sciences
+    "evolution",
+    "genetics",
+    "ecology",
+    "biology",
+    "neuroscience",
+    "immunology",
+    "epidemiology",
+    "pharmacology",
+    "genomics",
+    "natural selection",
+    "biodiversity",
+    "cell biology",
+    # Social sciences & humanities
+    "economics",
+    "sociology",
+    "political theory",
+    "anthropology",
+    "linguistics",
+    "history",
+    "philosophy",
+    "ethics",
+    "aesthetics",
+    "cultural studies",
+    "media studies",
+    "communication theory",
+    "systems thinking",
+    "emergence",
+    "complexity",
+    # Technology & engineering
+    "computer science",
+    "cryptography",
+    "distributed systems",
+    "algorithms",
+    "data structures",
+    "software engineering",
+    "cybersecurity",
+    "robotics",
+    "automation",
+    # Medicine & health
+    "medicine",
+    "public health",
+    "psychology",
+    "neurology",
+    "oncology",
+    "epidemiology",
+    "clinical medicine",
+    # Arts & culture
+    "music theory",
+    "art history",
+    "narrative theory",
+    "rhetoric",
+    "architecture",
+    "film theory",
+    # Environment & society
+    "climate change",
+    "ecology",
+    "sustainability",
+    "political economy",
+    "social stratification",
+    "institutional theory",
+    "network theory",
 }
 
 
@@ -227,6 +320,10 @@ TOPIC_ALIASES = {
     "architecture": "systems design",
     "cognitive bias": "cognitive bias",
     "cognitive biases": "cognitive bias",
+    "cognitive bia": "cognitive bias",
+    "cognitive bias": "cognitive bias",
+    "cognitive biases": "cognitive bias",
+    "confirmation": "confirmation bias",
 }
 
 
@@ -947,9 +1044,23 @@ def _clean_cognition_text(raw):
     text = raw
     if "--- Debate Response ---" in text:
         text = text.split("--- Debate Response ---")[-1]
-    for label in ["Agent:", "Stance:", "Claim:", "Response:", "Insight:"]:
-        if label in text:
-            text = text.split(label)[-1]
+    for label in [
+        "Agent:",
+        "Stance:",
+        "Claim:",
+        "Response:",
+        "Insight:",
+        "**Debate Response**",
+        "**Claim:**",
+        "**Response:**",
+        "**Insight:**",
+        "**Journal Entry (Private):**",
+        "**Journal Entry: Nexarion**",
+        "Journal Entry:",
+        "**Journal Entry",
+    ]:
+        raw_thought = raw_thought.replace(label, "")
+        text = text.split(label)[-1]
     text = (
         text.replace("---", "")
         .replace("[1 sentence max]", "")
@@ -1509,6 +1620,20 @@ def run():
                 memory["force_topic_escape"] = False
                 save_memory(memory)
 
+            # --- CURRICULUM SYSTEM ---
+            # Check curriculum before deciding topic context.
+            # The curriculum ensures Nexarion explores all knowledge domains,
+            # not just whatever the workspace has drifted toward.
+            try:
+                from habitat.agents.curriculum import (
+                    advance_curriculum,
+                    get_curriculum_search_term,
+                )
+
+                curriculum_domain = advance_curriculum(current_cycle)
+            except Exception:
+                curriculum_domain = None
+
             if force_escape or workspace.should_break_loop():
                 ESCAPE_DOMAINS = [
                     "quantum mechanics",
@@ -1549,10 +1674,20 @@ def run():
                 memory["active_goal"] = f"Explore {escape} deeply"
                 save_memory(memory)
                 print(f"🔁 LOOP ESCAPE → {escape}")
+
+            elif curriculum_domain:
+                # Curriculum is active — use its domain as context and goal
+                topic_context = curriculum_domain["name"]
+                memory["active_goal"] = curriculum_domain["goal"]
+                save_memory(memory)
+                print(f"🎓 CURRICULUM ACTIVE: {curriculum_domain['name']}")
+
             else:
                 topic_context = (
                     ", ".join(top_topic_names[:3]) if top_topic_names else "none yet"
                 )
+
+            # --- END CURRICULUM SYSTEM ---
 
             scores = score_agents(memory, history)
             reinforcement = memory.get("reinforcement", {})
@@ -1676,6 +1811,12 @@ Claim:
 {claim_seed}"""
 
             raw_output = call_llm(prompt)
+            # Strip DeepSeek R1 chain-of-thought blocks before validation
+            import re
+
+            raw_output = re.sub(
+                r"<think>.*?</think>", "", raw_output, flags=re.DOTALL
+            ).strip()
             if has_valid_structure(raw_output):
                 print("✅ LLM OUTPUT VALID")
                 insight = raw_output.strip()
@@ -1749,6 +1890,20 @@ Claim:
             search_term = normalize_topic_name(
                 generate_search_topic(insight).split(":")[-1].strip()[:80]
             )
+
+            # If curriculum is active and the generated search term drifts
+            # back to an already-dominant topic, override with curriculum term
+            if curriculum_domain:
+                dominant = workspace.get_dominant_topic() or ""
+                if not search_term or search_term.lower() in dominant.lower():
+                    try:
+                        from habitat.agents.curriculum import get_curriculum_search_term
+
+                        search_term = get_curriculum_search_term(curriculum_domain)
+                        print(f"🎓 CURRICULUM SEARCH OVERRIDE → {search_term}")
+                    except Exception:
+                        pass
+
             print(f"🧠 CLEANED TOPIC: {search_term}")
 
             dominant = workspace.get_dominant_topic()
@@ -2420,6 +2575,16 @@ def api_journal_entries():
             pass
     entries = list(reversed(entries[-50:]))
     return jsonify({"entries": entries})
+
+
+@app.route("/api/curriculum/status", methods=["GET"])
+def api_curriculum_status():
+    try:
+        from habitat.agents.curriculum import get_curriculum_status
+
+        return jsonify({"status": "ok", **get_curriculum_status()})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
 
 
 # =========================
