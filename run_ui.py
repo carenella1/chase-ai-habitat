@@ -1321,13 +1321,13 @@ def api_chat():
         # =========================
         tool_context = ""
         try:
-            from habitat.agents.tool_detector import (
-                detect_tools,
+            from habitat.agents.tool_selector import (
+                select_tools_for_message,
                 format_tools_for_prompt,
             )
             from habitat.agents.tool_executor import execute_tool
 
-            detected = detect_tools(msg)
+            detected = select_tools_for_message(msg, call_llm)
             if detected:
                 print(f"🔧 TOOLS DETECTED: {[t[0] for t in detected]}")
                 tool_results = []

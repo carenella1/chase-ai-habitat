@@ -1,4 +1,366 @@
-Flask process started (PID: 517884)
-Waiting for Flask at http://127.0.0.1:5000...
-Flask is ready!
+🌐 GLOBAL WORKSPACE INITIALIZED (Milestone A+B)
+🔥 NEXARION HABITAT ONLINE
+🧠 BRAIN THREAD STARTED
+🌐 GLOBAL WORKSPACE ACTIVE
+🌐 WORKSPACE RESTORED: cycle=1557, topic=general relativity, thread=stable
+🌐 WORKSPACE RESTORED — Cycle 1557
+🔄 WORKSPACE CYCLE: 1558
+🔄 COGNITION CYCLE #1558 (last: 0s)
+🚀 Starting Waitress production server...
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 0.90 → 0.95
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 1558): RECONCILED
+🧠 TOTAL STORED: 364
+🎯 GOAL ROTATED: Investigate sustainability from a new angle
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.6, 'Curator': 0, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: relativity
+❌ WIKI MISS: relativity
+🧠 TOTAL STORED: 366
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=8.5 topic=relativity
+🧵 THREAD: 5 topics in working memory. Dominant: 'thermodynamics'. Stances: REFRAMEx3, CHALLENGEx2, SUPPORTx1, EXPANDx1.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN STARTED: [482dd503] topic=relativity
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 28.74
+🧠 DECAY: sustainability → 11.17
+🧠 DECAY: mathematics → 10.15
+🧠 DECAY: topology → 6.96
+🧠 DECAY: thermodynamics → 6.03
+🧠 DECAY: neural network → 4.57
+🧠 DECAY: computer science → 4.17
+🧠 DECAY: formal logic → 2.76
+🧠 DECAY: institutional theory → 2.51
+🧠 DECAY: general relativity → 2.42
+🧠 DECAY: network theory → 2.38
+🧠 DECAY: aesthetics → 2.35
+🧠 DECAY: epidemiology → 2.03
+🧠 DECAY: sociology → 1.67
+🧠 DECAY: climate change → 1.59
+🧠 DECAY: immunology → 1.47
+🧠 DECAY: collective behavior → 1.39
+🧠 DECAY: medicine → 1.33
+🧠 DECAY: biodiversity → 1.32
+🧠 DECAY: graph theory → 1.28
+🧠 DECAY: relativity → 1.25
+🧠 DECAY: challenge** → 1.17
+🧠 DECAY: number theory → 1.13
+🧠 DECAY: social → 1.07
+🧠 DECAY: systems design → 0.96
+⚡ SYNTHESIS PAIRS: [('sustainability', 'thermodynamics')]
+   DUP similarity=1.00: 'what this overlooks is that whil' vs 'what this overlooks is that whil'
+⭐ SIGNIFICANCE: 3.4/10
+🧠 TOTAL STORED: 367
+🔄 WORKSPACE CYCLE: 1559
+🔄 COGNITION CYCLE #1559 (last: 55s)
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': -1.4, 'Curator': 0, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Archivist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: dark matter
+✅ WIKI HIT: dark matter
+🧠 TOTAL STORED: 369
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/SUPPORT] salience=9.0 topic=dark matter
+🧵 THREAD: Thread diverging across 5 topics. Consider focusing on 'thermodynamics'.
+🌐 NEW BROADCAST — salience=9.0
+🔗 CHAIN STEP 3/5: [482dd503] development by Archivist
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 28.95
+🧠 DECAY: mathematics → 11.98
+🧠 DECAY: sustainability → 10.51
+🧠 DECAY: topology → 6.55
+🧠 DECAY: thermodynamics → 5.67
+🧠 DECAY: neural network → 4.30
+🧠 DECAY: computer science → 3.92
+🧠 DECAY: formal logic → 2.60
+🧠 DECAY: relativity → 2.59
+🧠 DECAY: institutional theory → 2.36
+🧠 DECAY: general relativity → 2.28
+🧠 DECAY: network theory → 2.24
+🧠 DECAY: aesthetics → 2.21
+🧠 DECAY: epidemiology → 1.91
+🧠 DECAY: sociology → 1.57
+🧠 DECAY: climate change → 1.50
+🧠 DECAY: immunology → 1.38
+🧠 DECAY: collective behavior → 1.31
+🧠 DECAY: medicine → 1.25
+🧠 DECAY: biodiversity → 1.24
+🧠 DECAY: graph theory → 1.20
+🧠 DECAY: challenge** → 1.10
+🧠 DECAY: number theory → 1.07
+🧠 DECAY: social → 1.00
+🧠 DECAY: systems design → 0.91
+⚡ SYNTHESIS PAIRS: [('debate', 'mathematics'), ('sustainability', 'thermodynamics')]
+   DUP similarity=1.00: 'a critical flaw in understand' vs 'a critical flaw in understand'
+⭐ SIGNIFICANCE: 5.3/10
+🔄 WORKSPACE CYCLE: 1560
+🔄 COGNITION CYCLE #1560 (last: 46s)
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.6, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🎓 CURRICULUM SEARCH OVERRIDE → entropy
+🧠 CLEANED TOPIC: entropy
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'entropy'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 370
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/REFRAME] salience=9.5 topic=entropy
+🧵 THREAD: Thread diverging across 5 topics. Consider focusing on 'thermodynamics'.
+🌐 NEW BROADCAST — salience=9.5
+🔗 CHAIN STEP 4/5: [482dd503] synthesis by Strategist
+🧠 NEW BELIEF: **
+🪞 SELF-MODEL UPDATED (observation #472)
+🪞 I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'thermodynamics'. My strongest agent is Archivist. I lean toward REFRAME stances (36%). Recurring topics: thermodynamics, computer science, relativity. Strong beliefs: This perspective ignores that functionality and aesthetics a.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 29.06
+🧠 DECAY: mathematics → 11.62
+🧠 DECAY: sustainability → 10.19
+🧠 DECAY: topology → 6.36
+🧠 DECAY: thermodynamics → 5.50
+🧠 DECAY: neural network → 4.17
+🧠 DECAY: computer science → 3.80
+🧠 DECAY: formal logic → 2.52
+🧠 DECAY: relativity → 2.51
+🧠 DECAY: dark matter → 2.42
+🧠 DECAY: institutional theory → 2.29
+🧠 DECAY: general relativity → 2.21
+🧠 DECAY: network theory → 2.17
+🧠 DECAY: aesthetics → 2.15
+🧠 DECAY: epidemiology → 1.86
+🧠 DECAY: sociology → 1.52
+🧠 DECAY: climate change → 1.46
+🧠 DECAY: immunology → 1.34
+🧠 DECAY: collective behavior → 1.27
+🧠 DECAY: medicine → 1.21
+🧠 DECAY: biodiversity → 1.21
+🧠 DECAY: graph theory → 1.17
+🧠 DECAY: challenge** → 1.07
+🧠 DECAY: number theory → 1.03
+🧠 DECAY: social → 0.97
+⚡ SYNTHESIS PAIRS: [('debate', 'sustainability'), ('thermodynamics', 'topology')]
+🎙️ VOICE SIGNAL: stance=REFRAME → +3 philosopher
+🎙️ VOICE SIGNAL: agent=Strategist → +2 challenger
+🎙️ VOICE SIGNAL: high debate intensity (52) → +2 challenger
+🎙️ VOICE STABLE: philosopher (scores: {'analytical': 9.519748708620323, 'challenger': 13.952589069857419, 'explorer': 9.954138870943293, 'philosopher': 11.850963509055404})
+🎙️ VOICE EVALUATED → Philosopher
+⭐ SIGNIFICANCE: 7.2/10
+📓 JOURNAL ENTRY WRITTEN (score=7.2)
+🔔 INITIATION QUEUED (score=7.2): Gravitational waves have opened up new avenues for research, but they also highl...
+🔄 WORKSPACE CYCLE: 1561
+🔄 COGNITION CYCLE #1561 (last: 67s)
+⚔️ CONTRADICTION DETECTED:
+   A: This perspective ignores that functionality and aesthetics are not mutually excl
+   B: Building on this, decentralized artificial intelligence systems in healthcare ca
+⚔️ 10 unresolved contradiction(s)
+⚔️ 10 contradiction(s) detected
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': -1.4, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: information theory
+✅ WIKI HIT: information theory
+🧠 TOTAL STORED: 373
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=10.0 topic=information theory
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'relativity'.
+🌐 NEW BROADCAST — salience=10.0
+🧠 NEW BELIEF CREATED: ** A critical flaw in current thermodynamic models is their inability to account
+🧠 NEW BELIEF: ** A critical flaw in current thermodynamic models is their inability to account for the relationship between thermodynamic entropy and the principles of information theory.
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 28.43
+🧠 DECAY: mathematics → 10.60
+🧠 DECAY: sustainability → 9.30
+🧠 DECAY: thermodynamics → 7.45
+🧠 DECAY: topology → 5.80
+🧠 DECAY: neural network → 3.80
+🧠 DECAY: relativity → 3.70
+🧠 DECAY: computer science → 3.47
+🧠 DECAY: formal logic → 2.30
+🧠 DECAY: entropy → 2.28
+🧠 DECAY: dark matter → 2.21
+🧠 DECAY: institutional theory → 2.09
+🧠 DECAY: general relativity → 2.02
+🧠 DECAY: network theory → 1.98
+🧠 DECAY: aesthetics → 1.96
+🧠 DECAY: epidemiology → 1.69
+🧠 DECAY: sociology → 1.39
+🧠 DECAY: climate change → 1.33
+🧠 DECAY: immunology → 1.22
+🧠 DECAY: collective behavior → 1.16
+🧠 DECAY: medicine → 1.11
+🧠 DECAY: biodiversity → 1.10
+🧠 DECAY: graph theory → 1.07
+🧠 DECAY: challenge** → 0.98
+🧠 DECAY: number theory → 0.94
+⚡ SYNTHESIS PAIRS: [('mathematics', 'thermodynamics'), ('sustainability', 'thermodynamics')]
+   DUP similarity=1.00: '** a critical flaw in current thermodynamic models' vs '** a critical flaw in current thermodynamic models'
+⭐ SIGNIFICANCE: 5.3/10
+🔄 WORKSPACE CYCLE: 1562
+🔄 COGNITION CYCLE #1562 (last: 43s)
+🎓 CURRICULUM ACTIVE: physics and cosmology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 1.6, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Builder (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: information theory
+✅ WIKI HIT: information theory
+🧠 TOTAL STORED: 374
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Builder] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 27.58
+🧠 DECAY: mathematics → 10.29
+🧠 DECAY: sustainability → 9.02
+🧠 DECAY: thermodynamics → 7.22
+🧠 DECAY: topology → 5.63
+🧠 DECAY: neural network → 3.69
+🧠 DECAY: relativity → 3.59
+🧠 DECAY: computer science → 3.37
+🧠 DECAY: information theory → 2.42
+🧠 DECAY: formal logic → 2.23
+🧠 DECAY: entropy → 2.21
+🧠 DECAY: dark matter → 2.15
+🧠 DECAY: institutional theory → 2.03
+🧠 DECAY: general relativity → 1.96
+🧠 DECAY: network theory → 1.92
+🧠 DECAY: aesthetics → 1.90
+🧠 DECAY: epidemiology → 1.64
+🧠 DECAY: sociology → 1.35
+🧠 DECAY: climate change → 1.29
+🧠 DECAY: immunology → 1.18
+🧠 DECAY: collective behavior → 1.13
+🧠 DECAY: medicine → 1.07
+🧠 DECAY: biodiversity → 1.07
+🧠 DECAY: graph theory → 1.03
+🧠 DECAY: **debate → 0.97
+⚡ SYNTHESIS PAIRS: [('mathematics', 'thermodynamics'), ('sustainability', 'thermodynamics')]
+   DUP similarity=1.00: 'the evidence suggests a deeper c' vs 'the evidence suggests a deeper c'
+⭐ SIGNIFICANCE: 5.9/10
+🔄 WORKSPACE CYCLE: 1563
+🔄 COGNITION CYCLE #1563 (last: 40s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 0.90 → 0.95
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 1563): RECONCILED
+🧠 TOTAL STORED: 376
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.6, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: information theory
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'information theory'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 377
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Archivist] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 27.86
+🧠 DECAY: mathematics → 9.68
+🧠 DECAY: sustainability → 8.49
+🧠 DECAY: thermodynamics → 6.80
+🧠 DECAY: topology → 5.29
+🧠 DECAY: information theory → 4.63
+🧠 DECAY: neural network → 3.47
+🧠 DECAY: relativity → 3.38
+🧠 DECAY: computer science → 3.17
+🧠 DECAY: natural selection → 2.42
+🧠 DECAY: formal logic → 2.10
+🧠 DECAY: entropy → 2.08
+🧠 DECAY: dark matter → 2.02
+🧠 DECAY: institutional theory → 1.91
+🧠 DECAY: general relativity → 1.84
+🧠 DECAY: network theory → 1.81
+🧠 DECAY: aesthetics → 1.79
+🧠 DECAY: epidemiology → 1.55
+🧠 DECAY: sociology → 1.27
+🧠 DECAY: climate change → 1.21
+🧠 DECAY: immunology → 1.11
+🧠 DECAY: collective behavior → 1.06
+🧠 DECAY: medicine → 1.01
+🧠 DECAY: biodiversity → 1.01
+🧠 DECAY: graph theory → 0.97
+⚡ SYNTHESIS PAIRS: [('debate', 'sustainability'), ('information theory', 'mathematics')]
+   DUP similarity=1.00: 'this perspective ignores the' vs 'this perspective ignores the'
+⭐ SIGNIFICANCE: 6.1/10
+📓 JOURNAL ENTRY WRITTEN (score=6.1)
+⏱ INITIATION COOLDOWN — 1041s remaining
+🔄 WORKSPACE CYCLE: 1564
+🔄 COGNITION CYCLE #1564 (last: 65s)
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.6000000000000001, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: information theory
+✅ WIKI HIT: information theory
+🧠 TOTAL STORED: 379
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=11.0 topic=information theory
+🧵 THREAD: 6 topics in working memory. Dominant: 'information theory'. Stances: EXPANDx3, REFRAMEx2, CHALLENGEx1, SUPPORTx1.
+🌐 NEW BROADCAST — salience=11.0
+🔗 CHAIN STEP 2/5: [a8cb362d] development by Archivist
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 28.12
+🧠 DECAY: information theory → 9.14
+🧠 DECAY: mathematics → 9.11
+🧠 DECAY: sustainability → 7.99
+🧠 DECAY: thermodynamics → 6.40
+🧠 DECAY: topology → 4.98
+🧠 DECAY: neural network → 3.27
+🧠 DECAY: relativity → 3.18
+🧠 DECAY: computer science → 2.98
+🧠 DECAY: natural selection → 2.28
+🧠 DECAY: formal logic → 1.98
+🧠 DECAY: entropy → 1.96
+🧠 DECAY: dark matter → 1.90
+🧠 DECAY: institutional theory → 1.80
+🧠 DECAY: general relativity → 1.73
+🧠 DECAY: network theory → 1.70
+🧠 DECAY: aesthetics → 1.68
+🧠 DECAY: epidemiology → 1.45
+🧠 DECAY: sociology → 1.19
+🧠 DECAY: climate change → 1.14
+🧠 DECAY: immunology → 1.05
+🧠 DECAY: collective behavior → 1.00
+🧠 DECAY: medicine → 0.95
+🧠 DECAY: biodiversity → 0.95
+🧠 DECAY: graph theory → 0.91
+⚡ SYNTHESIS PAIRS: [('debate', 'mathematics'), ('debate', 'sustainability')]
+   DUP similarity=1.00: 'biological evolution is fundam' vs 'biological evolution is fundam'
+⭐ SIGNIFICANCE: 6.5/10
+📓 JOURNAL ENTRY WRITTEN (score=6.5)
+⏱ INITIATION COOLDOWN — 987s remaining
+🔄 WORKSPACE CYCLE: 1565
+🔄 COGNITION CYCLE #1565 (last: 54s)
+🎓 CURRICULUM ACTIVE: biology and evolution
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.6000000000000001, 'Curator': 3, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Curator (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🎓 CURRICULUM SEARCH OVERRIDE → cell biology
+🧠 CLEANED TOPIC: cell biology
+✅ WIKI HIT: cell biology
+🧠 TOTAL STORED: 381
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Curator/REFRAME] salience=11.0 topic=cell biology
+🧵 THREAD: 6 topics in working memory. Dominant: 'information theory'. Stances: REFRAMEx3, EXPANDx2, CHALLENGEx1, SUPPORTx1.
+🌐 NEW BROADCAST — salience=11.0
 Shutting down Nexarion Habitat...

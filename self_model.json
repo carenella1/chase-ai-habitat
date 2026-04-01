@@ -1,71 +1,47 @@
 {
   "version": 1,
   "created": 1774933976,
-  "last_updated": 1775056992,
-  "observation_count": 471,
+  "last_updated": 1775058015,
+  "observation_count": 476,
   "cognitive_tendencies": {
-    "thread_direction": "stable",
-    "dominant_topic": "mathematics",
+    "thread_direction": "diverging",
+    "dominant_topic": "information theory",
     "loop_cycles": 1,
-    "best_agent": "Strategist",
-    "dominant_stance": "CHALLENGE"
+    "best_agent": "Builder",
+    "dominant_stance": "EXPAND"
   },
   "agent_performance": {
-    "Strategist": 4.0,
-    "Archivist": 4.0,
+    "Archivist": 3.67,
+    "Builder": 4.0,
     "Resolver": 1.0,
-    "Builder": 2.0
+    "Strategist": 4.0,
+    "Curator": 4.0
   },
   "belief_summary": {
     "total": 50,
-    "avg_confidence": 0.89,
+    "avg_confidence": 0.9,
     "high_confidence": [
-      "The evidence suggests that a harmonious balance between functionality and aesthe",
-      "Human cognitive biases are not only obstacles to effective decision-making in ar",
+      "The development of artificial intelligence will not only increase human creativi",
+      "The increasing adoption of artificial intelligence in industries will not only l",
       "Building on this, decentralized artificial intelligence systems in healthcare ca"
     ],
     "low_confidence": []
   },
   "topic_obsessions": [
-    "mathematics",
-    "topology",
-    "thermodynamics",
+    "information theory",
+    "natural selection",
+    "evolution",
     "contradiction",
-    "computer science"
+    "cell biology"
   ],
   "stance_bias": {
-    "CHALLENGE": 0.33,
-    "REFRAME": 0.33,
-    "RECONCILE": 0.13,
-    "EXPAND": 0.13,
-    "SUPPORT": 0.07
+    "EXPAND": 0.37,
+    "RECONCILE": 0.11,
+    "REFRAME": 0.26,
+    "CHALLENGE": 0.16,
+    "SUPPORT": 0.11
   },
   "self_observations": [
-    {
-      "cycle": 1505,
-      "timestamp": 1775053130,
-      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'chemistry'. My strongest agent is Curator. I lean toward EXPAND stances (55%). Recurring topics: sustainability, medicine, chemistry. Strong beliefs: The development of artificial intelligence will not only inc."
-    },
-    {
-      "cycle": 1510,
-      "timestamp": 1775053333,
-      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'electrochemistry'. My strongest agent is Curator. I lean toward EXPAND stances (35%). Recurring topics: sustainability, climate change, medicine. Strong beliefs: Human cognitive biases are not only obstacles to effective d."
-    },
-    {
-      "cycle": 1510,
-      "timestamp": 1775053404,
-      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'climate change'. My strongest agent is Curator. I lean toward EXPAND stances (35%). Recurring topics: sustainability, climate change. Strong beliefs: Human cognitive biases are not only obstacles to effective d."
-    },
-    {
-      "cycle": 1515,
-      "timestamp": 1775053659,
-      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'climate change'. My strongest agent is Strategist. I lean toward EXPAND stances (30%). Recurring topics: climate change, contradiction, carbon cycle. Strong beliefs: This perspective ignores the potential for AI systems to lea."
-    },
-    {
-      "cycle": 1515,
-      "timestamp": 1775053691,
-      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'perspective'. My strongest agent is Strategist. I lean toward REFRAME stances (30%). Recurring topics: climate change, contradiction, carbon cycle. Strong beliefs: This perspective ignores the potential for AI systems to lea."
-    },
     {
       "cycle": 1520,
       "timestamp": 1775053954,
@@ -140,9 +116,34 @@
       "cycle": 1555,
       "timestamp": 1775056992,
       "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently stable, focused on 'mathematics'. My strongest agent is Strategist. I lean toward CHALLENGE stances (33%). Recurring topics: mathematics, topology, thermodynamics. Strong beliefs: The evidence suggests that a harmonious balance between func."
+    },
+    {
+      "cycle": 1560,
+      "timestamp": 1775057476,
+      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'thermodynamics'. My strongest agent is Archivist. I lean toward REFRAME stances (36%). Recurring topics: thermodynamics, computer science, relativity. Strong beliefs: This perspective ignores that functionality and aesthetics a."
+    },
+    {
+      "cycle": 1560,
+      "timestamp": 1775057536,
+      "observation": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently diverging, focused on 'thermodynamics'. My strongest agent is Archivist. I lean toward REFRAME stances (40%). Recurring topics: relativity, computer science, neural network. Strong beliefs: This perspective ignores that functionality and aesthetics a."
+    },
+    {
+      "cycle": 1565,
+      "timestamp": 1775057744,
+      "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently stable, focused on 'information theory'. My strongest agent is Curator. I lean toward REFRAME stances (32%). Recurring topics: information theory, contradiction, relativity. Strong beliefs: Building on this, decentralized artificial intelligence syst."
+    },
+    {
+      "cycle": 1565,
+      "timestamp": 1775057833,
+      "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently stable, focused on 'information theory'. My strongest agent is Builder. I lean toward REFRAME stances (37%). Recurring topics: information theory, contradiction, relativity. Strong beliefs: Building on this, decentralized artificial intelligence syst."
+    },
+    {
+      "cycle": 1570,
+      "timestamp": 1775058015,
+      "observation": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'information theory'. My strongest agent is Builder. I lean toward EXPAND stances (37%). Recurring topics: information theory, natural selection, evolution. Strong beliefs: The development of artificial intelligence will not only inc."
     }
   ],
-  "current_summary": "I have formed 50 beliefs with avg confidence 0.89. My thinking is currently stable, focused on 'mathematics'. My strongest agent is Strategist. I lean toward CHALLENGE stances (33%). Recurring topics: mathematics, topology, thermodynamics. Strong beliefs: The evidence suggests that a harmonious balance between func.",
+  "current_summary": "I have formed 50 beliefs with avg confidence 0.9. My thinking is currently diverging, focused on 'information theory'. My strongest agent is Builder. I lean toward EXPAND stances (37%). Recurring topics: information theory, natural selection, evolution. Strong beliefs: The development of artificial intelligence will not only inc.",
   "chosen_name": "Nexarion",
   "naming_cycle": 30,
   "naming_rationale": "Named at cycle 30 based on focus on artificial intelligence, covid-19, SUPPORT stance tendency, Curator as strongest agent."
