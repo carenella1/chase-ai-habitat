@@ -353,6 +353,90 @@ def tool_news_search(query: str) -> dict:
 
 
 # =========================
+# ADD THIS FUNCTION TO tool_executor.py
+# Place it after tool_news_search() and before TOOL_REGISTRY
+# Then add the entry to TOOL_REGISTRY shown below
+# =========================
+
+
+def tool_web_search(query: str) -> dict:
+    """
+    General web search — searches DuckDuckGo and fetches the top result.
+    This is the catch-all tool for any current information request.
+    Covers: movies, sports, weather, events, prices, people, places — anything.
+    """
+    try:
+        import requests
+        from urllib.parse import quote
+
+        HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; NexarionTools/1.0)"}
+
+        # Step 1: DuckDuckGo HTML search
+        search_url = f"https://html.duckduckgo.com/html/?q={quote(query)}"
+        r = requests.get(search_url, headers=HEADERS, timeout=10)
+
+        # Extract titles and snippets
+        import re
+
+        snippets = re.findall(
+            r'class="result__snippet"[^>]*>(.*?)</a>', r.text, re.DOTALL
+        )
+        titles = re.findall(r'class="result__a"[^>]*>(.*?)</a>', r.text, re.DOTALL)
+        urls = re.findall(r'class="result__url"[^>]*>(.*?)</span>', r.text, re.DOTALL)
+
+        results = []
+        for i in range(min(4, len(titles), len(snippets))):
+            title = re.sub(r"<[^>]+>", "", titles[i]).strip()
+            snippet = re.sub(r"<[^>]+>", "", snippets[i]).strip()
+            if title and snippet:
+                results.append(f"{title}: {snippet}")
+
+        if not results:
+            return {"error": "No search results found", "query": query, "results": []}
+
+        # Step 2: Try to fetch the top result for more detail
+        top_content = ""
+        try:
+            actual_urls = re.findall(r'uddg=(https?[^&"]+)', r.text)
+            if actual_urls:
+                from urllib.parse import unquote
+
+                top_url = unquote(actual_urls[0])
+                fetch_r = requests.get(top_url, headers=HEADERS, timeout=8)
+                html = fetch_r.text
+                # Strip scripts and styles
+                html = re.sub(
+                    r"<script[^>]*>.*?</script>",
+                    "",
+                    html,
+                    flags=re.DOTALL | re.IGNORECASE,
+                )
+                html = re.sub(
+                    r"<style[^>]*>.*?</style>",
+                    "",
+                    html,
+                    flags=re.DOTALL | re.IGNORECASE,
+                )
+                html = re.sub(r"<[^>]+>", " ", html)
+                text = re.sub(r"\s+", " ", html).strip()
+                # Take meaningful sentences
+                sentences = [s.strip() for s in text.split(".") if len(s.strip()) > 40]
+                top_content = ". ".join(sentences[:8])
+        except Exception:
+            pass  # Top result fetch is best-effort
+
+        return {
+            "query": query,
+            "results": results,
+            "top_content": top_content[:1500] if top_content else "",
+            "summary": " | ".join(results[:3]),
+        }
+
+    except Exception as e:
+        return {"error": str(e), "query": query, "results": []}
+
+
+# =========================
 # TOOL REGISTRY
 # =========================
 TOOL_REGISTRY = {
@@ -391,6 +475,12 @@ TOOL_REGISTRY = {
         "description": "Search for recent news on a topic",
         "param": "query",
         "example": "news_search('AI regulation 2025')",
+    },
+    "web_search": {
+        "function": tool_web_search,
+        "description": "General web search for any current information",
+        "param": "query",
+        "example": "web_search('number 1 movie Philippines 2025')",
     },
 }
 
@@ -471,6 +561,17 @@ def format_tool_result(result: dict) -> str:
             return f"[News: {query}] No results found"
         lines = [f"[Recent news: {query}]"]
         lines.extend(f"• {r}" for r in results[:4])
+        return "\n".join(lines)
+
+    elif tool == "web_search":
+        results = result.get("results", [])
+        top = result.get("top_content", "")
+        query = result.get("query", "")
+        lines = [f"[Web search: {query}]"]
+        if top:
+            lines.append(top[:1000])
+        elif results:
+            lines.extend(f"• {r}" for r in results[:4])
         return "\n".join(lines)
 
     # Generic fallback
