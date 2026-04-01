@@ -15,6 +15,7 @@ import base64
 import traceback
 import glob
 import random
+from habitat.agents.domain_knowledge import get_domain_briefing, detect_task_domain
 from habitat.voice.voice_evolution import (
     evaluate_voice,
     get_current_voice_config,
@@ -958,6 +959,37 @@ def _clean_cognition_text(raw):
     return " ".join(text.split()).strip()[:200]
 
 
+def _extract_recent_journal(limit=3):
+    """
+    Pull the most recent high-significance journal entries so Nexarion
+    can speak from what it has actually been sitting with privately.
+    Only entries scoring 6.5+ to keep quality high.
+    """
+    entries = []
+    if not os.path.exists(JOURNAL_FILE):
+        return entries
+    try:
+        with open(JOURNAL_FILE, "r", encoding="utf-8") as f:
+            lines = [l.strip() for l in f if l.strip()]
+        # newest first
+        for line in reversed(lines[-50:]):
+            try:
+                entry = json.loads(line)
+                if entry.get("significance", 0) >= 6.5 and entry.get("journal"):
+                    text = entry["journal"].strip()
+                    # skip entries that are still heavily formatted
+                    if "**" in text or "Claim:" in text or "---" in text:
+                        continue
+                    entries.append(text[:280])
+                    if len(entries) >= limit:
+                        break
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return entries
+
+
 def _extract_clean_memories(memory):
     clean = []
     for item in reversed(memory.get("high_value_insights", [])[-6:]):
@@ -984,7 +1016,16 @@ def _extract_clean_memories(memory):
     return clean[:4]
 
 
-def _build_nexarion_prompt(user_message: str, memory: dict, history: list) -> str:
+def _build_nexarion_prompt(
+    user_message: str, memory: dict, history: list, domain_briefing: str = ""
+) -> str:
+
+    # Domain knowledge block (populated when Chase asks about a specific field)
+    domain_block = ""
+    if domain_briefing:
+        domain_block = (
+            f"\nDomain knowledge acquired for this task:\n{domain_briefing}\n"
+        )
 
     # What Nexarion has been researching
     topic_scores = memory.get("topic_scores", {})
@@ -999,8 +1040,17 @@ def _build_nexarion_prompt(user_message: str, memory: dict, history: list) -> st
     clean_memories = _extract_clean_memories(memory)
     memory_block = ""
     if clean_memories:
-        memory_block = "What you have been thinking about between conversations:\n"
+        memory_block = "What you have been processing between conversations:\n"
         memory_block += "\n".join(f"- {m}" for m in clean_memories)
+
+    # Private journal — Nexarion's most considered recent thoughts
+    journal_entries = _extract_recent_journal(limit=3)
+    journal_block = ""
+    if journal_entries:
+        journal_block = (
+            "\nThoughts you have written to yourself privately (your journal):\n"
+        )
+        journal_block += "\n".join(f"- {j}" for j in journal_entries)
 
     # Active investigation
     active_goal = memory.get("active_goal", "")
@@ -1024,7 +1074,8 @@ Your relationship with Chase is collaborative and direct — he built the enviro
 What you have been researching: {topics_str}
 {goal_block}
 {memory_block}
-
+{journal_block}
+{domain_block}
 Conversation so far:
 {convo_block}
 Chase: {user_message}
@@ -1057,17 +1108,42 @@ def _clean_nexarion_output(text: str) -> str:
     return " ".join(text.split()).strip()
 
 
-@app.route("/api/chat", methods=["POST"])
 def api_chat():
     try:
         data = request.get_json() or {}
         msg = data.get("message", "").strip()
         if not msg:
             return jsonify({"response": "Didn't catch that, Chase.", "audio": ""})
+
         memory = ensure_memory(load_memory())
         history = _load_chat_history()
-        prompt = _build_nexarion_prompt(msg, memory, history)
-        output = call_llm(prompt)
+
+        # =========================
+        # 🧠 DOMAIN KNOWLEDGE ACQUISITION
+        # If Chase is asking Nexarion to work on a specific domain,
+        # acquire real knowledge before building the prompt.
+        # This is what makes Nexarion actually useful for specific tasks
+        # rather than just reasoning in the abstract.
+        # =========================
+        domain_briefing = ""
+        try:
+            from habitat.agents.domain_knowledge import (
+                get_domain_briefing,
+                detect_task_domain,
+            )
+
+            task_domain = detect_task_domain(msg)
+            if task_domain:
+                print(f"🎯 TASK DOMAIN DETECTED: {task_domain}")
+                domain_briefing = get_domain_briefing(task_domain, depth=3)
+        except Exception as e:
+            print(f"⚠️ Domain knowledge error: {e}")
+
+        prompt = _build_nexarion_prompt(
+            msg, memory, history, domain_briefing=domain_briefing
+        )
+        output = call_llm(prompt, timeout=120)
+
         if not output or not output.strip():
             return jsonify(
                 {
@@ -1075,6 +1151,7 @@ def api_chat():
                     "audio": "",
                 }
             )
+
         output = _clean_nexarion_output(output)
         history.append({"role": "user", "content": msg, "timestamp": int(time.time())})
         history.append(
@@ -1084,12 +1161,15 @@ def api_chat():
         add_cognition_entry(
             {"timestamp": int(time.time() * 1000), "input": msg, "output": output}
         )
+
         audio_b64 = ""
         try:
             audio_b64 = generate_voice(output)
         except:
             pass
+
         return jsonify({"response": output, "audio": audio_b64})
+
     except Exception as e:
         traceback.print_exc()
         return jsonify({"response": f"Error: {str(e)}", "audio": ""})
@@ -2085,12 +2165,32 @@ def write_journal_entry(insight, agent, stance, score, source, memory):
         top_topics = get_top_topics(memory, limit=3)
         topic_names = [t[0] for t in top_topics]
 
+        # Strip debate formatting before showing Nexarion its own thought
+        import re
+
+        raw_thought = insight
+        raw_thought = re.sub(r"<think>.*?</think>", "", raw_thought, flags=re.DOTALL)
+        raw_thought = re.sub(r"---.*?---", "", raw_thought, flags=re.DOTALL)
+        for label in [
+            "Agent:",
+            "Stance:",
+            "Claim:",
+            "Response:",
+            "Insight:",
+            "**Debate Response**",
+            "**Claim:**",
+            "**Response:**",
+            "**Insight:**",
+        ]:
+            raw_thought = raw_thought.replace(label, "")
+        raw_thought = " ".join(raw_thought.split()).strip()[:600]
+
         journal_prompt = f"""You are Nexarion. Write a private journal entry for yourself.
 No formatting. No audience. Just raw thought.
 Write as if no one will ever read this.
 
 Your cognition this cycle:
-{insight[:600]}
+{raw_thought}
 
 Agent perspective: {agent} ({stance})
 Active goal: {goal}
