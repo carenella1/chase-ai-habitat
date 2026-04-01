@@ -1469,3 +1469,1099 @@ Memory stored in tier: high_value | importance: 6
 ⭐ SIGNIFICANCE: 4.9/10
 🔄 WORKSPACE CYCLE: 637
 🔄 COGNITION CYCLE #637 (last: 65s)
+⚔️ CONTRADICTION DETECTED:
+   A: The increasing adoption of artificial intelligence in industries will not only l
+   B: The application of artificial intelligence can significantly enhance contact tra
+⚔️ 10 unresolved contradiction(s)
+⚔️ 10 contradiction(s) detected
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: debate
+✅ WIKI HIT: debate
+🧠 TOTAL STORED: 873
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=9.5 topic=debate
+🧵 THREAD: 3 topics in working memory. Dominant: 'cognitive bia'. Stances: EXPANDx3, CHALLENGEx3, REFRAMEx1.
+🌐 NEW BROADCAST — salience=9.5
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: cognitive bia → 35.28
+🧠 DECAY: debate → 33.52
+🧠 DECAY: **debate → 3.55
+🧠 DECAY: confirmation → 2.93
+🧠 DECAY: linguistic semantics → 1.81
+🧠 DECAY: systems thinking → 1.68
+🧠 DECAY: while → 1.40
+🧠 DECAY: storie → 1.30
+🧠 DECAY: narrative → 1.20
+🧠 DECAY: cognitive architecture → 1.14
+🧠 DECAY: perspective → 1.07
+🧠 DECAY: overlooked → 0.93
+🧠 DECAY: consciousness neuroscience → 0.87
+🧠 DECAY: debater → 0.74
+🧠 DECAY: critical → 0.69
+🧠 DECAY: challenge → 0.67
+🧠 DECAY: overlook → 0.64
+🧠 DECAY: media → 0.53
+⚡ SYNTHESIS PAIRS: [('cognitive bia', 'debate'), ('**debate', 'debate')]
+   DUP similarity=1.00: 'debates inherently prioritize wi' vs 'debates inherently prioritize wi'
+⭐ SIGNIFICANCE: 5.8/10
+🔄 WORKSPACE CYCLE: 638
+🔄 COGNITION CYCLE #638 (last: 46s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 0.85 → 0.90
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 638): RECONCILED
+🧠 TOTAL STORED: 874
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: debate
+✅ WIKI HIT: debate
+🧠 TOTAL STORED: 875
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 35.91
+🧠 DECAY: cognitive bia → 34.22
+🧠 DECAY: **debate → 3.44
+🧠 DECAY: confirmation → 2.84
+🧠 DECAY: linguistic semantics → 1.76
+🧠 DECAY: systems thinking → 1.63
+🧠 DECAY: while → 1.36
+🧠 DECAY: storie → 1.26
+🧠 DECAY: narrative → 1.17
+🧠 DECAY: cognitive architecture → 1.11
+🧠 DECAY: perspective → 1.04
+🧠 DECAY: overlooked → 0.90
+🧠 DECAY: consciousness neuroscience → 0.84
+🧠 DECAY: debater → 0.72
+🧠 DECAY: critical → 0.67
+🧠 DECAY: challenge → 0.65
+🧠 DECAY: overlook → 0.62
+🧠 DECAY: media → 0.52
+⚡ SYNTHESIS PAIRS: [('confirmation', 'debate'), ('**debate', 'confirmation')]
+   DUP similarity=1.00: 'debates often prioritize win' vs 'debates often prioritize win'
+⭐ SIGNIFICANCE: 5.8/10
+🔄 WORKSPACE CYCLE: 639
+🔄 COGNITION CYCLE #639 (last: 65s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.4000000000000001, 'Curator': 3, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Curator (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+WEB RESEARCH: 'cognitive bia'
+Trying DDG Instant Answer API...
+DDG API: no content for 'cognitive bia'
+Trying DDG HTML search...
+DDG HTML: 6 results for 'cognitive bia'
+Fetching: https://en.wikipedia.org/wiki/Cognitive_bias...
+DDG HTML success: en.wikipedia.org (426 chars)
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 876
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Curator/CHALLENGE] salience=10.0 topic=cognitive bia
+🧵 THREAD: 3 topics in working memory. Dominant: 'cognitive bia'. Stances: CHALLENGEx4, EXPANDx2, REFRAMEx1.
+🌐 NEW BROADCAST — salience=10.0
+🔗 CHAIN STARTED: [2cf5a96c] topic=cognitive bia
+🧠 NEW BELIEF CREATED: While debates can involve strategic competition, they also provide structured op
+🧠 NEW BELIEF: While debates can involve strategic competition, they also provide structured opportunities for truth-seeking through evidence and rebuttal.
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 38.22
+🧠 DECAY: cognitive bia → 33.19
+🧠 DECAY: **debate → 3.34
+🧠 DECAY: confirmation → 2.76
+🧠 DECAY: linguistic semantics → 1.70
+🧠 DECAY: systems thinking → 1.58
+🧠 DECAY: while → 1.32
+🧠 DECAY: storie → 1.22
+🧠 DECAY: narrative → 1.13
+🧠 DECAY: cognitive architecture → 1.07
+🧠 DECAY: perspective → 1.01
+🧠 DECAY: overlooked → 0.88
+🧠 DECAY: consciousness neuroscience → 0.82
+🧠 DECAY: debater → 0.70
+🧠 DECAY: critical → 0.65
+🧠 DECAY: challenge → 0.63
+🧠 DECAY: overlook → 0.60
+🧠 DECAY: media → 0.50
+⚡ SYNTHESIS PAIRS: [('confirmation', 'debate'), ('**debate', 'cognitive bia')]
+   DUP similarity=1.00: 'while debates can involve strat' vs 'while debates can involve strat'
+⭐ SIGNIFICANCE: 6.2/10
+📓 JOURNAL ENTRY WRITTEN (score=6.2)
+⏱ INITIATION COOLDOWN — 666s remaining
+🔄 WORKSPACE CYCLE: 640
+🔄 COGNITION CYCLE #640 (last: 75s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': -3, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: cognitive bia
+🧠 TOTAL STORED: 877
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN STEP 2/5: [2cf5a96c] synthesis by Strategist
+🪞 SELF-MODEL UPDATED (observation #127)
+🪞 I have formed 50 beliefs with avg confidence 0.76. My thinking is currently stable, focused on 'cognitive bia'. My strongest agent is Strategist. I lean toward CHALLENGE stances (30%). Recurring topics: cognitive bia, contradiction, debate. Strong beliefs: The increasing adoption of artificial intelligence in indust.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+Memory stored in tier: high_value | importance: 2
+🔥 HIGH VALUE INSIGHT SAVED (importance=2)
+🧠 DECAY: debate → 38.05
+🧠 DECAY: cognitive bia → 34.62
+🧠 DECAY: **debate → 3.24
+🧠 DECAY: confirmation → 2.68
+🧠 DECAY: linguistic semantics → 1.65
+🧠 DECAY: systems thinking → 1.54
+🧠 DECAY: while → 1.28
+🧠 DECAY: storie → 1.18
+🧠 DECAY: narrative → 1.10
+🧠 DECAY: cognitive architecture → 1.04
+🧠 DECAY: perspective → 0.98
+🧠 DECAY: overlooked → 0.85
+🧠 DECAY: consciousness neuroscience → 0.79
+🧠 DECAY: debater → 0.67
+🧠 DECAY: critical → 0.63
+🧠 DECAY: challenge → 0.61
+🧠 DECAY: overlook → 0.58
+🧠 DECAY: media → 0.49
+⚡ SYNTHESIS PAIRS: [('debate', 'linguistic semantics'), ('**debate', 'cognitive bia')]
+   DUP similarity=1.00: 'debates reduce the impact of cogni' vs 'debates reduce the impact of cogni'
+⭐ SIGNIFICANCE: 5.4/10
+🔄 WORKSPACE CYCLE: 641
+🔄 COGNITION CYCLE #641 (last: 47s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.4000000000000001, 'Curator': 0, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Archivist (thread: stable, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: cognitive bia
+🧠 TOTAL STORED: 878
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Archivist] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN STEP 3/5: [2cf5a96c] development by Archivist
+Memory stored in tier: high_value | importance: 2
+🔥 HIGH VALUE INSIGHT SAVED (importance=2)
+🧠 DECAY: debate → 37.88
+🧠 DECAY: cognitive bia → 35.04
+🧠 DECAY: **debate → 3.14
+🧠 DECAY: confirmation → 2.60
+🧠 DECAY: linguistic semantics → 1.60
+🧠 DECAY: systems thinking → 1.49
+🧠 DECAY: while → 1.24
+🧠 DECAY: storie → 1.15
+🧠 DECAY: narrative → 1.07
+🧠 DECAY: cognitive architecture → 1.01
+🧠 DECAY: perspective → 0.95
+🧠 DECAY: overlooked → 0.82
+🧠 DECAY: consciousness neuroscience → 0.77
+🧠 DECAY: debater → 0.65
+🧠 DECAY: critical → 0.61
+🧠 DECAY: challenge → 0.60
+🧠 DECAY: overlook → 0.56
+⚡ SYNTHESIS PAIRS: [('confirmation', 'debate'), ('**debate', 'cognitive bia')]
+   DUP similarity=1.00: 'debate can reduce the impact of cog' vs 'debate can reduce the impact of cog'
+⭐ SIGNIFICANCE: 3.3/10
+🔄 WORKSPACE CYCLE: 642
+🔄 COGNITION CYCLE #642 (last: 50s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+WEB RESEARCH: 'cognitive bia'
+Trying DDG Instant Answer API...
+DDG API: no content for 'cognitive bia'
+Trying DDG HTML search...
+DDG HTML: 6 results for 'cognitive bia'
+Fetching: https://en.wikipedia.org/wiki/Cognitive_bias...
+DDG HTML success: en.wikipedia.org (460 chars)
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 879
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/REFRAME] salience=10.0 topic=cognitive bia
+🧵 THREAD: Thread converging on 'cognitive bia'. Deepen this reasoning.
+🌐 NEW BROADCAST — salience=10.0
+🔗 CHAIN STEP 4/5: [2cf5a96c] synthesis by Strategist
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 37.71
+🧠 DECAY: cognitive bia → 35.44
+🧠 DECAY: **debate → 3.05
+🧠 DECAY: confirmation → 2.52
+🧠 DECAY: linguistic semantics → 1.55
+🧠 DECAY: systems thinking → 1.44
+🧠 DECAY: while → 1.20
+🧠 DECAY: storie → 1.11
+🧠 DECAY: narrative → 1.03
+🧠 DECAY: cognitive architecture → 0.98
+🧠 DECAY: perspective → 0.92
+🧠 DECAY: overlooked → 0.80
+🧠 DECAY: consciousness neuroscience → 0.74
+🧠 DECAY: debater → 0.63
+🧠 DECAY: critical → 0.59
+🧠 DECAY: challenge → 0.58
+🧠 DECAY: overlook → 0.55
+⚡ SYNTHESIS PAIRS: [('**debate', 'linguistic semantics'), ('confirmation', 'debate')]
+   DUP similarity=1.00: 'the emphasis on strategic competit' vs 'the emphasis on strategic competit'
+⭐ SIGNIFICANCE: 6.6/10
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱ INITIATION COOLDOWN — 503s remaining
+🔄 WORKSPACE CYCLE: 643
+🔄 COGNITION CYCLE #643 (last: 65s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 0.75 → 0.80
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 643): RECONCILED
+🧠 TOTAL STORED: 880
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 5.4, 'Curator': 4, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: thermodynamics entropy
+   DUP similarity=1.00: 'while debates can involve strategic competition, t' vs '** while debates can involve strategic competition'
+⚠️ duplicate detected
+⏭️ CYCLE SKIPPED: duplicate_skip
+🔄 WORKSPACE CYCLE: 644
+🔄 COGNITION CYCLE #644 (last: 53s)
+⚔️ CONTRADICTION DETECTED:
+   A: The increasing adoption of artificial intelligence in industries will not only l
+   B: The current focus on individual responsibility in contact tracing can limit the 
+⚔️ CONTRADICTION DETECTED:
+   A: The increasing adoption of artificial intelligence in industries will not only l
+   B: Implementing artificial intelligence (AI) in every industry will lead to signifi
+⚔️ 10 unresolved contradiction(s)
+⚔️ 10 contradiction(s) detected
+🔁 LOOP ESCAPE → astrophysics
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 5.4, 'Curator': 4, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+✅ WIKI HIT: astrophysics
+   DUP similarity=1.00: 'while debates can involve strategic competition, t' vs '** while debates can involve strategic competition'
+⚠️ duplicate detected
+⏭️ CYCLE SKIPPED: duplicate_skip
+🔄 WORKSPACE CYCLE: 645
+🔄 COGNITION CYCLE #645 (last: 45s)
+🎯 GOAL ROTATED: Investigate debate from a new angle
+🔁 LOOP ESCAPE → behavioral ecology
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 5.4, 'Curator': 4, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+WEB RESEARCH: 'behavioral ecology'
+Trying DDG Instant Answer API...
+DDG API: got 1111 chars for 'behavioral ecology'
+DDG API success: 507 chars
+✅ WEB HIT: duckduckgo.com
+🧠 TOTAL STORED: 881
+📡 FEED ENTRY STORED
+🌐 SALIENCE OVERRIDE ACTIVE — accepting forced broadcast
+📡 BROADCAST: [Strategist/REFRAME] salience=9.5 topic=behavioral ecology
+🧵 THREAD: Thread diverging across 3 topics. Consider focusing on 'cognitive bia'.
+🌐 NEW BROADCAST — salience=9.5
+🔗 CHAIN CONCLUDED: [2cf5a96c] after 5 steps
+🔗 CONCLUSION: Recognizing how competition influences reasoning is essentia
+🪞 SELF-MODEL UPDATED (observation #128)
+🪞 I have formed 50 beliefs with avg confidence 0.76. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Curator. I lean toward REFRAME stances (30%). Recurring topics: cognitive bia, contradiction, debate. Strong beliefs: The increasing adoption of artificial intelligence in indust.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 37.55
+🧠 DECAY: cognitive bia → 36.80
+🧠 DECAY: **debate → 2.96
+🧠 DECAY: confirmation → 2.44
+🧠 DECAY: linguistic semantics → 1.51
+🧠 DECAY: systems thinking → 1.40
+🧠 DECAY: while → 1.17
+🧠 DECAY: storie → 1.08
+🧠 DECAY: narrative → 1.00
+🧠 DECAY: cognitive architecture → 0.95
+🧠 DECAY: perspective → 0.89
+🧠 DECAY: overlooked → 0.77
+🧠 DECAY: consciousness neuroscience → 0.72
+🧠 DECAY: debater → 0.62
+🧠 DECAY: critical → 0.57
+🧠 DECAY: challenge → 0.56
+🧠 DECAY: overlook → 0.53
+⚡ SYNTHESIS PAIRS: [('cognitive bia', 'linguistic semantics'), ('**debate', 'debate')]
+🎙️ VOICE SIGNAL: stance=CHALLENGE → +3 challenger
+🎙️ VOICE SIGNAL: agent=Strategist → +2 challenger
+🎙️ VOICE SIGNAL: high debate intensity (148) → +2 challenger
+🎙️ VOICE STABLE: challenger (scores: {'analytical': 6.5055099685168045, 'challenger': 25.98697715648301, 'explorer': 3.165359863208613, 'philosopher': 4.735969202591447})
+🎙️ VOICE EVALUATED → Challenger
+   DUP similarity=1.00: 'while debates can involve strategi' vs 'while debates can involve strategi'
+⭐ SIGNIFICANCE: 4.6/10
+🔄 WORKSPACE CYCLE: 646
+🔄 COGNITION CYCLE #646 (last: 56s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.4000000000000001, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: debate
+✅ WIKI HIT: debate
+🧠 TOTAL STORED: 882
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/SUPPORT] salience=8.5 topic=debate
+🧵 THREAD: Thread diverging across 3 topics. Consider focusing on 'debate'.
+🌐 NEW BROADCAST — salience=8.5
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 37.39
+🧠 DECAY: cognitive bia → 35.70
+🧠 DECAY: **debate → 2.87
+🧠 DECAY: confirmation → 2.37
+🧠 DECAY: linguistic semantics → 1.46
+🧠 DECAY: behavioral ecology → 1.46
+🧠 DECAY: systems thinking → 1.36
+🧠 DECAY: while → 1.13
+🧠 DECAY: storie → 1.05
+🧠 DECAY: narrative → 0.97
+🧠 DECAY: cognitive architecture → 0.92
+🧠 DECAY: perspective → 0.87
+🧠 DECAY: overlooked → 0.75
+🧠 DECAY: consciousness neuroscience → 0.70
+🧠 DECAY: debater → 0.60
+🧠 DECAY: critical → 0.56
+🧠 DECAY: challenge → 0.54
+🧠 DECAY: overlook → 0.52
+⚡ SYNTHESIS PAIRS: [('confirmation', 'linguistic semantics'), ('**debate', 'cognitive bia')]
+   DUP similarity=1.00: 'debates inherently risk fostering a' vs 'debates inherently risk fostering a'
+⭐ SIGNIFICANCE: 5.3/10
+🔄 WORKSPACE CYCLE: 647
+🔄 COGNITION CYCLE #647 (last: 47s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: assumption
+❌ WIKI MISS: assumption
+🧠 TOTAL STORED: 883
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=8.0 topic=assumption
+🧵 THREAD: Thread diverging across 4 topics. Consider focusing on 'cognitive bia'.
+🌐 NEW BROADCAST — salience=8.0
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 39.67
+🧠 DECAY: cognitive bia → 34.63
+🧠 DECAY: **debate → 2.78
+🧠 DECAY: confirmation → 2.30
+🧠 DECAY: linguistic semantics → 1.42
+🧠 DECAY: behavioral ecology → 1.41
+🧠 DECAY: systems thinking → 1.32
+🧠 DECAY: while → 1.10
+🧠 DECAY: storie → 1.02
+🧠 DECAY: narrative → 0.94
+🧠 DECAY: cognitive architecture → 0.89
+🧠 DECAY: perspective → 0.84
+🧠 DECAY: overlooked → 0.73
+🧠 DECAY: consciousness neuroscience → 0.68
+🧠 DECAY: debater → 0.58
+🧠 DECAY: critical → 0.54
+🧠 DECAY: challenge → 0.53
+🧠 DECAY: overlook → 0.50
+⚡ SYNTHESIS PAIRS: [('assumption', 'debate'), ('cognitive bia', 'confirmation')]
+   DUP similarity=1.00: 'the assumption that debates in' vs 'the assumption that debates in'
+⭐ SIGNIFICANCE: 5.0/10
+🔄 WORKSPACE CYCLE: 648
+🔄 COGNITION CYCLE #648 (last: 41s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 0.75 → 0.60
+⚔️ VERDICT: A wins — confidence adjusted
+⚔️ CONTRADICTION RESOLVED (cycle 648): A_WINS
+🧠 TOTAL STORED: 884
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+WEB RESEARCH: 'cognitive bia'
+Trying DDG Instant Answer API...
+DDG API: no content for 'cognitive bia'
+Trying DDG HTML search...
+DDG HTML: 6 results for 'cognitive bia'
+Fetching: https://en.wikipedia.org/wiki/Cognitive_bias...
+DDG HTML success: en.wikipedia.org (350 chars)
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 885
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/EXPAND] salience=8.5 topic=cognitive bia
+🧵 THREAD: Thread diverging across 4 topics. Consider focusing on 'cognitive bia'.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN STARTED: [e5011c40] topic=cognitive bia
+🧠 NEW BELIEF: **
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 38.48
+🧠 DECAY: cognitive bia → 33.59
+🧠 DECAY: **debate → 3.67
+🧠 DECAY: confirmation → 2.23
+🧠 DECAY: assumption → 1.46
+🧠 DECAY: linguistic semantics → 1.38
+🧠 DECAY: behavioral ecology → 1.37
+🧠 DECAY: systems thinking → 1.28
+🧠 DECAY: while → 1.07
+🧠 DECAY: storie → 0.99
+🧠 DECAY: narrative → 0.91
+🧠 DECAY: cognitive architecture → 0.87
+🧠 DECAY: perspective → 0.82
+🧠 DECAY: overlooked → 0.71
+🧠 DECAY: consciousness neuroscience → 0.66
+🧠 DECAY: debater → 0.56
+🧠 DECAY: critical → 0.52
+🧠 DECAY: challenge → 0.51
+⚡ SYNTHESIS PAIRS: [('**debate', 'cognitive bia'), ('**debate', 'debate')]
+⭐ SIGNIFICANCE: 7.1/10
+📓 JOURNAL ENTRY WRITTEN (score=7.1)
+⏱ INITIATION COOLDOWN — 174s remaining
+🔄 WORKSPACE CYCLE: 649
+🔄 COGNITION CYCLE #649 (last: 84s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 3, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: cognitive bia
+🧠 TOTAL STORED: 886
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN STEP 2/5: [e5011c40] challenge by Strategist
+🧠 NEW BELIEF: **
+Memory stored in tier: high_value | importance: 2
+🔥 HIGH VALUE INSIGHT SAVED (importance=2)
+🧠 DECAY: debate → 38.29
+🧠 DECAY: cognitive bia → 35.01
+🧠 DECAY: **debate → 3.56
+🧠 DECAY: confirmation → 2.16
+🧠 DECAY: assumption → 1.41
+🧠 DECAY: linguistic semantics → 1.34
+🧠 DECAY: behavioral ecology → 1.33
+🧠 DECAY: systems thinking → 1.24
+🧠 DECAY: while → 1.03
+🧠 DECAY: storie → 0.96
+🧠 DECAY: narrative → 0.89
+🧠 DECAY: cognitive architecture → 0.84
+🧠 DECAY: perspective → 0.79
+🧠 DECAY: overlooked → 0.69
+🧠 DECAY: consciousness neuroscience → 0.64
+🧠 DECAY: debater → 0.55
+🧠 DECAY: critical → 0.51
+🧠 DECAY: challenge → 0.50
+⚡ SYNTHESIS PAIRS: [('**debate', 'cognitive bia'), ('assumption', 'cognitive bia')]
+⭐ SIGNIFICANCE: 5.2/10
+🔄 WORKSPACE CYCLE: 650
+🔄 COGNITION CYCLE #650 (last: 40s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.4000000000000001, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: cognitive bia
+🧠 TOTAL STORED: 887
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Archivist] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN STEP 3/5: [e5011c40] development by Archivist
+🧠 NEW BELIEF: **
+🪞 SELF-MODEL UPDATED (observation #129)
+🪞 I have formed 50 beliefs with avg confidence 0.76. My thinking is currently diverging, focused on 'cognitive bia'. My strongest agent is Curator. I lean toward CHALLENGE stances (25%). Recurring topics: cognitive bia, contradiction, debate. Strong beliefs: Human cognitive biases are not only obstacles to effective d.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+Memory stored in tier: high_value | importance: 2
+🔥 HIGH VALUE INSIGHT SAVED (importance=2)
+🧠 DECAY: debate → 38.11
+🧠 DECAY: cognitive bia → 35.41
+🧠 DECAY: **debate → 3.45
+🧠 DECAY: confirmation → 2.10
+🧠 DECAY: assumption → 1.37
+🧠 DECAY: linguistic semantics → 1.30
+🧠 DECAY: behavioral ecology → 1.29
+🧠 DECAY: systems thinking → 1.20
+🧠 DECAY: while → 1.00
+🧠 DECAY: storie → 0.93
+🧠 DECAY: narrative → 0.86
+🧠 DECAY: cognitive architecture → 0.82
+🧠 DECAY: perspective → 0.77
+🧠 DECAY: overlooked → 0.67
+🧠 DECAY: consciousness neuroscience → 0.62
+🧠 DECAY: debater → 0.53
+🧠 DECAY: critical → 0.49
+⚡ SYNTHESIS PAIRS: [('cognitive bia', 'confirmation'), ('assumption', 'confirmation')]
+⭐ SIGNIFICANCE: 5.1/10
+🔄 WORKSPACE CYCLE: 651
+🔄 COGNITION CYCLE #651 (last: 40s)
+⚔️ CONTRADICTION DETECTED:
+   A: Human cognitive biases are not only obstacles to effective decision-making in ar
+   B: Implementing a cognitive architecture that incorporates machine learning algorit
+⚔️ 10 unresolved contradiction(s)
+⚔️ 10 contradiction(s) detected
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+WEB RESEARCH: 'cognitive bia'
+Trying DDG Instant Answer API...
+DDG API: no content for 'cognitive bia'
+Trying DDG HTML search...
+DDG HTML: 6 results for 'cognitive bia'
+Fetching: https://en.wikipedia.org/wiki/Cognitive_bias...
+DDG HTML success: en.wikipedia.org (367 chars)
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 888
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=9.0 topic=cognitive bia
+🧵 THREAD: Thread diverging across 4 topics. Consider focusing on 'cognitive bia'.
+🌐 NEW BROADCAST — salience=9.0
+🔗 CHAIN STEP 4/5: [e5011c40] challenge by Strategist
+🧠 NEW BELIEF: **
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 37.94
+🧠 DECAY: cognitive bia → 35.81
+🧠 DECAY: **debate → 3.35
+🧠 DECAY: confirmation → 2.03
+🧠 DECAY: assumption → 1.33
+🧠 DECAY: linguistic semantics → 1.26
+🧠 DECAY: behavioral ecology → 1.25
+🧠 DECAY: systems thinking → 1.17
+🧠 DECAY: while → 0.97
+🧠 DECAY: storie → 0.90
+🧠 DECAY: narrative → 0.84
+🧠 DECAY: cognitive architecture → 0.79
+🧠 DECAY: perspective → 0.75
+🧠 DECAY: overlooked → 0.65
+🧠 DECAY: consciousness neuroscience → 0.60
+🧠 DECAY: debater → 0.51
+⚡ SYNTHESIS PAIRS: [('**debate', 'debate'), ('assumption', 'confirmation')]
+⭐ SIGNIFICANCE: 7.2/10
+📓 JOURNAL ENTRY WRITTEN (score=7.2)
+⏱ INITIATION COOLDOWN — 29s remaining
+🔄 WORKSPACE CYCLE: 652
+🔄 COGNITION CYCLE #652 (last: 64s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.4000000000000001, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: cognitive bia
+✅ WIKI HIT: game theory
+🧠 TOTAL STORED: 889
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/REFRAME] salience=8.0 topic=game theory
+🧵 THREAD: 5 topics in working memory. Dominant: 'cognitive bia'. Stances: REFRAMEx3, CHALLENGEx2, SUPPORTx1, EXPANDx1.
+🌐 NEW BROADCAST — salience=8.0
+🔗 CHAIN CONCLUDED: [e5011c40] after 5 steps
+🔗 CONCLUSION: A balanced approach considers biases as one factor among many.
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 37.77
+🧠 DECAY: cognitive bia → 37.16
+🧠 DECAY: **debate → 3.25
+🧠 DECAY: confirmation → 1.97
+🧠 DECAY: assumption → 1.29
+🧠 DECAY: linguistic semantics → 1.22
+🧠 DECAY: behavioral ecology → 1.21
+🧠 DECAY: systems thinking → 1.13
+🧠 DECAY: while → 0.94
+🧠 DECAY: storie → 0.87
+🧠 DECAY: narrative → 0.81
+🧠 DECAY: cognitive architecture → 0.77
+🧠 DECAY: perspective → 0.72
+🧠 DECAY: overlooked → 0.63
+🧠 DECAY: consciousness neuroscience → 0.58
+🧠 DECAY: debater → 0.50
+⚡ SYNTHESIS PAIRS: [('confirmation', 'game theory'), ('confirmation', 'debate')]
+   DUP similarity=1.00: 'acknowledging cognitive biases is c' vs 'acknowledging cognitive biases is c'
+⭐ SIGNIFICANCE: 4.2/10
+🔄 WORKSPACE CYCLE: 653
+🔄 COGNITION CYCLE #653 (last: 45s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 0.88 → 0.93
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 653): RECONCILED
+🧠 TOTAL STORED: 890
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 3, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: cognitive bia
+🧠 TOTAL STORED: 891
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=8.0 topic=cognitive bia
+🧵 THREAD: Thread converging on 'cognitive bia'. Deepen this reasoning.
+🌐 NEW BROADCAST — salience=8.0
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 37.61
+🧠 DECAY: cognitive bia → 36.04
+🧠 DECAY: **debate → 3.15
+🧠 DECAY: game theory → 2.42
+🧠 DECAY: confirmation → 1.91
+🧠 DECAY: assumption → 1.25
+🧠 DECAY: linguistic semantics → 1.18
+🧠 DECAY: behavioral ecology → 1.18
+🧠 DECAY: systems thinking → 1.10
+🧠 DECAY: while → 0.92
+🧠 DECAY: storie → 0.85
+🧠 DECAY: narrative → 0.79
+🧠 DECAY: cognitive architecture → 0.74
+🧠 DECAY: perspective → 0.70
+🧠 DECAY: overlooked → 0.61
+🧠 DECAY: consciousness neuroscience → 0.57
+⚡ SYNTHESIS PAIRS: [('**debate', 'game theory'), ('debate', 'game theory')]
+   DUP similarity=1.00: '** a deeper analysis rev' vs '** a deeper analysis rev'
+⭐ SIGNIFICANCE: 3.4/10
+🔄 WORKSPACE CYCLE: 654
+🔄 COGNITION CYCLE #654 (last: 61s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2.4, 'Curator': 1, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+WEB RESEARCH: 'cognitive bia'
+Trying DDG Instant Answer API...
+DDG API: no content for 'cognitive bia'
+Trying DDG HTML search...
+DDG HTML: 6 results for 'cognitive bia'
+Fetching: https://en.wikipedia.org/wiki/Cognitive_bias...
+DDG HTML success: en.wikipedia.org (466 chars)
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 892
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 37.45
+🧠 DECAY: cognitive bia → 36.42
+🧠 DECAY: **debate → 3.06
+🧠 DECAY: game theory → 2.35
+🧠 DECAY: confirmation → 1.86
+🧠 DECAY: assumption → 1.21
+🧠 DECAY: linguistic semantics → 1.15
+🧠 DECAY: behavioral ecology → 1.14
+🧠 DECAY: systems thinking → 1.07
+🧠 DECAY: while → 0.89
+🧠 DECAY: storie → 0.82
+🧠 DECAY: narrative → 0.76
+🧠 DECAY: cognitive architecture → 0.72
+🧠 DECAY: perspective → 0.68
+🧠 DECAY: overlooked → 0.59
+🧠 DECAY: consciousness neuroscience → 0.55
+⚡ SYNTHESIS PAIRS: [('confirmation', 'game theory')]
+   DUP similarity=1.00: 'understanding and addressing cog' vs 'understanding and addressing cog'
+⭐ SIGNIFICANCE: 6.6/10
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+🔔 INITIATION QUEUED (score=6.6): That’s a crucial point about cognitive biases! It makes me think of times when a...
+🔄 WORKSPACE CYCLE: 655
+🔄 COGNITION CYCLE #655 (last: 75s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2.4, 'Curator': 1, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: cognitive bia
+🧠 TOTAL STORED: 893
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+🧠 NEW BELIEF CREATED: Focusing on our own cognitive biases helps create a more balanced dialogue.
+🧠 NEW BELIEF: Focusing on our own cognitive biases helps create a more balanced dialogue.
+🪞 SELF-MODEL UPDATED (observation #130)
+🪞 I have formed 50 beliefs with avg confidence 0.76. My thinking is currently converging, focused on 'cognitive bia'. My strongest agent is Curator. I lean toward CHALLENGE stances (30%). Recurring topics: cognitive bia, contradiction, debate. Strong beliefs: Human cognitive biases are not only obstacles to effective d.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+Memory stored in tier: high_value | importance: 2
+🔥 HIGH VALUE INSIGHT SAVED (importance=2)
+🧠 DECAY: cognitive bia → 37.75
+🧠 DECAY: debate → 37.30
+🧠 DECAY: **debate → 2.97
+🧠 DECAY: game theory → 2.28
+🧠 DECAY: confirmation → 1.80
+🧠 DECAY: assumption → 1.18
+🧠 DECAY: linguistic semantics → 1.11
+🧠 DECAY: behavioral ecology → 1.11
+🧠 DECAY: systems thinking → 1.03
+🧠 DECAY: while → 0.86
+🧠 DECAY: storie → 0.80
+🧠 DECAY: narrative → 0.74
+🧠 DECAY: cognitive architecture → 0.70
+🧠 DECAY: perspective → 0.66
+🧠 DECAY: overlooked → 0.57
+🧠 DECAY: consciousness neuroscience → 0.53
+⚡ SYNTHESIS PAIRS: [('cognitive bia', 'debate'), ('debate', 'game theory')]
+   DUP similarity=1.00: 'focusing on our own cognitive' vs 'focusing on our own cognitive'
+⭐ SIGNIFICANCE: 3.8/10
+🔄 WORKSPACE CYCLE: 656
+🔄 COGNITION CYCLE #656 (last: 43s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2.4, 'Curator': 1, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: cognitive bia
+🧠 TOTAL STORED: 894
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/CHALLENGE] salience=8.5 topic=cognitive bia
+🧵 THREAD: Thread converging on 'cognitive bia'. Deepen this reasoning.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN STARTED: [b97e97bc] topic=cognitive bia
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: cognitive bia → 38.07
+🧠 DECAY: debate → 37.15
+🧠 DECAY: **debate → 2.88
+🧠 DECAY: game theory → 2.21
+🧠 DECAY: confirmation → 1.75
+🧠 DECAY: assumption → 1.14
+🧠 DECAY: linguistic semantics → 1.08
+🧠 DECAY: behavioral ecology → 1.07
+🧠 DECAY: systems thinking → 1.00
+🧠 DECAY: while → 0.84
+🧠 DECAY: storie → 0.77
+🧠 DECAY: narrative → 0.72
+🧠 DECAY: cognitive architecture → 0.68
+🧠 DECAY: perspective → 0.64
+🧠 DECAY: overlooked → 0.55
+🧠 DECAY: consciousness neuroscience → 0.52
+⚡ SYNTHESIS PAIRS: [('**debate', 'confirmation'), ('cognitive bia', 'debate')]
+   DUP similarity=1.00: 'one overlooked aspect is t' vs 'one overlooked aspect is t'
+⭐ SIGNIFICANCE: 4.6/10
+🔄 WORKSPACE CYCLE: 657
+🔄 COGNITION CYCLE #657 (last: 42s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.40000000000000013, 'Curator': 1, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Archivist (thread: converging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+WEB RESEARCH: 'moral philosophy'
+Trying DDG Instant Answer API...
+DDG API: no content for 'moral philosophy'
+Trying DDG HTML search...
+DDG HTML: 6 results for 'moral philosophy'
+Fetching: https://en.wikipedia.org/wiki/Ethics...
+DDG HTML success: en.wikipedia.org (600 chars)
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 895
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/SUPPORT] salience=7.5 topic=moral philosophy
+🧵 THREAD: Thread diverging across 4 topics. Consider focusing on 'cognitive bia'.
+🌐 NEW BROADCAST — salience=7.5
+🔗 CHAIN STEP 2/5: [b97e97bc] development by Archivist
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: cognitive bia → 38.38
+🧠 DECAY: debate → 37.00
+🧠 DECAY: **debate → 2.79
+🧠 DECAY: game theory → 2.15
+🧠 DECAY: confirmation → 1.70
+🧠 DECAY: assumption → 1.11
+🧠 DECAY: linguistic semantics → 1.05
+🧠 DECAY: behavioral ecology → 1.04
+🧠 DECAY: systems thinking → 0.97
+🧠 DECAY: while → 0.81
+🧠 DECAY: storie → 0.75
+🧠 DECAY: narrative → 0.70
+🧠 DECAY: cognitive architecture → 0.66
+🧠 DECAY: perspective → 0.62
+🧠 DECAY: overlooked → 0.54
+🧠 DECAY: consciousness neuroscience → 0.50
+⚡ SYNTHESIS PAIRS: [('cognitive bia', 'debate'), ('cognitive bia', 'game theory')]
+   DUP similarity=1.00: 'overemphasizing cognitive biases ca' vs 'overemphasizing cognitive biases ca'
+⭐ SIGNIFICANCE: 6.1/10
+📓 JOURNAL ENTRY WRITTEN (score=6.1)
+⏱ INITIATION COOLDOWN — 1036s remaining
+🔄 WORKSPACE CYCLE: 658
+🔄 COGNITION CYCLE #658 (last: 70s)
+⚔️ CONTRADICTION DETECTED:
+   A: Human cognitive biases are not only obstacles to effective decision-making in ar
+   B: The adoption of AI-powered decision support systems can not only eliminate cogni
+⚔️ 10 unresolved contradiction(s)
+⚔️ 10 contradiction(s) detected
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 0.85 → 0.90
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 658): RECONCILED
+🧠 TOTAL STORED: 896
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: cognitive bia
+🧠 TOTAL STORED: 897
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/REFRAME] salience=8.0 topic=cognitive bia
+🧵 THREAD: 3 topics in working memory. Dominant: 'cognitive bia'. Stances: CHALLENGEx3, REFRAMEx2, EXPANDx1, SUPPORTx1.
+🌐 NEW BROADCAST — salience=8.0
+🔗 CHAIN STEP 3/5: [b97e97bc] synthesis by Archivist
+🧠 NEW BELIEF CREATED: A deeper analysis reveals that while cognitive biases are often overemphasized, 
+🧠 NEW BELIEF: A deeper analysis reveals that while cognitive biases are often overemphasized, their application in specific contexts can lead to misunderstandings.
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: cognitive bia → 37.23
+🧠 DECAY: debate → 36.86
+🧠 DECAY: **debate → 2.71
+🧠 DECAY: moral philosophy → 2.42
+🧠 DECAY: game theory → 2.08
+🧠 DECAY: confirmation → 1.64
+🧠 DECAY: assumption → 1.07
+🧠 DECAY: linguistic semantics → 1.02
+🧠 DECAY: behavioral ecology → 1.01
+🧠 DECAY: systems thinking → 0.94
+🧠 DECAY: while → 0.79
+🧠 DECAY: storie → 0.73
+🧠 DECAY: narrative → 0.67
+🧠 DECAY: cognitive architecture → 0.64
+🧠 DECAY: perspective → 0.60
+🧠 DECAY: overlooked → 0.52
+🧠 DECAY: consciousness neuroscience → 0.49
+⚡ SYNTHESIS PAIRS: [('debate', 'game theory'), ('game theory', 'moral philosophy')]
+   DUP similarity=1.00: 'a deeper analysis reveals that' vs 'a deeper analysis reveals that'
+⭐ SIGNIFICANCE: 4.1/10
+🔄 WORKSPACE CYCLE: 659
+🔄 COGNITION CYCLE #659 (last: 52s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+❌ WIKI MISS: cognitive bia
+🧠 TOTAL STORED: 898
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Strategist] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN STEP 4/5: [b97e97bc] synthesis by Strategist
+🧠 NEW BELIEF: **
+Memory stored in tier: high_value | importance: 2
+🔥 HIGH VALUE INSIGHT SAVED (importance=2)
+🧠 DECAY: cognitive bia → 37.57
+🧠 DECAY: debate → 36.73
+🧠 DECAY: **debate → 2.63
+🧠 DECAY: moral philosophy → 2.35
+🧠 DECAY: game theory → 2.02
+🧠 DECAY: confirmation → 1.59
+🧠 DECAY: assumption → 1.04
+🧠 DECAY: linguistic semantics → 0.98
+🧠 DECAY: behavioral ecology → 0.98
+🧠 DECAY: systems thinking → 0.91
+🧠 DECAY: while → 0.76
+🧠 DECAY: storie → 0.71
+🧠 DECAY: narrative → 0.65
+🧠 DECAY: cognitive architecture → 0.62
+🧠 DECAY: perspective → 0.58
+🧠 DECAY: overlooked → 0.51
+⚡ SYNTHESIS PAIRS: [('game theory', 'moral philosophy')]
+⭐ SIGNIFICANCE: 6.0/10
+📓 JOURNAL ENTRY WRITTEN (score=6.0)
+⏱ INITIATION COOLDOWN — 931s remaining
+🔄 WORKSPACE CYCLE: 660
+🔄 COGNITION CYCLE #660 (last: 51s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.4000000000000001, 'Curator': 0, 'Archivist': 2, 'Builder': 1}
+🎯 SELECTED AGENT: Archivist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: cognitive bia
+WEB RESEARCH: 'cognitive bia'
+Trying DDG Instant Answer API...
+DDG API: no content for 'cognitive bia'
+Trying DDG HTML search...
+DDG HTML: 6 results for 'cognitive bia'
+Fetching: https://en.wikipedia.org/wiki/Cognitive_bias...
+DDG HTML success: en.wikipedia.org (283 chars)
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 899
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Archivist] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN CONCLUDED: [b97e97bc] after 5 steps
+🔗 CONCLUSION: --- Debate Response ---
+Agent: Archivist  
+Stance: SUPPORT  
+
+**Claim:**  
+Cognitive biases are not 
+🧠 NEW BELIEF: **
+🪞 SELF-MODEL UPDATED (observation #131)
+🪞 I have formed 50 beliefs with avg confidence 0.76. My thinking is currently stable, focused on 'cognitive bia'. My strongest agent is Archivist. I lean toward CHALLENGE stances (30%). Recurring topics: cognitive bia, contradiction. Strong beliefs: Human cognitive biases are not only obstacles to effective d.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: cognitive bia → 37.90
+🧠 DECAY: debate → 35.63
+🧠 DECAY: **debate → 3.52
+🧠 DECAY: moral philosophy → 2.28
+🧠 DECAY: game theory → 1.96
+🧠 DECAY: confirmation → 1.55
+🧠 DECAY: assumption → 1.01
+🧠 DECAY: linguistic semantics → 0.96
+🧠 DECAY: behavioral ecology → 0.95
+🧠 DECAY: systems thinking → 0.89
+🧠 DECAY: while → 0.74
+🧠 DECAY: storie → 0.68
+🧠 DECAY: narrative → 0.63
+🧠 DECAY: cognitive architecture → 0.60
+🧠 DECAY: perspective → 0.57
+🧠 DECAY: overlooked → 0.49
+⚡ SYNTHESIS PAIRS: [('**debate', 'moral philosophy'), ('debate', 'game theory')]
+🎙️ VOICE SIGNAL: stance=REFRAME → +3 philosopher
+🎙️ VOICE SIGNAL: agent=Strategist → +2 challenger
+🎙️ VOICE SIGNAL: high debate intensity (154) → +2 challenger
+🎙️ VOICE STABLE: challenger (scores: {'analytical': 5.529683473239284, 'challenger': 25.488930583010557, 'explorer': 2.690555883727321, 'philosopher': 7.85057382220273})
+🎙️ VOICE EVALUATED → Challenger
+⭐ SIGNIFICANCE: 7.1/10
+📓 JOURNAL ENTRY WRITTEN (score=7.1)
+⏱ INITIATION COOLDOWN — 865s remaining
+🔄 WORKSPACE CYCLE: 661
+🔄 COGNITION CYCLE #661 (last: 66s)
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': -1, 'Builder': 1}
+🎯 SELECTED AGENT: Strategist (thread: stable, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: research
+✅ WIKI HIT: research
+🧠 TOTAL STORED: 900
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/SUPPORT] salience=7.5 topic=research
+🧵 THREAD: Thread diverging across 4 topics. Consider focusing on 'cognitive bia'.
+🌐 NEW BROADCAST — salience=7.5
+🧠 NEW BELIEF CREATED: Recent studies indicate that anchoring bias significantly influences negotiation
+🧠 NEW BELIEF: Recent studies indicate that anchoring bias significantly influences negotiation outcomes.
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: cognitive bia → 39.19
+🧠 DECAY: debate → 35.53
+🧠 DECAY: **debate → 3.41
+🧠 DECAY: moral philosophy → 2.21
+🧠 DECAY: game theory → 1.90
+🧠 DECAY: confirmation → 1.50
+🧠 DECAY: assumption → 0.98
+🧠 DECAY: linguistic semantics → 0.93
+🧠 DECAY: behavioral ecology → 0.92
+🧠 DECAY: systems thinking → 0.86
+🧠 DECAY: while → 0.72
+🧠 DECAY: storie → 0.66
+🧠 DECAY: narrative → 0.62
+🧠 DECAY: cognitive architecture → 0.58
+🧠 DECAY: perspective → 0.55
+⚡ SYNTHESIS PAIRS: [('**debate', 'moral philosophy'), ('cognitive bia', 'debate')]
+   DUP similarity=1.00: 'recent studies indicate that a' vs 'recent studies indicate that a'
+⭐ SIGNIFICANCE: 6.6/10
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱ INITIATION COOLDOWN — 810s remaining
+🔄 WORKSPACE CYCLE: 662
+🔄 COGNITION CYCLE #662 (last: 54s)
+🧠 AGENT SCORES: {'Researcher': 0.30000000000000004, 'Explorer': 0, 'Strategist': 0.4000000000000001, 'Curator': 3, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: confirmation
+✅ WIKI HIT: confirmation
+🧠 TOTAL STORED: 901
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Archivist/REFRAME] salience=9.0 topic=confirmation
+🧵 THREAD: Thread diverging across 5 topics. Consider focusing on 'cognitive bia'.
+🌐 NEW BROADCAST — salience=9.0
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: cognitive bia → 38.01
+🧠 DECAY: debate → 35.43
+🧠 DECAY: **debate → 3.31
+🧠 DECAY: research → 2.42
+🧠 DECAY: moral philosophy → 2.15
+🧠 DECAY: game theory → 1.84
+🧠 DECAY: confirmation → 1.46
+🧠 DECAY: assumption → 0.95
+🧠 DECAY: linguistic semantics → 0.90
+🧠 DECAY: behavioral ecology → 0.89
+🧠 DECAY: systems thinking → 0.84
+🧠 DECAY: while → 0.70
+🧠 DECAY: storie → 0.64
+🧠 DECAY: narrative → 0.60
+🧠 DECAY: cognitive architecture → 0.57
+🧠 DECAY: perspective → 0.53
+⚡ SYNTHESIS PAIRS: [('cognitive bia', 'confirmation'), ('cognitive bia', 'research')]
+   DUP similarity=1.00: 'confirmation bias not only sl' vs 'confirmation bias not only sl'
+⭐ SIGNIFICANCE: 5.7/10
+🔄 WORKSPACE CYCLE: 663
+🔄 COGNITION CYCLE #663 (last: 48s)
+🧠 BELIEF UPDATED: 1.00 → 1.00
+🧠 BELIEF UPDATED: 0.75 → 0.80
+⚔️ VERDICT: Reconciled — both beliefs strengthened
+⚔️ CONTRADICTION RESOLVED (cycle 663): RECONCILED
+🧠 TOTAL STORED: 902
+🧠 AGENT SCORES: {'Researcher': 0.30000000000000004, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: confirmation
+WEB RESEARCH: 'confirmation'
+Trying DDG Instant Answer API...
+DDG API: got 1133 chars for 'confirmation'
+DDG API success: 325 chars
+✅ WEB HIT: duckduckgo.com
+🧠 TOTAL STORED: 903
+📡 FEED ENTRY STORED
+📻 NOT BROADCAST: [Archivist] suppressed
+📻 Below broadcast threshold
+Memory stored in tier: high_value | importance: 2
+🔥 HIGH VALUE INSIGHT SAVED (importance=2)
+🧠 DECAY: cognitive bia → 36.87
+🧠 DECAY: debate → 35.34
+🧠 DECAY: confirmation → 3.84
+🧠 DECAY: **debate → 3.21
+🧠 DECAY: research → 2.35
+🧠 DECAY: moral philosophy → 2.08
+🧠 DECAY: game theory → 1.79
+🧠 DECAY: assumption → 0.92
+🧠 DECAY: linguistic semantics → 0.87
+🧠 DECAY: behavioral ecology → 0.87
+🧠 DECAY: systems thinking → 0.81
+🧠 DECAY: while → 0.68
+🧠 DECAY: storie → 0.63
+🧠 DECAY: narrative → 0.58
+🧠 DECAY: cognitive architecture → 0.55
+🧠 DECAY: perspective → 0.52
+⚡ SYNTHESIS PAIRS: [('**debate', 'debate'), ('debate', 'research')]
+   DUP similarity=1.00: 'confirmation bias fundamentally sha' vs 'confirmation bias fundamentally sha'
+⭐ SIGNIFICANCE: 4.1/10
+🔄 WORKSPACE CYCLE: 664
+🔄 COGNITION CYCLE #664 (last: 68s)
+🧠 AGENT SCORES: {'Researcher': 0.30000000000000004, 'Explorer': 0, 'Strategist': 3.4, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: debate
+✅ WIKI HIT: debate
+🧠 TOTAL STORED: 904
+📡 FEED ENTRY STORED
+📡 BROADCAST: [Strategist/EXPAND] salience=8.5 topic=debate
+🧵 THREAD: Thread diverging across 5 topics. Consider focusing on 'cognitive bia'.
+🌐 NEW BROADCAST — salience=8.5
+🔗 CHAIN STARTED: [1ed59694] topic=debate
+🧠 NEW BELIEF: **
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: cognitive bia → 35.76
+🧠 DECAY: debate → 35.25
+🧠 DECAY: confirmation → 5.18
+🧠 DECAY: **debate → 3.11
+🧠 DECAY: research → 2.28
+🧠 DECAY: moral philosophy → 2.02
+🧠 DECAY: game theory → 1.73
+🧠 DECAY: assumption → 0.89
+🧠 DECAY: linguistic semantics → 0.85
+🧠 DECAY: behavioral ecology → 0.84
+🧠 DECAY: systems thinking → 0.79
+🧠 DECAY: while → 0.65
+🧠 DECAY: storie → 0.61
+🧠 DECAY: narrative → 0.56
+🧠 DECAY: cognitive architecture → 0.53
+🧠 DECAY: perspective → 0.50
+⚡ SYNTHESIS PAIRS: [('**debate', 'debate')]
+⭐ SIGNIFICANCE: 6.8/10
+📓 JOURNAL ENTRY WRITTEN (score=6.8)
+⏱ INITIATION COOLDOWN — 635s remaining
+🔄 WORKSPACE CYCLE: 665
+🔄 COGNITION CYCLE #665 (last: 58s)
+⚔️ CONTRADICTION DETECTED:
