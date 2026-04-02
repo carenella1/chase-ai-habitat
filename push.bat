@@ -1,8 +1,11 @@
 @echo off
-cd /d C:\Users\User\Desktop\Github\chase-ai-habitat
-git add .
-set /p MSG="Commit message: "
-git commit -m "%MSG%"
+set /p msg="Commit message: "
+git add -A
+git add data/journal_archive_*.jsonl 2>nul
+git add data/knowledge_synthesis.json 2>nul
+git add data/research_sessions.jsonl 2>nul
+git commit -m "%msg%"
 git push
-echo Done.
+echo.
+echo Pushed successfully.
 pause

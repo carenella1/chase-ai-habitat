@@ -2337,6 +2337,18 @@ Claim:
 
             # Run significance check and store score for autonomous research trigger
             run_significance_check(insight, agent, stance, source, memory)
+            # --- MEMORY MAINTENANCE (every 500 cycles) ---
+            if current_cycle % 500 == 0:
+                try:
+                    from habitat.agents.memory_manager_system import (
+                        run_full_maintenance,
+                    )
+
+                    memory = run_full_maintenance(memory, current_cycle)
+                    save_memory(memory)
+                except Exception as e:
+                    print(f"⚠️ Maintenance error: {e}")
+            # --- END MEMORY MAINTENANCE ---
 
             # --- AUTONOMOUS DEEP RESEARCH TRIGGER ---
             try:
@@ -2785,6 +2797,18 @@ def api_synthesis_status():
         from habitat.agents.knowledge_synthesizer import get_synthesis_status
 
         return jsonify({"status": "ok", **get_synthesis_status()})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/storage/status", methods=["GET"])
+def api_storage_status():
+    """Returns current storage usage of all Nexarion data files."""
+    try:
+        from habitat.agents.memory_manager_system import get_storage_report
+
+        report = get_storage_report()
+        return jsonify({"status": "ok", **report})
     except Exception as e:
         return jsonify({"status": "error", "error": str(e)})
 
