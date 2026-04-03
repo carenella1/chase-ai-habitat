@@ -1806,21 +1806,44 @@ def run():
                     ", ".join(top_topic_names[:3]) if top_topic_names else "none yet"
                 )
 
-            # --- PERSISTENT GOAL SYSTEM ---
+            # --- PERSISTENT GOAL SYSTEM (AUTONOMOUS) ---
             try:
                 from habitat.agents.persistent_goals import (
                     get_active_goal,
-                    get_goal_context_block,
                     score_relevance,
                     record_progress,
                 )
 
                 persistent_goal = get_active_goal()
+
                 if persistent_goal:
+                    # Goal is active — pursue it
                     topic_context = persistent_goal["text"][:80]
                     memory["active_goal"] = persistent_goal["text"]
                     save_memory(memory)
                     print(f"🎯 PURSUING GOAL: {persistent_goal['text'][:60]}")
+                else:
+                    # No active goal — Nexarion chooses its own next investigation
+                    print("🧠 NO ACTIVE GOAL — Nexarion generating its own...")
+                    try:
+                        from habitat.agents.autonomous_goal_engine import (
+                            set_autonomous_goal,
+                        )
+
+                        top_topics_for_goal = get_top_topics(memory, limit=10)
+                        new_goal = set_autonomous_goal(
+                            call_llm, memory, top_topics_for_goal
+                        )
+                        if new_goal:
+                            persistent_goal = get_active_goal()
+                            if persistent_goal:
+                                topic_context = persistent_goal["text"][:80]
+                                memory["active_goal"] = persistent_goal["text"]
+                                save_memory(memory)
+                    except Exception as e:
+                        print(f"⚠️ Autonomous goal error: {e}")
+                        persistent_goal = None
+
             except Exception as e:
                 print(f"⚠️ Goal system error: {e}")
                 persistent_goal = None
@@ -2809,6 +2832,18 @@ def api_storage_status():
 
         report = get_storage_report()
         return jsonify({"status": "ok", **report})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/goals/history", methods=["GET"])
+def api_goals_history():
+    """Returns the history of autonomously chosen goals."""
+    try:
+        from habitat.agents.autonomous_goal_engine import get_auto_goal_history
+
+        history = get_auto_goal_history()
+        return jsonify({"status": "ok", "history": history, "count": len(history)})
     except Exception as e:
         return jsonify({"status": "error", "error": str(e)})
 
