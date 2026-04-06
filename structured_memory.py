@@ -79,8 +79,10 @@ class StructuredMemoryDB:
         self._init_db()
 
     def _conn(self):
-        if not hasattr(self._local, "conn"):
-            self._local.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        if not hasattr(self._local, "conn") or self._local.conn is None:
+            self._local.conn = sqlite3.connect(
+                self.db_path, check_same_thread=False, timeout=30
+            )
             self._local.conn.row_factory = sqlite3.Row
         return self._local.conn
 

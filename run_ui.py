@@ -669,6 +669,11 @@ def research_page():
     return render_template("research.html", active="research")
 
 
+@app.route("/nexus")
+def nexus_page():
+    return render_template("nexus.html", active="nexus")
+
+
 @app.route("/api/cognition/all")
 def api_cognition_all():
     memory = ensure_memory(load_memory())
@@ -1815,8 +1820,6 @@ def run():
     global _auto_research_streak
     print("🧠 BRAIN THREAD STARTED")
     print("🌐 GLOBAL WORKSPACE ACTIVE")
-    nex_memory.remember(insight, agent=agent_name, importance=0.7)
-    nex_memory.learn(research_result, source="web_research", topic=topic)
     memory_manager = MemoryManager()
     synthesis_pairs = []
 
@@ -2199,7 +2202,7 @@ Stance: {stance}
 Claim:
 {claim_seed}"""
 
-            raw_output = call_llm(prompt)
+            raw_output = call_llm(prompt, timeout=180)
             import re
 
             raw_output = re.sub(
@@ -2379,7 +2382,11 @@ Claim:
             recent_insights = [
                 h.get("cognition", {}).get("insight", "") for h in history[-10:]
             ]
-            if any(is_similar(prev, insight) for prev in recent_insights):
+            if (
+                insight
+                and "Structure enforcement triggered" not in insight
+                and any(is_similar(prev, insight) for prev in recent_insights)
+            ):
                 print("⚠️ duplicate detected")
                 workspace._salience_override = True
                 memory = ensure_memory(load_memory())
@@ -2411,20 +2418,43 @@ Claim:
             }
             add_cognition_entry(new_entry)
             print("📡 FEED ENTRY STORED")
-            add_cognition_entry(new_entry)
-            print("📡 FEED ENTRY STORED")
+
+            # Phase 2 — Record to structured memory
+            try:
+                if insight:
+                    nex_memory.remember(
+                        insight[:300], agent=agent, importance=0.7, cycle=current_cycle
+                    )
+                if research:
+                    nex_memory.learn(
+                        research[:400], source="research", topic=search_term
+                    )
+                print("✅ PHASE 2: Memory written")
+            except Exception as e:
+                print(f"❌ PHASE 2 ERROR: {e}")
 
             # Phase 5 — Knowledge graph extraction
-            if research:
-                edges_added = knowledge_graph.learn_from_text(research, source=agent)
-                if edges_added > 0:
-                    print(
-                        f"🕸️ GRAPH: {edges_added} new connections extracted from research"
+            try:
+                if research:
+                    edges_added = knowledge_graph.learn_from_text(
+                        research, source=agent
                     )
-            if insight:
-                knowledge_graph.learn_from_text(insight, source=agent)
-            if insight:
-                self_optimizer.record_agent_output(agent, insight, cycle=current_cycle)
+                    if edges_added > 0:
+                        print(f"🕸️ GRAPH: {edges_added} new connections extracted")
+                if insight:
+                    knowledge_graph.learn_from_text(insight, source=agent)
+                print("✅ PHASE 5: Graph written")
+            except Exception as e:
+                print(f"❌ PHASE 5 ERROR: {e}")
+
+            # Phase 3
+            try:
+                if insight:
+                    self_optimizer.record_agent_output(
+                        agent, insight, cycle=current_cycle
+                    )
+            except Exception as e:
+                print(f"❌ PHASE 3 ERROR: {e}")
 
             broadcast_record = workspace.broadcast(
                 insight=insight,
@@ -3079,6 +3109,18 @@ def api_goals_history():
 @app.route("/api/memory/stats")
 def api_memory_stats():
     return jsonify(nex_memory.get_stats())
+
+
+@app.route("/api/memory/recall")
+def api_memory_recall():
+    query = request.args.get("q", "")
+    return jsonify({"results": nex_memory.recall(query, limit=6)})
+
+
+@app.route("/api/graph/connections")
+def api_graph_connections():
+    entity = request.args.get("entity", "")
+    return jsonify(knowledge_graph.what_connects_to(entity))
 
 
 # =========================

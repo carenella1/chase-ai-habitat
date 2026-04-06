@@ -1,33 +1,20 @@
 """
-llm_router.py  —  Phase 1: Nex Brain Upgrade
+llm_router.py  —  Two-Brain Architecture
 
-DROP-IN REPLACEMENT for the call_llm() function in run_ui.py.
+WHY TWO BRAINS?
+  Real intelligence uses fast reflexes AND slow deep reasoning separately.
+  deepseek-r1:14b  → Chat brain  (fast, ~10-30s, used for all conversation)
+  deepseek-r1:32b  → Deep brain  (powerful, ~2-4min, used for background cognition)
 
-WHAT THIS DOES:
-  Nex currently hard-codes deepseek-r1:14b with no fallback.
-  This router tries models in priority order, picks the best one
-  available on your machine, and uses "thinking mode" if the model
-  supports it (DeepSeek V3.2 / R1 stream their chain-of-thought,
-  which dramatically improves reasoning quality).
+  This fixes the timeout/backoff issue: the 32b model was being used for
+  live chat, timing out in 90s, failing 3x, then locking Nex out for 2 minutes.
+  Now chat always uses the fast 14b, and 32b is reserved for when speed
+  doesn't matter (background research, cognition cycles, deep reasoning).
 
-WHY THIS MATTERS:
-  The model IS Nex's brain. Every cognition cycle, every debate,
-  every hypothesis — all of it gets smarter when the underlying
-  model is smarter. This is the single highest-leverage upgrade.
-
-INSTALL:
-  1. Run:  ollama pull deepseek-r1:32b
-     (or)  ollama pull deepseek-r1:70b   (needs ~40GB VRAM)
-     (or)  ollama pull glm4:9b            (lighter, still excellent)
-  2. Replace call_llm() in run_ui.py with: from llm_router import call_llm
-  3. That's it. The router auto-detects what's available.
-
-MODEL PRIORITY (best → fallback):
-  1. deepseek-r1:32b   — Best reasoning, chain-of-thought, ~18GB RAM
-  2. deepseek-r1:14b   — Current Nex model, kept as fallback
-  3. glm4:9b           — Excellent agentic model, lighter
-  4. deepseek-r1:7b    — Minimal footprint fallback
-  5. llama3.1:8b       — Last resort fallback
+RESULT:
+  - Chat responses: fast and reliable again
+  - Background cognition: more powerful than ever (32b thinking)
+  - Nex gets smarter over time from 32b insights without chat being blocked
 """
 
 import requests
@@ -40,16 +27,22 @@ import time
 
 OLLAMA_BASE = "http://localhost:11434"
 
-# Models in priority order — first available wins at startup
-MODEL_PRIORITY = [
-    "deepseek-r1:32b",
+# CHAT BRAIN — fast, used for live conversation with Chase
+# Priority order: first one found installed wins
+CHAT_MODEL_PRIORITY = [
     "deepseek-r1:14b",
-    "glm4:9b",
     "deepseek-r1:7b",
     "llama3.1:8b",
 ]
 
-# Models that support thinking/reasoning mode (strip <think> tags from output)
+# DEEP BRAIN — powerful, used for background cognition only
+# Priority order: most powerful first
+DEEP_MODEL_PRIORITY = [
+    "deepseek-r1:32b",
+    "deepseek-r1:14b",  # fallback if 32b not available
+]
+
+# Models that output <think>...</think> reasoning blocks
 THINKING_MODELS = {
     "deepseek-r1:32b",
     "deepseek-r1:14b",
@@ -57,16 +50,22 @@ THINKING_MODELS = {
     "deepseek-r1:70b",
 }
 
+# Timeouts — chat needs to be fast, deep can take its time
+CHAT_TIMEOUT = 120  # 2 minutes max for chat responses
+DEEP_TIMEOUT = 300  # 5 minutes allowed for deep cognition
+
 # ─────────────────────────────────────────────
 # STATE
 # ─────────────────────────────────────────────
 
-_active_model: str | None = None
-_active_model_lock = threading.Lock()
+_chat_model: str | None = None
+_deep_model: str | None = None
+_model_lock = threading.Lock()
+
 _failure_count = 0
 _last_success = 0.0
-_BACKOFF_THRESHOLD = 3
-_BACKOFF_SECONDS = 120
+_BACKOFF_THRESHOLD = 5  # raised from 3 — more tolerance before lockout
+_BACKOFF_SECONDS = 60  # reduced from 120 — shorter penalty
 
 
 # ─────────────────────────────────────────────
@@ -86,62 +85,73 @@ def _get_available_models() -> list[str]:
     return []
 
 
-def _select_best_model() -> str:
-    """Pick the highest-priority model that's actually available."""
+def _pick_model(priority_list: list[str]) -> str:
+    """Pick the first model from the priority list that is actually installed."""
     available = _get_available_models()
     available_set = set(available)
 
-    for model in MODEL_PRIORITY:
-        # Exact match or prefix match (e.g. "deepseek-r1:32b" matches "deepseek-r1:32b-q4_K_M")
+    for model in priority_list:
         if model in available_set:
             return model
+        # Partial match — e.g. "deepseek-r1:14b" matches "deepseek-r1:14b-q4_K_M"
         for a in available:
-            if (
-                a.startswith(model.split(":")[0])
-                and ":" in model
-                and model.split(":")[1] in a
-            ):
-                return a
+            if a.startswith(model.split(":")[0]) and ":" in model:
+                if model.split(":")[1] in a:
+                    return a
 
-    # If nothing matches, use whatever is first available
+    # Last resort: return first available model
     if available:
         return available[0]
 
-    # Absolute fallback — Ollama will error if not installed
     return "deepseek-r1:14b"
 
 
+def get_chat_model() -> str:
+    """Get the fast chat brain model."""
+    global _chat_model
+    with _model_lock:
+        if _chat_model is None:
+            _chat_model = _pick_model(CHAT_MODEL_PRIORITY)
+            print(f"💬 CHAT BRAIN: {_chat_model}")
+        return _chat_model
+
+
+def get_deep_model() -> str:
+    """Get the powerful deep thinking brain model."""
+    global _deep_model
+    with _model_lock:
+        if _deep_model is None:
+            _deep_model = _pick_model(DEEP_MODEL_PRIORITY)
+            print(f"🧠 DEEP BRAIN: {_deep_model}")
+        return _deep_model
+
+
 def get_active_model() -> str:
-    """Get (or lazily detect) the active model."""
-    global _active_model
-    with _active_model_lock:
-        if _active_model is None:
-            _active_model = _select_best_model()
-            print(f"🧠 LLM ROUTER: Selected model → {_active_model}")
-        return _active_model
+    """Backward-compatible alias — returns the chat model."""
+    return get_chat_model()
 
 
 def refresh_model_selection():
-    """Force re-detection (call after pulling a new model)."""
-    global _active_model
-    with _active_model_lock:
-        _active_model = None
-    return get_active_model()
+    """Force re-detection of both models (call after pulling a new model)."""
+    global _chat_model, _deep_model
+    with _model_lock:
+        _chat_model = None
+        _deep_model = None
+    chat = get_chat_model()
+    deep = get_deep_model()
+    print(f"🔄 Models refreshed → Chat: {chat} | Deep: {deep}")
+    return chat
 
 
 # ─────────────────────────────────────────────
-# THINKING MODE
+# THINKING TAG STRIPPER
 # ─────────────────────────────────────────────
 
 
-def _strip_thinking_tags(text: str) -> str:
+def _strip_thinking_tags(text: str):
     """
-    DeepSeek R1 outputs <think>...</think> blocks containing its
-    chain-of-thought. These are valuable internally but shouldn't
-    appear in Nex's spoken responses. We strip them here.
-
-    IMPORTANT: We log the thinking separately so it can optionally
-    be stored in cognition history for transparency.
+    DeepSeek R1 outputs <think>...</think> chain-of-thought blocks.
+    We strip them from Nex's spoken output but log them for transparency.
     """
     import re
 
@@ -151,36 +161,41 @@ def _strip_thinking_tags(text: str) -> str:
 
 
 # ─────────────────────────────────────────────
-# CORE CALL
+# CORE CALL — used by run_ui.py for CHAT
 # ─────────────────────────────────────────────
 
 
-def call_llm(prompt: str, timeout: int = 90, log_thinking: bool = False) -> str:
+def call_llm(prompt: str, timeout: int = None, log_thinking: bool = False) -> str:
     """
-    Drop-in replacement for call_llm() in run_ui.py.
+    Fast chat call. Always uses the 14b chat brain.
+    This is the drop-in replacement for the old call_llm() in run_ui.py.
 
     Args:
-        prompt:       The full prompt string to send to the model.
-        timeout:      Max seconds to wait for response.
-        log_thinking: If True, returns a tuple (response, thinking_steps).
-                      If False (default), returns just the response string.
+        prompt:       The full prompt string.
+        timeout:      Max seconds to wait. Defaults to CHAT_TIMEOUT (120s).
+        log_thinking: If True, returns (response, thinking_steps) tuple.
 
     Returns:
         str: Nex's response with thinking tags stripped.
     """
     global _failure_count, _last_success
 
+    if timeout is None:
+        timeout = CHAT_TIMEOUT
+
     # Backoff check
     if _failure_count >= _BACKOFF_THRESHOLD:
         elapsed = time.time() - _last_success
         if elapsed < _BACKOFF_SECONDS:
-            print(f"⏸️ LLM BACKOFF: {_failure_count} failures, cooling down")
+            print(
+                f"⏸️ LLM BACKOFF: {_failure_count} failures, cooling down {int(_BACKOFF_SECONDS - elapsed)}s"
+            )
             return ""
         else:
             _failure_count = 0
 
-    model = get_active_model()
-    is_thinking_model = any(tm in model for tm in THINKING_MODELS)
+    model = get_chat_model()
+    is_thinking = any(tm in model for tm in THINKING_MODELS)
 
     try:
         response = requests.post(
@@ -189,9 +204,8 @@ def call_llm(prompt: str, timeout: int = 90, log_thinking: bool = False) -> str:
                 "model": model,
                 "prompt": prompt,
                 "stream": False,
-                # Thinking models benefit from higher token limits for reasoning
                 "options": {
-                    "num_predict": 2048 if is_thinking_model else 1024,
+                    "num_predict": 1024,
                     "temperature": 0.7,
                     "top_p": 0.9,
                 },
@@ -208,7 +222,7 @@ def call_llm(prompt: str, timeout: int = 90, log_thinking: bool = False) -> str:
         _failure_count = 0
         _last_success = time.time()
 
-        if is_thinking_model:
+        if is_thinking:
             clean, thinking = _strip_thinking_tags(raw)
             if log_thinking and thinking:
                 return clean, thinking
@@ -218,11 +232,11 @@ def call_llm(prompt: str, timeout: int = 90, log_thinking: bool = False) -> str:
 
     except requests.exceptions.Timeout:
         _failure_count += 1
-        print(f"⏱️ LLM TIMEOUT ({_failure_count}) model={model}")
+        print(f"⏱️ CHAT TIMEOUT ({_failure_count}) model={model} timeout={timeout}s")
         return ""
     except requests.exceptions.ConnectionError:
         _failure_count += 1
-        print(f"🔌 LLM CONNECTION ERROR ({_failure_count}) — is Ollama running?")
+        print(f"🔌 CONNECTION ERROR ({_failure_count}) — is Ollama running?")
         return ""
     except Exception as e:
         _failure_count += 1
@@ -231,43 +245,104 @@ def call_llm(prompt: str, timeout: int = 90, log_thinking: bool = False) -> str:
 
 
 # ─────────────────────────────────────────────
-# COGNITION-OPTIMIZED CALL
+# DEEP CALL — used for background cognition
 # ─────────────────────────────────────────────
 
 
-def call_llm_with_reasoning(prompt: str, timeout: int = 120) -> dict:
+def call_llm_deep(prompt: str, timeout: int = None) -> dict:
     """
-    Enhanced call that captures and stores the reasoning chain.
-    Use this for cognition cycles to give Nex's thinking transparency.
+    Powerful deep thinking call. Uses the 32b brain.
+    Use this for cognition cycles, research, and background reasoning
+    where response time doesn't matter but quality does.
 
     Returns:
         {
-          "response": str,           # Clean output
-          "thinking": list[str],     # Chain-of-thought steps (if available)
-          "model": str,              # Model used
+          "response": str,
+          "thinking": list[str],
+          "model": str,
           "reasoning_available": bool
         }
     """
-    model = get_active_model()
+    if timeout is None:
+        timeout = DEEP_TIMEOUT
+
+    model = get_deep_model()
     is_thinking = any(tm in model for tm in THINKING_MODELS)
 
-    result = call_llm(prompt, timeout=timeout, log_thinking=True)
+    try:
+        print(f"🧠 DEEP CALL: model={model} timeout={timeout}s")
+        response = requests.post(
+            f"{OLLAMA_BASE}/api/generate",
+            json={
+                "model": model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "num_predict": 2048,
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                },
+            },
+            timeout=timeout,
+        )
 
-    if isinstance(result, tuple):
-        response, thinking = result
+        raw = response.json().get("response", "")
+
+        if not raw:
+            return {
+                "response": "",
+                "thinking": [],
+                "model": model,
+                "reasoning_available": False,
+            }
+
+        if is_thinking:
+            clean, thinking = _strip_thinking_tags(raw)
+            return {
+                "response": clean,
+                "thinking": thinking,
+                "model": model,
+                "reasoning_available": bool(thinking),
+            }
+        else:
+            return {
+                "response": raw,
+                "thinking": [],
+                "model": model,
+                "reasoning_available": False,
+            }
+
+    except requests.exceptions.Timeout:
+        print(
+            f"⏱️ DEEP TIMEOUT — model={model} took >{timeout}s (this is ok for background tasks)"
+        )
         return {
-            "response": response,
-            "thinking": thinking,
-            "model": model,
-            "reasoning_available": True,
-        }
-    else:
-        return {
-            "response": result,
+            "response": "",
             "thinking": [],
             "model": model,
             "reasoning_available": False,
         }
+    except Exception as e:
+        print(f"❌ DEEP ERROR: {e}")
+        return {
+            "response": "",
+            "thinking": [],
+            "model": model,
+            "reasoning_available": False,
+        }
+
+
+# ─────────────────────────────────────────────
+# BACKWARD COMPAT — call_llm_with_reasoning
+# ─────────────────────────────────────────────
+
+
+def call_llm_with_reasoning(prompt: str, timeout: int = None) -> dict:
+    """
+    Now routes to call_llm_deep() for maximum reasoning quality.
+    Kept for backward compatibility with any existing code using this function.
+    """
+    return call_llm_deep(prompt, timeout=timeout)
 
 
 # ─────────────────────────────────────────────
@@ -277,34 +352,16 @@ def call_llm_with_reasoning(prompt: str, timeout: int = 120) -> dict:
 
 def get_llm_status() -> dict:
     """Return current LLM router status for the UI."""
-    model = get_active_model()
+    chat = get_chat_model()
+    deep = get_deep_model()
     available = _get_available_models()
     return {
-        "active_model": model,
+        "chat_model": chat,
+        "deep_model": deep,
+        "active_model": chat,  # backward compat
         "available_models": available,
-        "is_thinking_model": any(tm in model for tm in THINKING_MODELS),
+        "is_thinking_model": any(tm in chat for tm in THINKING_MODELS),
         "failure_count": _failure_count,
         "status": "backoff" if _failure_count >= _BACKOFF_THRESHOLD else "ok",
+        "architecture": "two-brain",
     }
-
-
-# ─────────────────────────────────────────────
-# HOW TO WIRE INTO run_ui.py
-# ─────────────────────────────────────────────
-#
-# 1. Copy this file next to run_ui.py
-#
-# 2. At the top of run_ui.py, REPLACE:
-#       def call_llm(prompt, timeout=90):
-#           ...
-#    WITH:
-#       from llm_router import call_llm, get_llm_status
-#
-# 3. Add a status endpoint to run_ui.py:
-#       @app.route("/api/llm/status")
-#       def api_llm_status():
-#           from llm_router import get_llm_status
-#           return jsonify(get_llm_status())
-#
-# 4. To pull a better model: ollama pull deepseek-r1:32b
-#    Then call refresh_model_selection() or restart the app.

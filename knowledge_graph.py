@@ -83,8 +83,10 @@ class GraphDB:
         self._init_db()
 
     def _conn(self):
-        if not hasattr(self._local, "conn"):
-            self._local.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        if not hasattr(self._local, "conn") or self._local.conn is None:
+            self._local.conn = sqlite3.connect(
+                self.db_path, check_same_thread=False, timeout=30
+            )
             self._local.conn.row_factory = sqlite3.Row
         return self._local.conn
 
@@ -463,20 +465,41 @@ class GraphExtractor:
 
     # Simple relationship patterns
     PATTERNS = [
-        # "X is a type of Y" / "X is a Y"
-        (r"(\w[\w\s]+) is (?:a type of|an? |a kind of) ([\w\s]+)", "is_a"),
+        # "X is a field of study in Y" / "X is a Y"
+        (
+            r"([A-Z][a-zA-Z\s]{2,30}) is (?:a field of study in|a branch of|a subfield of|part of|a type of|an? ) ([a-zA-Z\s]{3,30})",
+            "is_a",
+        ),
+        # "X is concerned with Y" / "X focuses on Y"
+        (
+            r"([A-Z][a-zA-Z\s]{2,30}) (?:is concerned with|focuses on|studies|examines|addresses) ([a-zA-Z\s]{3,40})",
+            "related_to",
+        ),
         # "X enables Y" / "X allows Y"
-        (r"(\w[\w\s]+) (?:enables?|allows?|makes? possible) ([\w\s]+)", "enables"),
+        (
+            r"([A-Z][a-zA-Z\s]{2,30}) (?:enables?|allows?|supports?|improves?) ([a-zA-Z\s]{3,30})",
+            "enables",
+        ),
         # "X requires Y" / "X depends on Y"
-        (r"(\w[\w\s]+) (?:requires?|depends? on|needs?) ([\w\s]+)", "requires"),
-        # "X uses Y" / "X utilizes Y"
-        (r"(\w[\w\s]+) (?:uses?|utilizes?|employs?) ([\w\s]+)", "uses"),
-        # "X improves Y" / "X enhances Y"
-        (r"(\w[\w\s]+) (?:improves?|enhances?|boosts?) ([\w\s]+)", "improves"),
+        (
+            r"([A-Z][a-zA-Z\s]{2,30}) (?:requires?|depends? on|relies? on|uses?) ([a-zA-Z\s]{3,30})",
+            "requires",
+        ),
         # "X leads to Y" / "X results in Y"
-        (r"(\w[\w\s]+) (?:leads? to|results? in|causes?) ([\w\s]+)", "leads_to"),
-        # "X is part of Y"
-        (r"(\w[\w\s]+) is (?:part of|a component of|within) ([\w\s]+)", "part_of"),
+        (
+            r"([A-Z][a-zA-Z\s]{2,30}) (?:leads? to|results? in|produces?|creates?) ([a-zA-Z\s]{3,30})",
+            "leads_to",
+        ),
+        # "X has applications in Y"
+        (
+            r"([A-Z][a-zA-Z\s]{2,30}) has applications? in ([a-zA-Z\s]{3,30})",
+            "applied_to",
+        ),
+        # "X is used in Y" / "X is applied to Y"
+        (
+            r"([A-Z][a-zA-Z\s]{2,30}) is (?:used in|applied (?:to|in)|employed in) ([a-zA-Z\s]{3,30})",
+            "applied_to",
+        ),
     ]
 
     def __init__(self, db: GraphDB):

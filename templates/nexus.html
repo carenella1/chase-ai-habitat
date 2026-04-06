@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nexus.css') }}">
+
+<div class="nexus-page">
+
+    <!-- HEADER -->
+    <div class="nexus-header">
+        <div class="nexus-title-block">
+            <div class="nexus-eyebrow">NEXARION CONTROL LAYER</div>
+            <h1 class="nexus-title">N<span class="title-accent">E</span>XUS</h1>
+            <div class="nexus-tagline">Intelligence Infrastructure · Trust Management · Cognitive Architecture</div>
+        </div>
+        <div class="nexus-pulse-ring">
+            <div class="pulse-core"></div>
+            <div class="pulse-ring r1"></div>
+            <div class="pulse-ring r2"></div>
+            <div class="pulse-ring r3"></div>
+            <div class="pulse-label" id="pulse-cycle">CYCLE —</div>
+        </div>
+    </div>
+
+    <!-- STATUS STRIP -->
+    <div class="nexus-status-strip">
+        <div class="status-tile">
+            <div class="tile-icon">🧠</div>
+            <div class="tile-body">
+                <div class="tile-label">ACTIVE MODEL</div>
+                <div class="tile-value" id="active-model">—</div>
+                <div class="tile-sub" id="thinking-mode">—</div>
+            </div>
+            <div class="tile-dot" id="brain-dot"></div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">💾</div>
+            <div class="tile-body">
+                <div class="tile-label">MEMORY NETWORKS</div>
+                <div class="tile-value" id="memory-total">—</div>
+                <div class="tile-sub" id="memory-detail">facts · episodes · beliefs</div>
+            </div>
+            <div class="tile-dot" id="memory-dot"></div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">🕸️</div>
+            <div class="tile-body">
+                <div class="tile-label">KNOWLEDGE GRAPH</div>
+                <div class="tile-value" id="graph-total">—</div>
+                <div class="tile-sub" id="graph-detail">nodes · edges</div>
+            </div>
+            <div class="tile-dot" id="graph-dot"></div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">🔒</div>
+            <div class="tile-body">
+                <div class="tile-label">SANDBOX TRUST</div>
+                <div class="tile-value" id="trust-level">—</div>
+                <div class="tile-sub" id="trust-name">—</div>
+            </div>
+            <div class="tile-dot" id="sandbox-dot"></div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">✨</div>
+            <div class="tile-body">
+                <div class="tile-label">AGENT OPTIMIZER</div>
+                <div class="tile-value" id="optimizer-avg">—</div>
+                <div class="tile-sub">avg quality score</div>
+            </div>
+            <div class="tile-dot" id="optimizer-dot"></div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="nexus-grid">
+
+        <!-- SANDBOX HUB -->
+        <div class="nexus-panel panel-sandbox">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <span class="panel-kicker">PHASE 4</span>
+                    <h2 class="panel-title">SANDBOX HUB</h2>
+                </div>
+                <div class="panel-header-right">
+                    <div class="trust-badge" id="trust-badge">TRUST LVL 0</div>
+                    <button class="nexus-btn btn-sm" id="btn-trust-up">↑ TRUST</button>
+                </div>
+            </div>
+            <div class="sandbox-tabs">
+                <button class="stab active" data-tab="activity">ACTIVITY LOG</button>
+                <button class="stab" data-tab="agents">BUILT AGENTS</button>
+                <button class="stab" data-tab="run">MANUAL RUN</button>
+            </div>
+            <div class="sandbox-pane active" id="pane-activity">
+                <div class="sandbox-list" id="activity-list">
+                    <div class="empty-state"><div class="empty-icon">◎</div><div>No sandbox activity yet.</div><div class="empty-sub">Nex will populate this as she builds.</div></div>
+                </div>
+            </div>
+            <div class="sandbox-pane" id="pane-agents">
+                <div class="sandbox-list" id="agents-list">
+                    <div class="empty-state"><div class="empty-icon">◎</div><div>No agents built yet.</div><div class="empty-sub">Agents Nex creates appear here for review.</div></div>
+                </div>
+            </div>
+            <div class="sandbox-pane" id="pane-run">
+                <div class="run-panel">
+                    <div class="run-label">Execute Python in Nex's isolated sandbox</div>
+                    <textarea id="sandbox-code" class="code-editor" placeholder="# Write Python here&#10;print('Hello from the sandbox')"></textarea>
+                    <div class="run-actions">
+                        <button class="nexus-btn btn-run" id="btn-run-code">▶ EXECUTE</button>
+                        <span class="run-status" id="run-status"></span>
+                    </div>
+                    <div class="run-output" id="run-output" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="nexus-right-col">
+
+            <!-- AGENT OPTIMIZER -->
+            <div class="nexus-panel panel-optimizer">
+                <div class="panel-header">
+                    <div class="panel-header-left">
+                        <span class="panel-kicker">PHASE 3</span>
+                        <h2 class="panel-title">AGENT OPTIMIZER</h2>
+                    </div>
+                    <div class="opt-runs" id="opt-runs">— RUNS</div>
+                </div>
+                <div class="agent-bars" id="agent-bars"></div>
+                <div class="opt-footer">
+                    <span class="opt-note">Updates every 20 cognition cycles</span>
+                    <button class="nexus-btn btn-sm" id="btn-revert-all">REVERT ▾</button>
+                </div>
+                <div class="revert-menu" id="revert-menu" style="display:none;"></div>
+            </div>
+
+            <!-- MEMORY INSPECTOR -->
+            <div class="nexus-panel panel-memory">
+                <div class="panel-header">
+                    <div class="panel-header-left">
+                        <span class="panel-kicker">PHASE 2</span>
+                        <h2 class="panel-title">MEMORY INSPECTOR</h2>
+                    </div>
+                </div>
+                <div class="memory-search-row">
+                    <input class="mem-search" id="mem-search" placeholder="Search Nex's memories..." />
+                    <button class="nexus-btn btn-sm" id="btn-mem-search">RECALL</button>
+                </div>
+                <div class="memory-results" id="memory-results">
+                    <div class="empty-state small">Enter a query to search Nex's memory networks</div>
+                </div>
+                <div class="memory-stats-row" id="mem-stats-row"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- KNOWLEDGE GRAPH -->
+    <div class="nexus-panel panel-graph">
+        <div class="panel-header">
+            <div class="panel-header-left">
+                <span class="panel-kicker">PHASE 5</span>
+                <h2 class="panel-title">KNOWLEDGE GRAPH</h2>
+            </div>
+            <div class="graph-controls">
+                <input class="graph-search" id="graph-from" placeholder="Entity A..." />
+                <span class="graph-arrow">→</span>
+                <input class="graph-search" id="graph-to" placeholder="Entity B..." />
+                <button class="nexus-btn btn-sm" id="btn-find-path">FIND PATH</button>
+                <div class="graph-stat-pill" id="graph-pill">— nodes · — edges</div>
+            </div>
+        </div>
+        <div class="graph-path-result" id="graph-path" style="display:none;"></div>
+        <div class="graph-canvas-wrap">
+            <canvas id="graph-canvas"></canvas>
+            <div class="graph-empty" id="graph-empty">
+                <div class="empty-icon large">◈</div>
+                <div>Knowledge graph is building...</div>
+                <div class="empty-sub">Nodes appear as Nex researches and extracts relationships.</div>
+            </div>
+        </div>
+        <div class="graph-top-entities" id="graph-top-entities"></div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const set = (id, val) => { const el = $(id); if (el) el.textContent = val; };
+const dot = (id, color) => { const el = $(id); if (el) { el.style.background = color; el.style.boxShadow = `0 0 8px ${color}`; } };
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// Tabs
+document.querySelectorAll('.stab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.sandbox-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        $('pane-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+// Phase 1 — LLM
+async function loadLLM() {
+    try {
+        const d = await fetch('/api/llm/status').then(r => r.json());
+        set('active-model', d.active_model || '—');
+        set('thinking-mode', d.is_thinking_model ? '⚡ THINKING MODE ACTIVE' : 'Standard mode');
+        dot('brain-dot', d.status === 'ok' ? '#00ffc8' : '#ff4444');
+    } catch(e) { dot('brain-dot', '#ff4444'); }
+}
+
+// Phase 2 — Memory
+async function loadMemory() {
+    try {
+        const d = await fetch('/api/memory/stats').then(r => r.json());
+        const total = (d.world_facts||0) + (d.episodic||0) + (d.entities||0) + (d.beliefs||0);
+        set('memory-total', total.toLocaleString());
+        set('memory-detail', `${d.world_facts} facts · ${d.episodic} episodes · ${d.beliefs} beliefs`);
+        dot('memory-dot', total > 50 ? '#00ffc8' : '#ffaa33');
+        const row = $('mem-stats-row');
+        if (row) row.innerHTML = `
+            <div class="mstat"><span class="mstat-val">${d.world_facts}</span><span class="mstat-label">Facts</span></div>
+            <div class="mstat"><span class="mstat-val">${d.episodic}</span><span class="mstat-label">Episodes</span></div>
+            <div class="mstat"><span class="mstat-val">${d.entities}</span><span class="mstat-label">Entities</span></div>
+            <div class="mstat"><span class="mstat-val">${d.beliefs}</span><span class="mstat-label">Beliefs</span></div>
+            <div class="mstat"><span class="mstat-val" style="color:${d.embedding_enabled?'#00ffc8':'#ff4444'}">${d.embedding_enabled?'✓':'✗'}</span><span class="mstat-label">Semantic</span></div>`;
+    } catch(e) { dot('memory-dot', '#ff4444'); }
+}
+
+// Phase 3 — Optimizer
+async function loadOptimizer() {
+    try {
+        const [scores, history] = await Promise.all([
+            fetch('/api/optimizer/scores').then(r => r.json()),
+            fetch('/api/optimizer/history').then(r => r.json()),
+        ]);
+        const vals = Object.values(scores);
+        const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
+        set('optimizer-avg', avg.toFixed(3));
+        dot('optimizer-dot', avg > 0.65 ? '#00ffc8' : avg > 0.5 ? '#ffaa33' : '#ff4444');
+        set('opt-runs', `${history.length} RUNS`);
+        const bars = $('agent-bars');
+        if (bars) bars.innerHTML = Object.entries(scores).map(([agent, score]) => {
+            const pct = Math.round(score * 100);
+            const c = score > 0.65 ? '#00ffc8' : score > 0.5 ? '#ffaa33' : '#ff6666';
+            return `<div class="agent-bar-row">
+                <div class="agent-bar-name">${agent}</div>
+                <div class="agent-bar-track"><div class="agent-bar-fill" style="width:${pct}%;background:${c};box-shadow:0 0 6px ${c}"></div></div>
+                <div class="agent-bar-score" style="color:${c}">${score.toFixed(3)}</div>
+            </div>`;
+        }).join('');
+        const menu = $('revert-menu');
+        if (menu) {
+            menu.innerHTML = Object.keys(scores).map(a =>
+                `<button class="revert-item" data-agent="${a}">↩ Revert ${a}</button>`).join('');
+            menu.querySelectorAll('.revert-item').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await fetch(`/api/optimizer/revert/${btn.dataset.agent}`, {method:'POST'});
+                    menu.style.display = 'none';
+                    loadOptimizer();
+                });
+            });
+        }
+    } catch(e) { dot('optimizer-dot', '#ff4444'); }
+}
+$('btn-revert-all').addEventListener('click', () => {
+    const m = $('revert-menu');
+    m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+});
+
+// Phase 4 — Sandbox
+async function loadSandbox() {
+    try {
+        const [status, activity, agents] = await Promise.all([
+            fetch('/api/sandbox/status').then(r => r.json()),
+            fetch('/api/sandbox/activity').then(r => r.json()),
+            fetch('/api/sandbox/agents').then(r => r.json()),
+        ]);
+        set('trust-level', `LEVEL ${status.trust_level}`);
+        set('trust-name', status.trust_level_name || '—');
+        dot('sandbox-dot', status.trust_level === 0 ? '#ffaa33' : '#00ffc8');
+        const badge = $('trust-badge');
+        if (badge) badge.textContent = `TRUST LVL ${status.trust_level}`;
+
+        const list = $('activity-list');
+        if (list) list.innerHTML = (!activity || !activity.length)
+            ? `<div class="empty-state"><div class="empty-icon">◎</div><div>No sandbox activity yet.</div><div class="empty-sub">Nex will populate this as she builds.</div></div>`
+            : activity.slice().reverse().map(t => {
+                const c = t.result_status === 'success' ? '#00ffc8' : t.result_status === 'blocked' ? '#ff4444' : '#ffaa33';
+                return `<div class="activity-item">
+                    <div class="activity-header">
+                        <span class="activity-type">${t.task_type}</span>
+                        <span class="activity-status" style="color:${c}">● ${t.result_status.toUpperCase()}</span>
+                        <span class="activity-time">${new Date(t.submitted_at).toLocaleTimeString()}</span>
+                    </div>
+                    <div class="activity-desc">${esc(t.description)}</div>
+                    ${t.result_output ? `<div class="activity-output">${esc(t.result_output.substring(0,200))}</div>` : ''}
+                </div>`;
+            }).join('');
+
+        const agentList = $('agents-list');
+        if (agentList) agentList.innerHTML = (!agents || !agents.length)
+            ? `<div class="empty-state"><div class="empty-icon">◎</div><div>No agents built yet.</div><div class="empty-sub">Agents Nex creates appear here for review.</div></div>`
+            : agents.map(a => `<div class="agent-card">
+                <div class="agent-card-header">
+                    <span class="agent-card-name">${a.name}</span>
+                    <span class="agent-card-size">${(a.size_bytes/1024).toFixed(1)}KB</span>
+                    <span class="agent-card-date">${new Date(a.created).toLocaleDateString()}</span>
+                </div>
+                <div class="agent-card-actions">
+                    <button class="nexus-btn btn-approve" data-agent="${a.name}">✓ APPROVE</button>
+                    <button class="nexus-btn btn-reject" data-agent="${a.name}">✗ REJECT</button>
+                </div>
+            </div>`).join('');
+    } catch(e) { dot('sandbox-dot', '#ff4444'); }
+}
+
+$('btn-run-code').addEventListener('click', async () => {
+    const code = $('sandbox-code').value.trim();
+    if (!code) return;
+    const status = $('run-status'), output = $('run-output');
+    status.textContent = 'EXECUTING...'; status.style.color = '#ffaa33';
+    output.style.display = 'none';
+    try {
+        const result = await fetch('/api/sandbox/run', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({code, description: 'Manual Nexus run'})
+        }).then(r => r.json());
+        status.textContent = `${result.status.toUpperCase()} (${result.duration}s)`;
+        status.style.color = result.status === 'success' ? '#00ffc8' : '#ff4444';
+        if (result.stdout || result.stderr || result.reason) {
+            output.style.display = 'block';
+            output.innerHTML = `<pre>${esc(result.stdout || '')}${result.stderr ? '\n[STDERR] '+esc(result.stderr) : ''}${result.reason ? '\n[BLOCKED] '+esc(result.reason) : ''}</pre>`;
+        }
+        loadSandbox();
+    } catch(e) { status.textContent = 'ERROR'; status.style.color = '#ff4444'; }
+});
+
+$('btn-trust-up').addEventListener('click', () => {
+    alert('To increase trust level, edit nex_sandbox.trust_level in run_ui.py:\n  nex_sandbox.trust_level = 1\nThen restart Nex.');
+});
+
+// Phase 5 — Graph
+async function loadGraph() {
+    try {
+        const [stats, viz] = await Promise.all([
+            fetch('/api/graph/stats').then(r => r.json()),
+            fetch('/api/graph/visualize').then(r => r.json()),
+        ]);
+        const n = stats.total_nodes || 0, e = stats.total_edges || 0;
+        set('graph-total', `${n} nodes · ${e} edges`);
+        set('graph-pill', `${n} nodes · ${e} edges`);
+        dot('graph-dot', n > 0 ? '#00ffc8' : '#444');
+        if (n > 0) { $('graph-empty').style.display = 'none'; drawGraph(viz); }
+        else $('graph-empty').style.display = 'flex';
+        const top = $('graph-top-entities');
+        if (top && stats.top_entities?.length) top.innerHTML = stats.top_entities.map(e =>
+            `<div class="entity-pill">${e.name} <span class="entity-count">${e.mentions}</span></div>`).join('');
+    } catch(e) { dot('graph-dot', '#ff4444'); }
+}
+
+function drawGraph(data) {
+    const canvas = $('graph-canvas');
+    if (!canvas || !data.nodes?.length) return;
+    const ctx = canvas.getContext('2d');
+    const wrap = canvas.parentElement;
+    canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight;
+    const W = canvas.width, H = canvas.height;
+    const nodes = data.nodes.slice(0, 80).map(n => ({
+        ...n, x: W/2 + (Math.random()-.5)*W*.7, y: H/2 + (Math.random()-.5)*H*.7,
+        vx: 0, vy: 0, r: Math.min(5 + Math.sqrt(n.mention_count||1)*2, 18)
+    }));
+    const nodeMap = {};
+    nodes.forEach(n => nodeMap[n.id] = n);
+    const edges = data.edges.filter(e => nodeMap[e.source] && nodeMap[e.target]).slice(0, 150);
+    let frame = 0;
+    function tick() {
+        for (let i = 0; i < nodes.length; i++) for (let j = i+1; j < nodes.length; j++) {
+            const dx = nodes[j].x-nodes[i].x, dy = nodes[j].y-nodes[i].y;
+            const d = Math.sqrt(dx*dx+dy*dy)||1, f = 1200/(d*d);
+            nodes[i].vx -= dx/d*f; nodes[i].vy -= dy/d*f;
+            nodes[j].vx += dx/d*f; nodes[j].vy += dy/d*f;
+        }
+        edges.forEach(e => {
+            const a = nodeMap[e.source], b = nodeMap[e.target];
+            if (!a||!b) return;
+            const dx = b.x-a.x, dy = b.y-a.y, d = Math.sqrt(dx*dx+dy*dy)||1;
+            const f = (d-80)*.015, fx = dx/d*f, fy = dy/d*f;
+            a.vx+=fx; a.vy+=fy; b.vx-=fx; b.vy-=fy;
+        });
+        nodes.forEach(n => {
+            n.vx += (W/2-n.x)*.001; n.vy += (H/2-n.y)*.001;
+            n.vx *= .85; n.vy *= .85;
+            n.x = Math.max(n.r, Math.min(W-n.r, n.x+n.vx));
+            n.y = Math.max(n.r, Math.min(H-n.r, n.y+n.vy));
+        });
+    }
+    function draw() {
+        ctx.clearRect(0,0,W,H);
+        edges.forEach(e => {
+            const a = nodeMap[e.source], b = nodeMap[e.target];
+            if (!a||!b) return;
+            ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+            ctx.strokeStyle = `rgba(0,240,255,${Math.min((e.weight||.5)*.5,.4)})`;
+            ctx.lineWidth = .8; ctx.stroke();
+        });
+        nodes.forEach(n => {
+            const g = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*2.5);
+            g.addColorStop(0,'rgba(0,240,255,0.25)'); g.addColorStop(1,'rgba(0,240,255,0)');
+            ctx.beginPath(); ctx.arc(n.x,n.y,n.r*2.5,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+            ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+            ctx.fillStyle='rgba(0,20,30,.9)'; ctx.fill();
+            ctx.strokeStyle='#00f0ff'; ctx.lineWidth=1; ctx.stroke();
+            if (n.r > 8) {
+                ctx.fillStyle='rgba(0,240,255,.9)';
+                ctx.font=`${Math.min(n.r,11)}px Rajdhani,monospace`;
+                ctx.textAlign='center';
+                ctx.fillText(n.name.substring(0,14), n.x, n.y+n.r+11);
+            }
+        });
+    }
+    function animate() { if (frame < 100) { tick(); frame++; } draw(); requestAnimationFrame(animate); }
+    animate();
+}
+
+$('btn-find-path').addEventListener('click', async () => {
+    const from = $('graph-from').value.trim(), to = $('graph-to').value.trim();
+    if (!from || !to) return;
+    const r = await fetch(`/api/graph/path?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`).then(r=>r.json());
+    const el = $('graph-path');
+    el.textContent = r.path || 'No path found.';
+    el.style.display = 'block';
+});
+
+// Memory search
+$('btn-mem-search').addEventListener('click', searchMemory);
+$('mem-search').addEventListener('keydown', e => { if (e.key==='Enter') searchMemory(); });
+async function searchMemory() {
+    const q = $('mem-search').value.trim();
+    if (!q) return;
+    const results = $('memory-results');
+    results.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+    try {
+        const d = await fetch(`/api/memory/recall?q=${encodeURIComponent(q)}`).then(r=>r.json());
+        const text = d.results || '';
+        if (!text) { results.innerHTML = '<div class="empty-state small">No memories found.</div>'; return; }
+        const lines = text.split('\n').filter(l=>l.trim());
+        results.innerHTML = lines.map(line => {
+            const type = line.startsWith('[FACT]') ? 'fact' : line.startsWith('[BELIEF') ? 'belief' : 'memory';
+            const colors = {fact:'#00ffc8', belief:'#ff66cc', memory:'#ffaa33'};
+            const labels = {fact:'FACT', belief:'BELIEF', memory:'EPISODE'};
+            return `<div class="mem-result">
+                <span class="mem-type" style="color:${colors[type]}">${labels[type]}</span>
+                <span class="mem-content">${esc(line.replace(/^\[.*?\]\s*/,'').substring(0,200))}</span>
+            </div>`;
+        }).join('');
+    } catch(e) { results.innerHTML = '<div class="empty-state small">Error.</div>'; }
+}
+
+// Cycle tracker
+async function loadCycle() {
+    try {
+        const d = await fetch('/api/cognition/all').then(r=>r.json());
+        const c = d.entries?.[0]?.cognition?.workspace_cycle;
+        if (c) set('pulse-cycle', `CYCLE ${c.toLocaleString()}`);
+    } catch(e) {}
+}
+
+// Boot
+async function loadAll() {
+    await Promise.all([loadLLM(), loadMemory(), loadOptimizer(), loadSandbox(), loadGraph(), loadCycle()]);
+}
+loadAll();
+setInterval(loadAll, 12000);
+</script>
+{% endblock %}
