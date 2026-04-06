@@ -26,7 +26,7 @@
         <div class="status-tile">
             <div class="tile-icon">🧠</div>
             <div class="tile-body">
-                <div class="tile-label">ACTIVE MODEL</div>
+                <div class="intel-tile-label">TWO-BRAIN SYSTEM</div>
                 <div class="tile-value" id="active-model">—</div>
                 <div class="tile-sub" id="thinking-mode">—</div>
             </div>
@@ -205,8 +205,11 @@ document.querySelectorAll('.stab').forEach(btn => {
 async function loadLLM() {
     try {
         const d = await fetch('/api/llm/status').then(r => r.json());
-        set('active-model', d.active_model || '—');
-        set('thinking-mode', d.is_thinking_model ? '⚡ THINKING MODE ACTIVE' : 'Standard mode');
+        const chatShort = (d.chat_model || d.active_model || '—').replace('deepseek-r1:','R1:').replace(':latest','');
+        const deepShort = (d.deep_model || '—').replace('deepseek-r1:','R1:').replace(':latest','');
+        const el = $('active-model');
+        if (el) el.innerHTML = `<div style="display:flex;flex-direction:column;gap:3px;line-height:1.4;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:rgba(0,240,255,0.5);width:28px;flex-shrink:0;">CHAT</span><span style="color:#fff;">${chatShort}</span><span style="font-size:9px;color:#00ffc8;margin-left:auto;">⚡</span></div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:rgba(255,170,50,0.6);width:28px;flex-shrink:0;">DEEP</span><span style="color:#ffaa33;">${deepShort}</span><span style="font-size:9px;color:#ffaa33;margin-left:auto;">🧠</span></div></div>`;
+        set('thinking-mode', 'both thinking mode active');
         dot('brain-dot', d.status === 'ok' ? '#00ffc8' : '#ff4444');
     } catch(e) { dot('brain-dot', '#ff4444'); }
 }

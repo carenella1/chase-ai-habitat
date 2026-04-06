@@ -48,10 +48,28 @@ async function loadIntelStatus() {
 
         // Brain tile
         if (llm) {
-            const modelShort = (llm.active_model || '—').replace('deepseek-r1:', 'R1:').replace(':latest', '');
-            setText('it-model', modelShort);
-            setText('it-thinking', llm.is_thinking_model ? '⚡ thinking mode active' : 'standard mode');
-            setText('ss-model-name', modelShort);
+            const chatShort = (llm.chat_model || llm.active_model || '—').replace('deepseek-r1:', 'R1:').replace(':latest', '');
+            const deepShort = (llm.deep_model || '—').replace('deepseek-r1:', 'R1:').replace(':latest', '');
+            const body = document.querySelector('#tile-brain .intel-tile-body');
+            if (body) {
+                body.innerHTML = `
+                <div class="intel-tile-label">TWO-BRAIN SYSTEM</div>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:9px;letter-spacing:1px;color:rgba(0,240,255,0.5);width:36px;">CHAT</span>
+                    <span style="font-family:'Share Tech Mono',monospace;font-size:14px;color:#fff;">${chatShort}</span>
+                    <span style="font-size:9px;color:#00ffc8;margin-left:auto;">⚡ FAST</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:9px;letter-spacing:1px;color:rgba(255,170,50,0.6);width:36px;">DEEP</span>
+                    <span style="font-family:'Share Tech Mono',monospace;font-size:14px;color:#ffaa33;">${deepShort}</span>
+                    <span style="font-size:9px;color:#ffaa33;margin-left:auto;">🧠 POWER</span>
+                    </div>
+                </div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;">thinking mode active on both</div>
+                `;
+            }
+            setText('ss-model-name', `${chatShort} / ${deepShort}`);
             setDot('ss-brain', llm.status === 'ok' ? 'online' : 'error');
         }
 

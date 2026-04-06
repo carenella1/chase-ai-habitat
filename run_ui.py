@@ -910,6 +910,14 @@ def api_graph_path():
     return jsonify({"path": knowledge_graph.how_are_related(a, b)})
 
 
+@app.route("/api/llm/refresh")
+def api_llm_refresh():
+    from llm_router import refresh_model_selection
+
+    model = refresh_model_selection()
+    return jsonify({"selected": model})
+
+
 # =========================
 # 💬 MULTI-CONVERSATION SYSTEM
 # =========================

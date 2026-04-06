@@ -329,6 +329,7 @@ def sandbox_print(*args, **kwargs):
             "PATH": os.environ.get("PATH", ""),
             "PYTHONPATH": "",
             "HOME": os.path.abspath(SANDBOX_ROOT),
+            "PYTHONHASHSEED": "0",
             # Explicitly block network-related env vars
         }
 
