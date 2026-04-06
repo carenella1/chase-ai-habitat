@@ -15,7 +15,17 @@ import base64
 import traceback
 import glob
 import random
+from llm_router import call_llm, get_llm_status
 from habitat.agents.domain_knowledge import get_domain_briefing, detect_task_domain
+from structured_memory import NexMemory, migrate_from_memory_json
+from self_optimizer import SelfOptimizer
+from nex_sandbox import NexSandbox
+from knowledge_graph import NexKnowledgeGraph
+
+knowledge_graph = NexKnowledgeGraph()
+nex_sandbox = NexSandbox()
+self_optimizer = SelfOptimizer(call_llm)
+nex_memory = NexMemory()
 from habitat.agents.curriculum import (
     advance_curriculum,
     get_curriculum_search_term,
@@ -580,40 +590,6 @@ _llm_failure_count = 0
 _llm_last_success = 0
 
 
-def call_llm(prompt, timeout=90):
-    global _llm_failure_count, _llm_last_success
-    if _llm_failure_count >= 3:
-        elapsed = time.time() - _llm_last_success
-        if elapsed < 120:
-            print(f"⏸️ LLM BACKOFF: {_llm_failure_count} failures")
-            return ""
-        else:
-            _llm_failure_count = 0
-    try:
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={"model": "deepseek-r1:14b", "prompt": prompt, "stream": False},
-            timeout=timeout,
-        )
-        result = response.json().get("response", "")
-        if result:
-            _llm_failure_count = 0
-            _llm_last_success = time.time()
-        return result
-    except requests.exceptions.Timeout:
-        _llm_failure_count += 1
-        print(f"⏱️ LLM TIMEOUT ({_llm_failure_count})")
-        return ""
-    except requests.exceptions.ConnectionError:
-        _llm_failure_count += 1
-        print(f"🔌 LLM CONNECTION ERROR ({_llm_failure_count})")
-        return ""
-    except Exception as e:
-        _llm_failure_count += 1
-        print(f"❌ LLM ERROR: {e}")
-        return ""
-
-
 def generate_search_topic(insight):
     if not insight:
         return ""
@@ -749,6 +725,13 @@ def api_cognition_all():
     )
 
 
+@app.route("/api/llm/status")
+def api_llm_status():
+    from llm_router import get_llm_status
+
+    return jsonify(get_llm_status())
+
+
 @app.route("/api/contradictions")
 def api_contradictions():
     try:
@@ -865,6 +848,61 @@ def api_workspace():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/optimizer/scores")
+def api_optimizer_scores():
+    return jsonify(self_optimizer.get_all_agent_scores())
+
+
+@app.route("/api/optimizer/history")
+def api_optimizer_history():
+    return jsonify(self_optimizer.get_optimization_history())
+
+
+@app.route("/api/optimizer/revert/<agent_name>", methods=["POST"])
+def api_optimizer_revert(agent_name):
+    success = self_optimizer.optimizer.revert_prompt(agent_name)
+    return jsonify({"success": success})
+
+
+@app.route("/api/sandbox/status")
+def api_sandbox_status():
+    return jsonify(nex_sandbox.get_status())
+
+
+@app.route("/api/sandbox/run", methods=["POST"])
+def api_sandbox_run():
+    data = request.get_json()
+    result = nex_sandbox.run_code(data["code"], data.get("description", ""))
+    return jsonify(result)
+
+
+@app.route("/api/sandbox/agents")
+def api_sandbox_agents():
+    return jsonify(nex_sandbox.get_sandbox_agents())
+
+
+@app.route("/api/sandbox/activity")
+def api_sandbox_activity():
+    return jsonify(nex_sandbox.get_activity())
+
+
+@app.route("/api/graph/stats")
+def api_graph_stats():
+    return jsonify(knowledge_graph.get_stats())
+
+
+@app.route("/api/graph/visualize")
+def api_graph_visualize():
+    return jsonify(knowledge_graph.export_for_visualization())
+
+
+@app.route("/api/graph/path")
+def api_graph_path():
+    a = request.args.get("from", "")
+    b = request.args.get("to", "")
+    return jsonify({"path": knowledge_graph.how_are_related(a, b)})
 
 
 # =========================
@@ -1189,10 +1227,8 @@ def _build_nexarion_prompt(
     )
 
     clean_memories = _extract_clean_memories(memory)
-    memory_block = ""
-    if clean_memories:
-        memory_block = "What you have been processing between conversations:\n"
-        memory_block += "\n".join(f"- {m}" for m in clean_memories)
+    memory_context = nex_memory.get_memory_context_for_prompt(user_message)
+    # ... inject memory_context into the prompt
 
     journal_entries = _extract_recent_journal(limit=3)
     journal_block = ""
@@ -1312,6 +1348,29 @@ When Chase asks for current information or computation, these tools fire before 
             and any(p in t.get("content", "").lower() for p in POISON_PHRASES)
         )
     ]
+
+    # Active investigation
+    active_goal = memory.get("active_goal", "")
+    goal_block = (
+        f"You are currently investigating: {active_goal}" if active_goal else ""
+    )
+
+    # Phase 5 — Knowledge graph context
+    graph_block = ""
+    try:
+        graph_context = knowledge_graph.get_graph_context_for_prompt(topics_str)
+        if graph_context:
+            graph_block = graph_context
+    except Exception:
+        pass
+
+    # Conversation history
+    recent = history[-NEXARION_PROMPT_LIMIT:]
+    convo_block = "\n".join(
+        f"{'Chase' if t['role'] == 'user' else 'Nexarion'}: {t['content']}"
+        for t in recent
+    )
+
     convo_block = "\n".join(
         f"{'Chase' if t['role'] == 'user' else 'Nexarion'}: {t['content']}"
         for t in recent
@@ -1358,10 +1417,11 @@ What you have been researching: {topics_str}
 {self_context_block}
 {synthesis_block}
 {memory_block}
+{graph_block}
 {journal_block}
 {domain_block}
 {tool_block}
-Conversation:
+Conversation so far:
 {convo_block}
 Chase: {user_message}
  
@@ -1755,6 +1815,8 @@ def run():
     global _auto_research_streak
     print("🧠 BRAIN THREAD STARTED")
     print("🌐 GLOBAL WORKSPACE ACTIVE")
+    nex_memory.remember(insight, agent=agent_name, importance=0.7)
+    nex_memory.learn(research_result, source="web_research", topic=topic)
     memory_manager = MemoryManager()
     synthesis_pairs = []
 
@@ -1798,6 +1860,13 @@ def run():
             current_cycle = workspace.increment_cycle()
             print(f"🔄 COGNITION CYCLE #{current_cycle} (last: {int(elapsed)}s)")
             memory = ensure_memory(load_memory())
+
+            # Phase 3 — Self-optimization every 20 cycles
+            if current_cycle % 20 == 0 and current_cycle > 0:
+                threading.Thread(
+                    target=self_optimizer.run_optimization_cycle, daemon=True
+                ).start()
+                print("✨ SELF-OPTIMIZER: Triggered in background")
 
             if current_cycle % 7 == 0:
                 try:
@@ -2342,6 +2411,20 @@ Claim:
             }
             add_cognition_entry(new_entry)
             print("📡 FEED ENTRY STORED")
+            add_cognition_entry(new_entry)
+            print("📡 FEED ENTRY STORED")
+
+            # Phase 5 — Knowledge graph extraction
+            if research:
+                edges_added = knowledge_graph.learn_from_text(research, source=agent)
+                if edges_added > 0:
+                    print(
+                        f"🕸️ GRAPH: {edges_added} new connections extracted from research"
+                    )
+            if insight:
+                knowledge_graph.learn_from_text(insight, source=agent)
+            if insight:
+                self_optimizer.record_agent_output(agent, insight, cycle=current_cycle)
 
             broadcast_record = workspace.broadcast(
                 insight=insight,
@@ -2992,6 +3075,21 @@ def api_goals_history():
     except Exception as e:
         return jsonify({"status": "error", "error": str(e)})
 
+
+@app.route("/api/memory/stats")
+def api_memory_stats():
+    return jsonify(nex_memory.get_stats())
+
+
+# =========================
+# PHASE 2 — MEMORY MIGRATION (runs once, then never again)
+# =========================
+_migration_flag = "data/.memory_migrated"
+if not os.path.exists(_migration_flag):
+    print("🧠 Running one-time memory migration...")
+    migrate_from_memory_json("memory.json", nex_memory)
+    open(_migration_flag, "w").close()
+    print("✅ Memory migration complete.")
 
 # =========================
 # START

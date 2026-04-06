@@ -19,6 +19,9 @@ import time
 import traceback
 import requests
 from urllib.parse import quote, urlparse, unquote
+from nex_sandbox import NexSandbox
+
+nex_sandbox = NexSandbox()
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; NexarionTools/1.0)"}
 REQUEST_TIMEOUT = 10
@@ -387,6 +390,10 @@ TOOL_REGISTRY = {
         "example": "web_search('number 1 movie Philippines 2026')",
     },
 }
+
+
+def tool_sandbox_run(code: str) -> dict:
+    return nex_sandbox.run_code(code)
 
 
 def execute_tool(tool_name: str, param: str) -> dict:
