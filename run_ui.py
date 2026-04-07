@@ -21,7 +21,10 @@ from structured_memory import NexMemory, migrate_from_memory_json
 from self_optimizer import SelfOptimizer
 from nex_sandbox import NexSandbox
 from knowledge_graph import NexKnowledgeGraph
+from nex_docker_agent import NexDockerAgent, NexAutonomousEngine
 
+nex_docker = NexDockerAgent()
+nex_autonomous = NexAutonomousEngine(nex_docker, call_llm)
 knowledge_graph = NexKnowledgeGraph()
 nex_sandbox = NexSandbox()
 self_optimizer = SelfOptimizer(call_llm)
@@ -916,6 +919,38 @@ def api_llm_refresh():
 
     model = refresh_model_selection()
     return jsonify({"selected": model})
+
+
+@app.route("/api/docker/status")
+def api_docker_status():
+    return jsonify(nex_docker.get_status())
+
+
+@app.route("/api/docker/execute", methods=["POST"])
+def api_docker_execute():
+    data = request.get_json()
+    result = nex_docker.execute(
+        code=data["code"],
+        description=data.get("description", "Manual Nexus execution"),
+    )
+    return jsonify(result)
+
+
+@app.route("/api/docker/files")
+def api_docker_files():
+    return jsonify(nex_docker.list_files())
+
+
+@app.route("/api/docker/activity")
+def api_docker_activity():
+    return jsonify(nex_docker.get_activity())
+
+
+@app.route("/api/docker/read")
+def api_docker_read():
+    path = request.args.get("path", "")
+    content = nex_docker.read_file(path)
+    return jsonify({"path": path, "content": content})
 
 
 # =========================
@@ -2638,6 +2673,20 @@ Claim:
                 except Exception as e:
                     print(f"⚠️ Maintenance error: {e}")
             # --- END MEMORY MAINTENANCE ---
+
+            # Phase 6 — Docker autonomous build
+            try:
+                sig_score = memory.get("_last_significance", 0)
+                nex_autonomous.maybe_build(
+                    insight=insight,
+                    agent=agent,
+                    cycle=current_cycle,
+                    significance=sig_score,
+                    topic=search_term or topic_context,
+                    memory=memory,
+                )
+            except Exception as e:
+                print(f"❌ DOCKER ENGINE ERROR: {e}")
 
             # --- AUTONOMOUS DEEP RESEARCH TRIGGER ---
             try:

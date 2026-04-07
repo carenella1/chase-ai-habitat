@@ -283,6 +283,7 @@ class SandboxExecutor:
         temp_file = f"{SANDBOX_ROOT}/temp/exec_{task_id}.py"
         with open(temp_file, "w") as f:
             # Inject sandbox preamble that restricts the environment
+            sandbox_path = os.path.abspath(SANDBOX_ROOT).replace("\\", "/")
             preamble = f"""
 import sys
 import json
@@ -309,7 +310,7 @@ import fractions
 
 # Sandbox working directory
 import os as _os
-_os.chdir("{os.path.abspath(SANDBOX_ROOT)}")
+_os.chdir("{os.path.abspath(SANDBOX_ROOT).replace(os.sep, '/')}")
 
 # Prevent further imports of dangerous modules
 _ALLOWED = {json.dumps(list(ALLOWED_IMPORTS))}
