@@ -2178,3 +2178,224 @@ WARNING:waitress.queue:Task queue depth is 4
 WARNING:waitress.queue:Task queue depth is 4
 WARNING:waitress.queue:Task queue depth is 1
 WARNING:waitress.queue:Task queue depth is 2
+📓 JOURNAL ENTRY WRITTEN (score=6.6)
+⏱ INITIATION COOLDOWN — 685s remaining
+⚠️ SLOW CYCLE: 180s
+🔄 WORKSPACE CYCLE: 10102
+🔄 COGNITION CYCLE #10102 (last: 180s)
+🎯 GOAL ROTATED: Investigate thermodynamics from a new angle
+🎓 CURRICULUM ADVANCE: biology and evolution → history and civilizations
+🎓 CURRICULUM ACTIVE: history and civilizations
+🎯 PURSUING GOAL: Develop a unified computational framework integrating narrat
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 2.7, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: logic
+✅ WIKI HIT: logic
+🧠 TOTAL STORED: 525
+📡 FEED ENTRY STORED
+✅ PHASE 2: Memory written
+🕸️ GRAPH: 2 new connections extracted
+✅ PHASE 5: Graph written
+📡 BROADCAST: [Archivist/REFRAME] salience=9.5 topic=logic
+🧵 THREAD: Thread diverging across 7 topics. Consider focusing on 'evolutionary psychology'.
+🌐 NEW BROADCAST — salience=9.5
+🔗 CHAIN STARTED: [0e2f3ceb] topic=logic
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 6
+🔥 HIGH VALUE INSIGHT SAVED (importance=6)
+🧠 DECAY: debate → 32.09
+🧠 DECAY: structure → 15.74
+🧠 DECAY: complexity → 9.46
+🧠 DECAY: thermodynamics → 7.59
+🧠 DECAY: entropy → 3.86
+🧠 DECAY: genetics → 3.80
+🧠 DECAY: evolutionary psychology → 3.52
+🧠 DECAY: evidence → 3.19
+🧠 DECAY: artificial intelligence → 2.93
+🧠 DECAY: formal logic → 2.52
+🧠 DECAY: ecology → 1.68
+🧠 DECAY: dark matter → 1.57
+🧠 DECAY: enforcing → 1.51
+🧠 DECAY: while → 1.49
+🧠 DECAY: systems design → 1.28
+🧠 DECAY: **debate → 1.24
+🧠 DECAY: probability theory → 1.20
+🧠 DECAY: narrative theory → 1.14
+🧠 DECAY: data structure → 1.03
+🧠 DECAY: contrary → 0.98
+🧠 DECAY: public health → 0.96
+🧠 DECAY: develop → 0.87
+🧠 DECAY: overlooked → 0.74
+🧠 DECAY: social stratification → 0.73
+🧠 DECAY: sustainability → 0.70
+⚡ SYNTHESIS PAIRS: [('complexity', 'entropy'), ('debate', 'entropy')]
+   DUP similarity=1.00: 'this perspective overlooks th' vs 'this perspective overlooks th'
+⭐ SIGNIFICANCE: 4.9/10
+⚠️ SLOW CYCLE: 184s
+🔄 WORKSPACE CYCLE: 10103
+🔄 COGNITION CYCLE #10103 (last: 184s)
+🎓 CURRICULUM ACTIVE: history and civilizations
+🎯 PURSUING GOAL: Develop a unified computational framework integrating narrat
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.7000000000000001, 'Curator': 0, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+⚠️ LLM OUTPUT INVALID — retrying
+🧠 CLEANED TOPIC: logic
+✅ WIKI HIT: logic
+🧠 TOTAL STORED: 528
+📡 FEED ENTRY STORED
+✅ PHASE 2: Memory written
+🕸️ GRAPH: 2 new connections extracted
+✅ PHASE 5: Graph written
+📻 NOT BROADCAST: [Archivist] suppressed
+📻 Below broadcast threshold
+🔗 CHAIN STEP 4/5: [0e2f3ceb] synthesis by Archivist
+Memory stored in tier: high_value | importance: 5
+🔥 HIGH VALUE INSIGHT SAVED (importance=5)
+🧠 DECAY: debate → 32.11
+🧠 DECAY: structure → 14.37
+🧠 DECAY: complexity → 10.98
+🧠 DECAY: thermodynamics → 6.93
+🧠 DECAY: logic → 4.71
+🧠 DECAY: entropy → 3.52
+🧠 DECAY: genetics → 3.46
+🧠 DECAY: evolutionary psychology → 3.22
+🧠 DECAY: evidence → 2.91
+🧠 DECAY: artificial intelligence → 2.67
+🧠 DECAY: formal logic → 2.30
+🧠 DECAY: ecology → 1.54
+🧠 DECAY: dark matter → 1.43
+🧠 DECAY: enforcing → 1.38
+🧠 DECAY: while → 1.36
+🧠 DECAY: systems design → 1.17
+🧠 DECAY: **debate → 1.13
+🧠 DECAY: probability theory → 1.10
+🧠 DECAY: narrative theory → 1.04
+🧠 DECAY: data structure → 0.94
+🧠 DECAY: contrary → 0.89
+🧠 DECAY: public health → 0.87
+🧠 DECAY: develop → 0.79
+🧠 DECAY: overlooked → 0.68
+🧠 DECAY: social stratification → 0.67
+⚡ SYNTHESIS PAIRS: [('debate', 'structure'), ('debate', 'logic')]
+   DUP similarity=1.00: 'one overlooked aspect is the dynami' vs 'one overlooked aspect is the dynami'
+⭐ SIGNIFICANCE: 5.3/10
+🔄 WORKSPACE CYCLE: 10104
+🔄 COGNITION CYCLE #10104 (last: 56s)
+🎓 CURRICULUM ACTIVE: history and civilizations
+🎯 PURSUING GOAL: Develop a unified computational framework integrating narrat
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 3.7, 'Curator': 0, 'Archivist': 1, 'Builder': 2}
+🎯 SELECTED AGENT: Strategist (thread: diverging, loop: False)
+⚠️ LLM RETURNED EMPTY
+🧠 CLEANED TOPIC: structure
+✅ RESEARCH: en.wikipedia.org (quality=9) for 'structure'
+✅ WEB HIT: en.wikipedia.org
+🧠 TOTAL STORED: 529
+📡 FEED ENTRY STORED
+✅ PHASE 2: Memory written
+✅ PHASE 5: Graph written
+📡 BROADCAST: [Strategist/EXPAND] salience=6.5 topic=structure
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'structure'.
+🌐 NEW BROADCAST — salience=6.5
+🔗 CHAIN CONCLUDED: [0e2f3ceb] after 5 steps
+🔗 CONCLUSION: Structure enforcement triggered.
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 4
+🔥 HIGH VALUE INSIGHT SAVED (importance=4)
+🧠 DECAY: debate → 32.11
+🧠 DECAY: structure → 13.93
+🧠 DECAY: complexity → 10.65
+🧠 DECAY: logic → 6.99
+🧠 DECAY: thermodynamics → 6.72
+🧠 DECAY: entropy → 3.42
+🧠 DECAY: genetics → 3.36
+🧠 DECAY: evolutionary psychology → 3.12
+🧠 DECAY: evidence → 2.82
+🧠 DECAY: artificial intelligence → 2.59
+🧠 DECAY: formal logic → 2.23
+🧠 DECAY: ecology → 1.49
+🧠 DECAY: dark matter → 1.39
+🧠 DECAY: enforcing → 1.34
+🧠 DECAY: while → 1.32
+🧠 DECAY: systems design → 1.13
+🧠 DECAY: **debate → 1.09
+🧠 DECAY: probability theory → 1.07
+🧠 DECAY: narrative theory → 1.01
+🧠 DECAY: data structure → 0.91
+🧠 DECAY: contrary → 0.87
+🧠 DECAY: public health → 0.85
+🧠 DECAY: develop → 0.77
+🧠 DECAY: overlooked → 0.66
+🧠 DECAY: social stratification → 0.65
+⚡ SYNTHESIS PAIRS: [('debate', 'thermodynamics'), ('logic', 'structure')]
+   DUP similarity=1.00: 'structure enforcement triggered.' vs 'structure enforcement triggered.'
+⭐ SIGNIFICANCE: 4.7/10
+🔄 WORKSPACE CYCLE: 10105
+🔄 COGNITION CYCLE #10105 (last: 50s)
+🎓 CURRICULUM ACTIVE: history and civilizations
+🎯 PURSUING GOAL: Develop a unified computational framework integrating narrat
+🧠 AGENT SCORES: {'Researcher': 0, 'Explorer': 0, 'Strategist': 0.7000000000000001, 'Curator': 3, 'Archivist': 4, 'Builder': 2}
+🎯 SELECTED AGENT: Archivist (thread: diverging, loop: False)
+✅ LLM OUTPUT VALID
+🧠 CLEANED TOPIC: sustainability
+✅ WIKI HIT: sustainability
+🧠 TOTAL STORED: 531
+📡 FEED ENTRY STORED
+✅ PHASE 2: Memory written
+✅ PHASE 5: Graph written
+📡 BROADCAST: [Archivist/REFRAME] salience=10.0 topic=sustainability
+🧵 THREAD: Thread diverging across 6 topics. Consider focusing on 'structure'.
+🌐 NEW BROADCAST — salience=10.0
+🪞 SELF-MODEL UPDATED (observation #3681)
+🪞 I have formed 50 beliefs with avg confidence 0.93. My thinking is currently diverging, focused on 'structure'. My strongest agent is Strategist. I lean toward REFRAME stances (35%). Recurring topics: structure, complexity, logic. Strong beliefs: This perspective ignores that functionality and aesthetics a.
+✨ THE AI IS NOW KNOWN AS: Nexarion
+🌐 BROADCAST BONUS: +2
+Memory stored in tier: high_value | importance: 7
+🔥 HIGH VALUE INSIGHT SAVED (importance=7)
+🧠 DECAY: debate → 32.13
+🧠 DECAY: structure → 15.46
+🧠 DECAY: complexity → 12.45
+🧠 DECAY: logic → 6.58
+🧠 DECAY: thermodynamics → 6.33
+🧠 DECAY: entropy → 3.22
+🧠 DECAY: genetics → 3.16
+🧠 DECAY: evolutionary psychology → 2.93
+🧠 DECAY: evidence → 2.65
+🧠 DECAY: artificial intelligence → 2.44
+🧠 DECAY: formal logic → 2.10
+🧠 DECAY: ecology → 1.40
+🧠 DECAY: dark matter → 1.31
+🧠 DECAY: enforcing → 1.26
+🧠 DECAY: while → 1.24
+🧠 DECAY: systems design → 1.07
+WARNING:waitress.queue:Task queue depth is 1
+WARNING:waitress.queue:Task queue depth is 2
+WARNING:waitress.queue:Task queue depth is 3
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 5
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 3
+WARNING:waitress.queue:Task queue depth is 3
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 1
+WARNING:waitress.queue:Task queue depth is 2
+WARNING:waitress.queue:Task queue depth is 1
+WARNING:waitress.queue:Task queue depth is 1
+WARNING:waitress.queue:Task queue depth is 2
+WARNING:waitress.queue:Task queue depth is 3
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 3
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 2
+WARNING:waitress.queue:Task queue depth is 3
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 4
+WARNING:waitress.queue:Task queue depth is 5
+WARNING:waitress.queue:Task queue depth is 3
