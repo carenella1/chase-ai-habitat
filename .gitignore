@@ -55,3 +55,6 @@ sandbox/temp/
 # Push helper script
 push.bat
 
+context_package/
+context_package - Copy/
+

@@ -11,29 +11,6 @@
         "last_updated": "2026-04-07T20:22:45.600043"
       },
       "belief_b": {
-        "belief_id": 245,
-        "statement": "Building on this, it's crucial to recognize that functionality and aesthetics are not fixed entities, but rather fluid and context-dependent, making it challenging to achieve a harmonious balance betw",
-        "confidence": 1.0,
-        "created_by_agent": "Strategist",
-        "status": "active",
-        "created_at": "2026-03-31T14:33:01.021978",
-        "last_updated": "2026-04-07T20:22:45.595503"
-      },
-      "detected_at": 1775593621,
-      "resolved": false,
-      "detected_cycle": 10073
-    },
-    {
-      "belief_a": {
-        "belief_id": 175,
-        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making.",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T05:49:07.252574",
-        "last_updated": "2026-04-07T20:22:45.600043"
-      },
-      "belief_b": {
         "belief_id": 81,
         "statement": "The incorporation of artificial intelligence in decision-making processes will lead to a more accurate and less biased assessment of human performance, potentially bridging the gap between objective d",
         "confidence": 1.0,
@@ -232,33 +209,6 @@
     }
   ],
   "resolved": [
-    {
-      "belief_a": {
-        "belief_id": 173,
-        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making by providing accurate and t",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T05:42:06.068293",
-        "last_updated": "2026-04-07T15:49:14.719419"
-      },
-      "belief_b": {
-        "belief_id": 244,
-        "statement": "One overlooked aspect is that by recognizing the interconnectedness of functionality and aesthetics, we can create a harmonious balance between the two, leading to more effective solutions.",
-        "confidence": 1.0,
-        "created_by_agent": "Archivist",
-        "status": "active",
-        "created_at": "2026-03-31T14:32:27.478903",
-        "last_updated": "2026-04-07T15:40:26.127059"
-      },
-      "detected_at": 1775576994,
-      "resolved": true,
-      "detected_cycle": 9877,
-      "resolution_text": "**Resolution:**\nThe resolution is that both Belief A and Belief B can coexist by recognizing that AI enhances efficiency and decision-making (functionality), while also integrating aesthetics to create user-friendly solutions. Thus, they complement each other rather than contradict.\n\n**Verdict: RECONCILED**\n\n**Reasoning:** Both beliefs focus on enhancing effectiveness through different yet complem",
-      "verdict": "RECONCILED",
-      "resolved_cycle": 9926,
-      "resolved_at": 1775579706
-    },
     {
       "belief_a": {
         "belief_id": 173,
@@ -1581,6 +1531,33 @@
       "verdict": "RECONCILED",
       "resolved_cycle": 10111,
       "resolved_at": 1775598249
+    },
+    {
+      "belief_a": {
+        "belief_id": 175,
+        "statement": "The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making.",
+        "confidence": 1.0,
+        "created_by_agent": "Archivist",
+        "status": "active",
+        "created_at": "2026-03-31T05:49:07.252574",
+        "last_updated": "2026-04-07T20:22:45.600043"
+      },
+      "belief_b": {
+        "belief_id": 245,
+        "statement": "Building on this, it's crucial to recognize that functionality and aesthetics are not fixed entities, but rather fluid and context-dependent, making it challenging to achieve a harmonious balance betw",
+        "confidence": 1.0,
+        "created_by_agent": "Strategist",
+        "status": "active",
+        "created_at": "2026-03-31T14:33:01.021978",
+        "last_updated": "2026-04-07T20:22:45.595503"
+      },
+      "detected_at": 1775593621,
+      "resolved": true,
+      "detected_cycle": 10073,
+      "resolution_text": "--- Contradiction Resolution ---\nBelief A: The increasing adoption of artificial intelligence in industries will not only lead to improved efficiency and reduced costs, but also enable more effective decision-making.\n\nBelief B: Building on this, it's crucial to recognize that functionality and aesthetics are not fixed entities, but rather fluid and context-dependent, making it challenging to achie",
+      "verdict": "RECONCILED",
+      "resolved_cycle": 10116,
+      "resolved_at": 1775599012
     }
   ]
 }
