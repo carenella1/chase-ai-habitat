@@ -58,3 +58,7 @@ push.bat
 context_package/
 context_package - Copy/
 
+contradictions.json
+habitat_debug.log
+versions/
+
