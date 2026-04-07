@@ -1,0 +1,107 @@
+:root {
+    --accent:         #00ffcc;
+    --accent-blue:    #66ccff;
+    --accent-warn:    #ffaa00;
+    --accent-danger:  #ff4455;
+    --accent-dim:     rgba(0, 255, 204, 0.15);
+    --bg-card:        rgba(0, 8, 20, 0.7);
+    --bg-main:        #020409;
+    --bg-panel:       rgba(5, 10, 20, 0.45);
+    --border-soft:    rgba(0, 255, 204, 0.12);
+    --border-mid:     rgba(0, 255, 204, 0.25);
+    --border-bright:  rgba(0, 255, 204, 0.5);
+    --text-primary:   #e8f4ff;
+    --text-secondary: #7a9ab8;
+    --text-dim:       #445566;
+    --text-main:      #ffffff;
+    --font-mono:      "Courier New", "Consolas", monospace;
+    --font-ui:        "Segoe UI", system-ui, sans-serif;
+    --glow-sm:        0 0 8px rgba(0, 255, 204, 0.3);
+    --glow-md:        0 0 16px rgba(0, 255, 204, 0.25);
+    --accent-soft:    rgba(0, 240, 255, 0.2);
+    --accent-glow:    rgba(0, 240, 255, 0.4);
+}
+
+html, body { height: 100%; margin: 0; }
+
+body {
+    font-family: "Rajdhani", "Segoe UI", sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+    overflow-x: hidden;
+    overflow-y: auto;
+    letter-spacing: 0.4px;
+}
+
+* { box-sizing: border-box; }
+
+#particle-background {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    overflow: hidden;
+}
+
+.page-shell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: #050a14;
+    border-right: 1px solid var(--border-soft);
+    padding: 20px;
+    flex-shrink: 0;
+}
+
+.logo { font-size: 14px; color: var(--accent); margin-bottom: 20px; }
+
+.sidebar h2 { font-size: 14px; color: var(--accent); margin-bottom: 20px; }
+
+.sidebar a {
+    display: block;
+    color: #7df9ff;
+    text-decoration: none;
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.sidebar a:hover, .sidebar a.active {
+    background: var(--accent-soft);
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+button {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover { background: var(--accent-soft); box-shadow: 0 0 12px var(--accent); }
+button:active { transform: scale(0.96); }
