@@ -2,46 +2,31 @@
 <html>
 <head>
     <title>Chase AI Habitat</title>
-
-<link rel="stylesheet" href="/static/css/base.css">
-
+    <link rel="stylesheet" href="/static/css/base.css">
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
-
 <body>
-
 <div id="particle-background"></div>
-
 <div class="app-container">
-
-    <!-- SIDEBAR -->
     <div class="sidebar">
         <h2 class="logo">CHASE AI HABITAT</h2>
-
         <nav>
             <a href="/chat" class="{% if active == 'chat' %}active{% endif %}">Chat</a>
             <a href="/habitat" class="{% if active == 'habitat' %}active{% endif %}">Habitat</a>
-            <a href="/agents" class="{% if active == 'agents' %}active{% endif %}">Agents</a>
-            <a href="/research" class="nav-link {% if active == 'research' %}active{% endif %}">Research</a>
+            <a href="/stream" class="{% if active == 'stream' %}active{% endif %}">Stream</a>
+            <a href="/research" class="{% if active == 'research' %}active{% endif %}">Research</a>
+            <a href="/evolution" class="{% if active == 'evolution' %}active{% endif %}">Evolution</a>
+            <a href="/atlas" class="{% if active == 'atlas' %}active{% endif %}">Atlas</a>
             <a href="/nexus" class="{% if active == 'nexus' %}active{% endif %}">Nexus</a>
         </nav>
     </div>
-
-    <!-- MAIN -->
     <div class="main-content">
-
-        <!-- 🔥 THIS IS THE FIX -->
         <div class="page-shell">
             {% block content %}{% endblock %}
         </div>
-
     </div>
-
 </div>
-
 <script src="/static/js/background_particles.js"></script>
-
 {% block scripts %}{% endblock %}
-
 </body>
 </html>

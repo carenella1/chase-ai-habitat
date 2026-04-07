@@ -1,0 +1,540 @@
+/* =============================================================
+   GOALS & EVOLUTION PAGE
+============================================================= */
+
+.ge-page {
+    padding: 20px 24px;
+    min-height: 100vh;
+    font-family: var(--font-ui);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* HEADER */
+.ge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.ge-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.ge-title {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--accent);
+    margin: 0 0 4px;
+    line-height: 1;
+}
+
+.title-amp {
+    color: var(--text-dim);
+    font-size: 18px;
+}
+
+.ge-tagline {
+    font-size: 12px;
+    color: var(--text-dim);
+}
+
+/* IDENTITY BLOCK */
+.ge-identity-block {
+    text-align: right;
+}
+
+.ge-identity-name {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--accent);
+    text-shadow: 0 0 16px rgba(0,255,204,0.3);
+}
+
+.ge-identity-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    max-width: 300px;
+    text-align: right;
+    line-height: 1.4;
+}
+
+/* ACTIVE GOAL STRIP */
+.active-goal-strip {
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    background: rgba(0,8,20,0.5);
+    padding: 14px 18px;
+    transition: all 0.3s;
+}
+
+.active-goal-strip.has-goal {
+    border-color: rgba(0,255,204,0.25);
+    background: rgba(0,255,204,0.03);
+}
+
+.goal-strip-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.goal-strip-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.goal-strip-text {
+    font-size: 13px;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 200px;
+}
+
+.goal-strip-progress {
+    width: 120px;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.goal-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.5s;
+    box-shadow: 0 0 6px rgba(0,255,204,0.4);
+}
+
+.goal-strip-stats {
+    display: flex;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+}
+
+/* MAIN LAYOUT */
+.ge-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 16px;
+}
+
+/* PANELS */
+.ge-panel {
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    background: rgba(0,8,20,0.5);
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.ge-panel-tall { max-height: 600px; display: flex; flex-direction: column; }
+
+.ge-panel-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    background: rgba(0,255,204,0.02);
+}
+
+.ge-kicker {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.ge-panel-header h2 {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.ge-panel-body {
+    padding: 14px 16px;
+}
+
+.ge-empty {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 8px 0;
+}
+
+/* GOAL INPUT */
+.ge-textarea {
+    width: 100%;
+    min-height: 120px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 12px;
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.ge-textarea:focus {
+    border-color: rgba(0,255,204,0.3);
+    box-shadow: 0 0 8px rgba(0,255,204,0.1);
+}
+
+.ge-duration-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.ge-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.ge-select {
+    flex: 1;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    padding: 6px 10px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+}
+
+.ge-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.ge-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.ge-btn-primary {
+    border: 1px solid var(--accent);
+    background: rgba(0,255,204,0.06);
+    color: var(--accent);
+}
+
+.ge-btn-primary:hover {
+    background: rgba(0,255,204,0.12);
+    box-shadow: 0 0 10px rgba(0,255,204,0.2);
+}
+
+.ge-btn-danger {
+    border: 1px solid rgba(255,68,85,0.4);
+    background: rgba(255,68,85,0.04);
+    color: #ff6677;
+}
+
+.ge-btn-danger:hover {
+    background: rgba(255,68,85,0.1);
+}
+
+/* GOAL HISTORY */
+.goal-history-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.goal-history-item:last-child { border-bottom: none; }
+.goal-history-item.completed .goal-hist-text { opacity: 0.6; }
+
+.goal-hist-text {
+    font-size: 12px;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.goal-hist-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.goal-hist-bar-track {
+    flex: 1;
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 1px;
+}
+
+.goal-hist-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 1px;
+    opacity: 0.6;
+}
+
+.goal-hist-pct, .goal-hist-findings {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-dim);
+}
+
+.goal-hist-done {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--accent);
+}
+
+/* BELIEFS */
+.belief-filter-row {
+    display: flex;
+    gap: 5px;
+    margin-top: 8px;
+}
+
+.belief-filter {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border: 1px solid var(--border-soft);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.belief-filter:hover {
+    color: var(--text-primary);
+    box-shadow: none;
+}
+
+.belief-filter.active {
+    color: var(--accent);
+    border-color: rgba(0,255,204,0.35);
+    background: rgba(0,255,204,0.05);
+}
+
+.belief-list {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 500px;
+}
+
+.belief-list::-webkit-scrollbar { width: 3px; }
+.belief-list::-webkit-scrollbar-thumb { background: var(--border-soft); }
+
+.belief-item {
+    position: relative;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    overflow: hidden;
+    transition: background 0.15s;
+}
+
+.belief-item:hover { background: rgba(255,255,255,0.02); }
+
+.belief-bar-track {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 100%;
+    pointer-events: none;
+}
+
+.belief-bar-fill {
+    height: 100%;
+    transition: width 0.5s;
+}
+
+.belief-content { position: relative; z-index: 1; }
+
+.belief-statement {
+    font-size: 12px;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin-bottom: 5px;
+}
+
+.belief-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.belief-conf {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.belief-status {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.belief-agent {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: capitalize;
+}
+
+.belief-date {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-left: auto;
+}
+
+/* SELF MODEL */
+.self-model-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.sm-block {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.sm-label {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.sm-val {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+}
+
+.sm-obsessions, .sm-beliefs { margin-top: 12px; }
+
+.sm-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.sm-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-blue);
+    padding: 3px 8px;
+    border: 1px solid rgba(102,204,255,0.2);
+    border-radius: 10px;
+    background: rgba(102,204,255,0.04);
+}
+
+.sm-conviction {
+    font-size: 11px;
+    color: var(--text-secondary);
+    padding: 5px 8px;
+    border-left: 2px solid var(--accent);
+    margin-bottom: 5px;
+    background: rgba(0,255,204,0.02);
+    line-height: 1.4;
+}
+
+/* IDENTITY TIMELINE */
+.identity-timeline-wrap {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.timeline-entry {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.timeline-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px rgba(0,255,204,0.4);
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
+.obs-dot {
+    background: var(--accent-blue);
+    box-shadow: 0 0 6px rgba(102,204,255,0.3);
+    width: 6px;
+    height: 6px;
+    margin-top: 4px;
+}
+
+.timeline-content { flex: 1; }
+
+.timeline-name {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+}
+
+.timeline-cycle {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+.timeline-obs-text {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}

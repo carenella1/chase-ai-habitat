@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/memory_atlas.css') }}">
+
+<div class="ma-page">
+
+    <!-- HEADER -->
+    <div class="ma-header">
+        <div class="ma-title-block">
+            <div class="ma-eyebrow">STRUCTURED MEMORY</div>
+            <h1 class="ma-title">MEMORY ATLAS</h1>
+            <div class="ma-tagline">Everything NEX knows, believes, remembers, and understands</div>
+        </div>
+        <div class="ma-stats-strip" id="ma-stats-strip">
+            <div class="ma-stat">
+                <span class="ma-stat-n" id="stat-facts">—</span>
+                <span class="ma-stat-l">World Facts</span>
+            </div>
+            <div class="ma-stat">
+                <span class="ma-stat-n" id="stat-episodes">—</span>
+                <span class="ma-stat-l">Episodes</span>
+            </div>
+            <div class="ma-stat">
+                <span class="ma-stat-n" id="stat-entities">—</span>
+                <span class="ma-stat-l">Entities</span>
+            </div>
+            <div class="ma-stat">
+                <span class="ma-stat-n" id="stat-beliefs">—</span>
+                <span class="ma-stat-l">Beliefs</span>
+            </div>
+            <div class="ma-stat">
+                <span class="ma-stat-n" id="stat-semantic" style="color:#ffaa33">—</span>
+                <span class="ma-stat-l">Semantic</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH BAR -->
+    <div class="ma-search-bar">
+        <input id="ma-search-input" class="ma-search-input" placeholder="Search all of NEX's memory — facts, beliefs, episodes, entities..." />
+        <button class="ma-search-btn" id="ma-search-btn">RECALL</button>
+        <button class="ma-search-btn ma-btn-secondary" id="ma-clear-btn">CLEAR</button>
+    </div>
+
+    <!-- SEARCH RESULTS (shown when searching) -->
+    <div class="ma-search-results" id="ma-search-results" style="display:none">
+        <div class="ma-results-header">
+            <span class="ma-results-label">RECALL RESULTS</span>
+            <span class="ma-results-query" id="results-query"></span>
+        </div>
+        <div class="ma-results-list" id="results-list"></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="ma-tabs" id="ma-main-content">
+        <button class="ma-tab active" data-tab="facts">WORLD FACTS</button>
+        <button class="ma-tab" data-tab="episodes">EPISODES</button>
+        <button class="ma-tab" data-tab="entities">ENTITIES</button>
+        <button class="ma-tab" data-tab="beliefs">BELIEF MAP</button>
+    </div>
+
+    <!-- TAB CONTENT -->
+    <div class="ma-tab-content">
+
+        <!-- WORLD FACTS -->
+        <div class="ma-pane active" id="pane-facts">
+            <div class="ma-pane-header">
+                <span class="ma-pane-desc">Things NEX has learned as factual from research and reasoning</span>
+                <select class="ma-filter-select" id="facts-topic-filter">
+                    <option value="">All topics</option>
+                </select>
+            </div>
+            <div class="fact-grid" id="fact-grid"></div>
+        </div>
+
+        <!-- EPISODES -->
+        <div class="ma-pane" id="pane-episodes">
+            <div class="ma-pane-header">
+                <span class="ma-pane-desc">NEX's episodic memory — what happened, when, and why it mattered</span>
+                <select class="ma-filter-select" id="episodes-agent-filter">
+                    <option value="">All agents</option>
+                </select>
+            </div>
+            <div class="episode-timeline" id="episode-timeline"></div>
+        </div>
+
+        <!-- ENTITIES -->
+        <div class="ma-pane" id="pane-entities">
+            <div class="ma-pane-header">
+                <span class="ma-pane-desc">Concepts, people, technologies and ideas NEX has built a model of</span>
+                <input class="ma-inline-search" id="entity-search" placeholder="Filter entities..." />
+            </div>
+            <div class="entity-grid" id="entity-grid"></div>
+        </div>
+
+        <!-- BELIEF MAP -->
+        <div class="ma-pane" id="pane-beliefs">
+            <div class="ma-pane-header">
+                <span class="ma-pane-desc">NEX's own opinions — confidence heatmap showing conviction strength</span>
+                <div class="belief-legend">
+                    <span class="bl-item"><span class="bl-dot" style="background:#00ffcc"></span>Strong (75%+)</span>
+                    <span class="bl-item"><span class="bl-dot" style="background:#66ccff"></span>Active (50%+)</span>
+                    <span class="bl-item"><span class="bl-dot" style="background:#ffaa33"></span>Weakened (35%+)</span>
+                    <span class="bl-item"><span class="bl-dot" style="background:#ff4455"></span>Fading (&lt;35%)</span>
+                </div>
+            </div>
+            <div class="belief-heatmap" id="belief-heatmap"></div>
+            <canvas id="belief-canvas" class="belief-canvas"></canvas>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+let activeTab = 'facts';
+let allFacts = [], allEpisodes = [], allEntities = [], allBeliefs = [];
+
+// ─── TABS ─────────────────────────────────────
+document.querySelectorAll('.ma-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.ma-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.ma-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        activeTab = btn.dataset.tab;
+        $('pane-' + activeTab).classList.add('active');
+        loadTabData(activeTab);
+    });
+});
+
+// ─── SEARCH ───────────────────────────────────
+$('ma-search-btn').addEventListener('click', doSearch);
+$('ma-clear-btn').addEventListener('click', clearSearch);
+$('ma-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+async function doSearch() {
+    const q = $('ma-search-input').value.trim();
+    if (!q) return;
+
+    const results = $('ma-search-results');
+    const list = $('results-list');
+    results.style.display = 'block';
+    $('results-query').textContent = `"${q}"`;
+    list.innerHTML = '<div class="ma-loading">Searching memory networks...</div>';
+
+    try {
+        const data = await fetch(`/api/memory/recall?q=${encodeURIComponent(q)}`).then(r => r.json());
+        const text = data.results || '';
+        if (!text.trim()) {
+            list.innerHTML = '<div class="ma-empty">No memories found for this query</div>';
+            return;
+        }
+
+        const lines = text.split('\n').filter(l => l.trim());
+        list.innerHTML = lines.map(line => {
+            const isFact = line.startsWith('[FACT]');
+            const isBelief = line.startsWith('[BELIEF');
+            const isMemory = line.startsWith('[MEMORY]');
+
+            const typeLabel = isFact ? 'FACT' : isBelief ? 'BELIEF' : 'EPISODE';
+            const typeColor = isFact ? '#00ffcc' : isBelief ? '#aa88ff' : '#66ccff';
+
+            // Extract confidence from belief
+            const confMatch = line.match(/\[BELIEF (\d+)%\]/);
+            const conf = confMatch ? confMatch[1] + '%' : '';
+
+            const content = line.replace(/^\[.*?\]\s*/, '').trim();
+
+            return `
+            <div class="result-item">
+                <div class="result-type-badge" style="color:${typeColor};border-color:${typeColor}30">${typeLabel}${conf ? ' ' + conf : ''}</div>
+                <div class="result-content">${esc(content)}</div>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        list.innerHTML = '<div class="ma-empty">Error querying memory</div>';
+    }
+}
+
+function clearSearch() {
+    $('ma-search-input').value = '';
+    $('ma-search-results').style.display = 'none';
+}
+
+// ─── STATS ────────────────────────────────────
+async function loadStats() {
+    try {
+        const data = await fetch('/api/memory/stats').then(r => r.json());
+        $('stat-facts').textContent = (data.world_facts || 0).toLocaleString();
+        $('stat-episodes').textContent = (data.episodic || 0).toLocaleString();
+        $('stat-entities').textContent = (data.entities || 0).toLocaleString();
+        $('stat-beliefs').textContent = (data.beliefs || 0).toLocaleString();
+        $('stat-semantic').textContent = data.embedding_enabled ? 'ON' : 'OFF';
+    } catch(e) {}
+}
+
+// ─── TAB DATA ─────────────────────────────────
+async function loadTabData(tab) {
+    if (tab === 'facts') loadFacts();
+    else if (tab === 'episodes') loadEpisodes();
+    else if (tab === 'entities') loadEntities();
+    else if (tab === 'beliefs') loadBeliefMap();
+}
+
+// ─── FACTS ────────────────────────────────────
+async function loadFacts() {
+    const grid = $('fact-grid');
+    grid.innerHTML = '<div class="ma-loading">Loading world facts...</div>';
+    try {
+        const data = await fetch('/api/memory/facts').then(r => r.json()).catch(() => ({ facts: [] }));
+        allFacts = data.facts || [];
+
+        if (!allFacts.length) {
+            // Fallback: use recall with broad query
+            const recall = await fetch('/api/memory/recall?q=fact').then(r => r.json());
+            grid.innerHTML = `<div class="ma-empty">Facts accumulate as NEX researches. Check back after more cognition cycles.</div>`;
+            return;
+        }
+
+        // Populate topic filter
+        const topics = [...new Set(allFacts.map(f => f.topic).filter(Boolean))];
+        const filter = $('facts-topic-filter');
+        filter.innerHTML = '<option value="">All topics</option>' +
+            topics.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+
+        renderFacts(allFacts);
+
+        filter.addEventListener('change', () => {
+            const topic = filter.value;
+            renderFacts(topic ? allFacts.filter(f => f.topic === topic) : allFacts);
+        });
+    } catch(e) {
+        grid.innerHTML = '<div class="ma-empty">Could not load facts</div>';
+    }
+}
+
+function renderFacts(facts) {
+    const grid = $('fact-grid');
+    if (!facts.length) {
+        grid.innerHTML = '<div class="ma-empty">No facts in this category</div>';
+        return;
+    }
+    grid.innerHTML = facts.slice(0, 50).map(f => {
+        const conf = f.confidence || 0.7;
+        const barColor = conf > 0.8 ? '#00ffcc' : conf > 0.6 ? '#66ccff' : '#ffaa33';
+        return `
+        <div class="fact-card">
+            <div class="fact-confidence-bar" style="width:${Math.round(conf*100)}%;background:${barColor}"></div>
+            <div class="fact-topic">${esc(f.topic || 'general')}</div>
+            <div class="fact-content">${esc((f.content || '').substring(0, 180))}</div>
+            <div class="fact-meta">
+                <span>${esc(f.source || '—')}</span>
+                <span>${Math.round(conf*100)}% confidence</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ─── EPISODES ─────────────────────────────────
+async function loadEpisodes() {
+    const timeline = $('episode-timeline');
+    timeline.innerHTML = '<div class="ma-loading">Loading episodic memory...</div>';
+    try {
+        const data = await fetch('/api/memory/episodes').then(r => r.json()).catch(() => ({ episodes: [] }));
+        allEpisodes = data.episodes || [];
+
+        if (!allEpisodes.length) {
+            timeline.innerHTML = '<div class="ma-empty">Episodes record significant events in cognition cycles.</div>';
+            return;
+        }
+
+        // Agent filter
+        const agents = [...new Set(allEpisodes.map(e => e.agent).filter(Boolean))];
+        const filter = $('episodes-agent-filter');
+        filter.innerHTML = '<option value="">All agents</option>' +
+            agents.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('');
+
+        renderEpisodes(allEpisodes);
+
+        filter.addEventListener('change', () => {
+            const agent = filter.value;
+            renderEpisodes(agent ? allEpisodes.filter(e => e.agent === agent) : allEpisodes);
+        });
+    } catch(e) {
+        timeline.innerHTML = '<div class="ma-empty">Could not load episodes</div>';
+    }
+}
+
+function renderEpisodes(episodes) {
+    const timeline = $('episode-timeline');
+    const AGENT_COLORS = {
+        Researcher: '#66ccff', Strategist: '#ff66cc', Explorer: '#ffaa33',
+        Builder: '#00ffcc', Archivist: '#aa88ff', Curator: '#ff6666',
+    };
+
+    timeline.innerHTML = episodes.slice(0, 40).map(ep => {
+        const color = AGENT_COLORS[ep.agent] || '#7a9ab8';
+        const imp = ep.importance || 0.5;
+        const impPct = Math.round(imp * 100);
+        const cycle = ep.cycle || 0;
+        const dateStr = ep.timestamp ? new Date(ep.timestamp).toLocaleString() : '';
+
+        return `
+        <div class="episode-entry">
+            <div class="ep-timeline-line">
+                <div class="ep-dot" style="background:${color};box-shadow:0 0 6px ${color}40"></div>
+            </div>
+            <div class="ep-content">
+                <div class="ep-header">
+                    <span class="ep-agent" style="color:${color}">${esc(ep.agent || 'system')}</span>
+                    ${cycle ? `<span class="ep-cycle">cycle ${cycle}</span>` : ''}
+                    ${ep.topic ? `<span class="ep-topic">${esc(ep.topic)}</span>` : ''}
+                    <span class="ep-importance" style="color:${imp > 0.7 ? '#00ffcc' : '#445566'}">
+                        ${imp > 0.7 ? '★' : '·'} ${impPct}%
+                    </span>
+                    ${dateStr ? `<span class="ep-date">${dateStr}</span>` : ''}
+                </div>
+                <div class="ep-event">${esc((ep.event || '').substring(0, 200))}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ─── ENTITIES ─────────────────────────────────
+async function loadEntities() {
+    const grid = $('entity-grid');
+    grid.innerHTML = '<div class="ma-loading">Loading entity model...</div>';
+    try {
+        const data = await fetch('/api/memory/entities').then(r => r.json()).catch(() => ({ entities: [] }));
+        allEntities = data.entities || [];
+
+        if (!allEntities.length) {
+            grid.innerHTML = '<div class="ma-empty">Entities build as NEX researches and extracts concepts.</div>';
+            return;
+        }
+
+        renderEntities(allEntities);
+
+        $('entity-search').addEventListener('input', e => {
+            const q = e.target.value.toLowerCase();
+            renderEntities(q ? allEntities.filter(en =>
+                (en.entity||'').toLowerCase().includes(q) ||
+                (en.summary||'').toLowerCase().includes(q)
+            ) : allEntities);
+        });
+    } catch(e) {
+        grid.innerHTML = '<div class="ma-empty">Could not load entities</div>';
+    }
+}
+
+function renderEntities(entities) {
+    const grid = $('entity-grid');
+    const TYPE_COLORS = {
+        concept: '#66ccff', person: '#ff66cc', technology: '#00ffcc',
+        organization: '#ffaa33', event: '#aa88ff', location: '#ff9966',
+    };
+
+    grid.innerHTML = entities.slice(0, 40).map(en => {
+        const color = TYPE_COLORS[en.entity_type] || '#7a9ab8';
+        const mentions = en.mention_count || 1;
+        const related = en.related_entities ? JSON.parse(en.related_entities || '[]') : [];
+
+        return `
+        <div class="entity-card">
+            <div class="entity-type-tag" style="color:${color};border-color:${color}30">${esc(en.entity_type || 'concept')}</div>
+            <div class="entity-name">${esc(en.entity || '')}</div>
+            <div class="entity-summary">${esc((en.summary || '').substring(0, 140))}</div>
+            <div class="entity-footer">
+                <span class="entity-mentions">${mentions}× mentioned</span>
+                ${related.length ? `<span class="entity-related">→ ${related.slice(0,3).map(r => esc(r)).join(', ')}</span>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ─── BELIEF MAP ───────────────────────────────
+async function loadBeliefMap() {
+    const heatmap = $('belief-heatmap');
+    heatmap.innerHTML = '<div class="ma-loading">Loading belief map...</div>';
+    try {
+        const data = await fetch('/api/beliefs').then(r => r.json()).catch(() => ({ beliefs: [] }));
+        allBeliefs = data.beliefs || [];
+
+        if (!allBeliefs.length) {
+            heatmap.innerHTML = '<div class="ma-empty">Beliefs form as NEX debates and reasons across cycles.</div>';
+            return;
+        }
+
+        renderBeliefHeatmap(allBeliefs);
+    } catch(e) {
+        heatmap.innerHTML = '<div class="ma-empty">Could not load beliefs</div>';
+    }
+}
+
+function renderBeliefHeatmap(beliefs) {
+    const heatmap = $('belief-heatmap');
+
+    // Sort by confidence
+    const sorted = [...beliefs].sort((a,b) => (b.confidence||0) - (a.confidence||0));
+
+    heatmap.innerHTML = sorted.slice(0, 50).map(b => {
+        const conf = b.confidence || 0.5;
+        const pct = Math.round(conf * 100);
+        const color = conf > 0.75 ? '#00ffcc' : conf > 0.5 ? '#66ccff' : conf > 0.35 ? '#ffaa33' : '#ff4455';
+        const status = b.status || 'active';
+        const width = Math.max(10, Math.round(conf * 100));
+        const opacity = Math.max(0.3, conf);
+
+        return `
+        <div class="belief-heat-row" style="opacity:${opacity}">
+            <div class="belief-heat-bar" style="width:${width}%;background:${color}18;border-left:3px solid ${color}">
+                <div class="belief-heat-text">${esc((b.statement||'').substring(0,180))}</div>
+                <div class="belief-heat-meta">
+                    <span style="color:${color}">${pct}%</span>
+                    <span class="bhm-status">${status.replace('_',' ')}</span>
+                    ${b.formed_by_agent ? `<span class="bhm-agent">${esc(b.formed_by_agent)}</span>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ─── BOOT ────────────────────────────────────
+loadStats();
+loadTabData('facts');
+setInterval(loadStats, 30000);
+</script>
+{% endblock %}

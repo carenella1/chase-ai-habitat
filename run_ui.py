@@ -661,9 +661,19 @@ def habitat_page():
     return render_template("habitat.html", active="habitat")
 
 
-@app.route("/agents")
-def agents_page():
-    return render_template("agents.html", active="agents")
+@app.route("/stream")
+def stream_page():
+    return render_template("cognition_stream.html", active="stream")
+
+
+@app.route("/evolution")
+def evolution_page():
+    return render_template("goals_evolution.html", active="evolution")
+
+
+@app.route("/atlas")
+def atlas_page():
+    return render_template("memory_atlas.html", active="atlas")
 
 
 @app.route("/research")
@@ -950,6 +960,56 @@ def api_docker_read():
     path = request.args.get("path", "")
     content = nex_docker.read_file(path)
     return jsonify({"path": path, "content": content})
+
+
+@app.route("/api/beliefs")
+def api_beliefs():
+    """Get all active beliefs from structured memory."""
+    try:
+        beliefs = nex_memory.beliefs.get_active_beliefs(limit=100)
+        return jsonify({"status": "ok", "beliefs": beliefs})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e), "beliefs": []})
+
+
+@app.route("/api/memory/facts")
+def api_memory_facts():
+    """Get world facts from structured memory."""
+    try:
+        conn = nex_memory.db._conn()
+        rows = conn.execute(
+            """SELECT * FROM world_facts WHERE valid_until IS NULL
+               ORDER BY created_at DESC LIMIT 100"""
+        ).fetchall()
+        facts = [dict(r) for r in rows]
+        return jsonify({"status": "ok", "facts": facts})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e), "facts": []})
+
+
+@app.route("/api/memory/episodes")
+def api_memory_episodes():
+    """Get episodic memories."""
+    try:
+        conn = nex_memory.db._conn()
+        rows = conn.execute(
+            """SELECT * FROM episodic_memory
+               ORDER BY cycle DESC, importance DESC LIMIT 80"""
+        ).fetchall()
+        episodes = [dict(r) for r in rows]
+        return jsonify({"status": "ok", "episodes": episodes})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e), "episodes": []})
+
+
+@app.route("/api/memory/entities")
+def api_memory_entities():
+    """Get entity summaries."""
+    try:
+        entities = nex_memory.entities.get_most_known(limit=80)
+        return jsonify({"status": "ok", "entities": entities})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e), "entities": []})
 
 
 # =========================

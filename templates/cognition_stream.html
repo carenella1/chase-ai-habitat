@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cognition_stream.css') }}">
+
+<div class="cs-page">
+
+    <!-- HEADER -->
+    <div class="cs-header">
+        <div class="cs-title-block">
+            <div class="cs-eyebrow">LIVE COGNITION</div>
+            <h1 class="cs-title">STREAM</h1>
+            <div class="cs-tagline">NEX's stream of consciousness — every thought, every agent, every cycle</div>
+        </div>
+        <div class="cs-meta-strip">
+            <div class="cs-meta-pill" id="cycle-pill">
+                <span class="meta-dot pulse-dot"></span>
+                <span class="meta-label">CYCLE</span>
+                <span class="meta-val" id="current-cycle">—</span>
+            </div>
+            <div class="cs-meta-pill">
+                <span class="meta-dot"></span>
+                <span class="meta-label">ACTIVE AGENT</span>
+                <span class="meta-val" id="active-agent">—</span>
+            </div>
+            <div class="cs-meta-pill">
+                <span class="meta-dot"></span>
+                <span class="meta-label">STANCE</span>
+                <span class="meta-val" id="active-stance">—</span>
+            </div>
+            <div class="cs-meta-pill">
+                <span class="meta-dot"></span>
+                <span class="meta-label">THREAD</span>
+                <span class="meta-val" id="thread-dir">—</span>
+            </div>
+            <div class="cs-meta-pill">
+                <span class="meta-dot" id="chain-dot"></span>
+                <span class="meta-label">REASONING CHAIN</span>
+                <span class="meta-val" id="chain-status">—</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="cs-layout">
+
+        <!-- LEFT: LIVE STREAM -->
+        <div class="cs-stream-col">
+
+            <!-- FILTER BAR -->
+            <div class="cs-filter-bar">
+                <button class="cs-filter-btn active" data-filter="all">ALL</button>
+                <button class="cs-filter-btn" data-filter="Researcher">RESEARCHER</button>
+                <button class="cs-filter-btn" data-filter="Strategist">STRATEGIST</button>
+                <button class="cs-filter-btn" data-filter="Explorer">EXPLORER</button>
+                <button class="cs-filter-btn" data-filter="Builder">BUILDER</button>
+                <button class="cs-filter-btn" data-filter="Archivist">ARCHIVIST</button>
+                <button class="cs-filter-btn" data-filter="Curator">CURATOR</button>
+                <div class="cs-filter-spacer"></div>
+                <button class="cs-filter-btn" id="pause-btn">⏸ PAUSE</button>
+            </div>
+
+            <!-- STREAM -->
+            <div class="cs-stream" id="thought-stream"></div>
+
+        </div>
+
+        <!-- RIGHT: SIDEPANELS -->
+        <div class="cs-right-col">
+
+            <!-- AGENT ACTIVITY -->
+            <div class="cs-panel">
+                <div class="cs-panel-header">
+                    <span class="cs-panel-kicker">AGENT PERFORMANCE</span>
+                    <h2>Active Minds</h2>
+                </div>
+                <div class="agent-perf-list" id="agent-perf-list"></div>
+            </div>
+
+            <!-- REASONING CHAIN -->
+            <div class="cs-panel">
+                <div class="cs-panel-header">
+                    <span class="cs-panel-kicker">REASONING CHAIN</span>
+                    <h2>Active Thread</h2>
+                </div>
+                <div class="chain-display" id="chain-display">
+                    <div class="chain-empty">No active reasoning chain</div>
+                </div>
+                <div class="chain-conclusions" id="chain-conclusions"></div>
+            </div>
+
+            <!-- CONTRADICTIONS -->
+            <div class="cs-panel">
+                <div class="cs-panel-header">
+                    <span class="cs-panel-kicker">BELIEF CONFLICTS</span>
+                    <h2>Contradictions</h2>
+                </div>
+                <div class="contradiction-list" id="contradiction-list">
+                    <div class="chain-empty">No active contradictions</div>
+                </div>
+            </div>
+
+            <!-- LOOP DETECTOR -->
+            <div class="cs-panel">
+                <div class="cs-panel-header">
+                    <span class="cs-panel-kicker">COGNITIVE HEALTH</span>
+                    <h2>Loop Monitor</h2>
+                </div>
+                <div class="loop-monitor" id="loop-monitor"></div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ─── STATE ───────────────────────────────────
+let paused = false;
+let activeFilter = 'all';
+let seenIds = new Set();
+let agentStats = {};
+
+const AGENT_COLORS = {
+    Researcher:  '#66ccff',
+    Strategist:  '#ff66cc',
+    Explorer:    '#ffaa33',
+    Builder:     '#00ffcc',
+    Archivist:   '#aa88ff',
+    Curator:     '#ff6666',
+    Insight:     '#ffffff',
+};
+
+const STANCE_COLORS = {
+    SUPPORT:   '#00ffcc',
+    CHALLENGE: '#ff4455',
+    EXPAND:    '#ffaa33',
+    REFRAME:   '#aa88ff',
+};
+
+// ─── FILTER ──────────────────────────────────
+document.querySelectorAll('.cs-filter-btn[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cs-filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        applyFilter();
+    });
+});
+
+$('pause-btn').addEventListener('click', () => {
+    paused = !paused;
+    $('pause-btn').textContent = paused ? '▶ RESUME' : '⏸ PAUSE';
+    $('pause-btn').classList.toggle('active', paused);
+});
+
+function applyFilter() {
+    document.querySelectorAll('.thought-card').forEach(card => {
+        const agent = card.dataset.agent || '';
+        card.style.display = (activeFilter === 'all' || agent === activeFilter) ? '' : 'none';
+    });
+}
+
+// ─── STREAM ──────────────────────────────────
+function buildThoughtCard(entry) {
+    const cog = entry.cognition || {};
+    const agent = cog.agent || cog.source || 'System';
+    const stance = cog.stance || '';
+    const insight = cog.insight || cog.content || '';
+    const source = cog.source || '';
+    const searchTerm = cog.search_term || '';
+    const ts = entry.timestamp || '';
+    const significance = cog.significance || 0;
+
+    const agentColor = AGENT_COLORS[agent] || '#7a9ab8';
+    const stanceColor = STANCE_COLORS[stance] || '#445566';
+
+    const timeStr = ts ? new Date(ts * 1000).toLocaleTimeString() : '';
+
+    // Extract clean parts from debate format
+    let claim = '', response = '', insightText = '';
+    if (insight.includes('Claim:')) {
+        const parts = insight.split(/Claim:|Response:|Insight:/);
+        claim = parts[1] ? parts[1].split('\n')[0].trim() : '';
+        response = parts[2] ? parts[2].split('\n')[0].trim() : '';
+        insightText = parts[3] ? parts[3].split('\n')[0].trim() : '';
+    } else {
+        insightText = insight.substring(0, 300);
+    }
+
+    const importanceBars = Math.min(5, Math.max(1, Math.round((significance || 1) * 1.5)));
+
+    return `
+    <div class="thought-card ${significance >= 3 ? 'high-value' : ''}" data-agent="${esc(agent)}">
+        <div class="thought-header">
+            <span class="thought-agent" style="color:${agentColor}">${esc(agent)}</span>
+            ${stance ? `<span class="thought-stance" style="color:${stanceColor};border-color:${stanceColor}40">${stance}</span>` : ''}
+            ${searchTerm ? `<span class="thought-topic">${esc(searchTerm)}</span>` : ''}
+            <div class="thought-importance">
+                ${Array(5).fill(0).map((_, i) => `<span class="imp-bar ${i < importanceBars ? 'filled' : ''}"></span>`).join('')}
+            </div>
+            <span class="thought-time">${timeStr}</span>
+        </div>
+        ${claim ? `<div class="thought-claim">${esc(claim)}</div>` : ''}
+        ${response ? `<div class="thought-response">${esc(response)}</div>` : ''}
+        ${insightText ? `<div class="thought-insight">${esc(insightText.substring(0, 250))}</div>` : ''}
+        ${source === 'wikipedia' ? `<div class="thought-source-badge">◈ wikipedia</div>` : ''}
+        ${significance >= 3 ? `<div class="high-value-marker">HIGH VALUE</div>` : ''}
+    </div>`;
+}
+
+async function loadStream() {
+    if (paused) return;
+    try {
+        const data = await fetch('/api/cognition/all').then(r => r.json());
+        const entries = data.entries || [];
+        const stream = $('thought-stream');
+
+        let added = 0;
+        for (const entry of entries.slice(0, 40)) {
+            const id = entry.timestamp + (entry.cognition?.agent || '');
+            if (seenIds.has(id)) continue;
+            seenIds.add(id);
+
+            const card = document.createElement('div');
+            card.innerHTML = buildThoughtCard(entry);
+            const inner = card.firstElementChild;
+            stream.insertBefore(inner, stream.firstChild);
+            added++;
+
+            // Track agent stats
+            const agent = entry.cognition?.agent || '';
+            if (agent) {
+                agentStats[agent] = agentStats[agent] || { count: 0, lastStance: '' };
+                agentStats[agent].count++;
+                agentStats[agent].lastStance = entry.cognition?.stance || '';
+                agentStats[agent].lastTopic = entry.cognition?.search_term || '';
+            }
+        }
+
+        // Keep stream from growing too large
+        while (stream.children.length > 60) {
+            stream.removeChild(stream.lastChild);
+        }
+
+        if (added > 0) applyFilter();
+
+        // Update header meta
+        if (entries.length > 0) {
+            const latest = entries[entries.length - 1];
+            const cog = latest.cognition || {};
+            $('active-agent').textContent = cog.agent || '—';
+            $('active-stance').textContent = cog.stance || '—';
+        }
+
+        // Workspace cycle
+        const ws = data.entries?.[0]?.cognition?.workspace_cycle;
+        if (ws) $('current-cycle').textContent = ws.toLocaleString();
+
+        updateAgentPerf();
+    } catch(e) { console.error(e); }
+}
+
+function updateAgentPerf() {
+    const list = $('agent-perf-list');
+    if (!list) return;
+    const sorted = Object.entries(agentStats).sort((a,b) => b[1].count - a[1].count);
+    const max = sorted[0]?.[1]?.count || 1;
+
+    list.innerHTML = sorted.map(([agent, stats]) => {
+        const color = AGENT_COLORS[agent] || '#7a9ab8';
+        const pct = Math.round((stats.count / max) * 100);
+        return `
+        <div class="agent-perf-row">
+            <div class="agent-perf-name" style="color:${color}">${agent}</div>
+            <div class="agent-perf-bar-track">
+                <div class="agent-perf-bar-fill" style="width:${pct}%;background:${color}22;border-right:2px solid ${color}"></div>
+            </div>
+            <div class="agent-perf-count">${stats.count}</div>
+            <div class="agent-perf-stance" style="color:${STANCE_COLORS[stats.lastStance]||'#445566'}">${stats.lastStance || '—'}</div>
+        </div>`;
+    }).join('') || '<div class="chain-empty">Waiting for cognition data...</div>';
+}
+
+// ─── REASONING CHAIN ─────────────────────────
+async function loadChain() {
+    try {
+        const data = await fetch('/api/reasoning-chain').then(r => r.json());
+        const active = data.active_chain;
+        const chainDisplay = $('chain-display');
+        const chainConclusions = $('chain-conclusions');
+
+        if (active && active.topic) {
+            $('chain-status').textContent = active.topic.substring(0, 20);
+            $('chain-dot').style.background = '#00ffcc';
+            $('chain-dot').style.boxShadow = '0 0 6px #00ffcc';
+
+            chainDisplay.innerHTML = `
+            <div class="chain-active">
+                <div class="chain-topic">${esc(active.topic)}</div>
+                <div class="chain-thesis">${esc((active.thesis || '').substring(0, 150))}</div>
+                <div class="chain-steps">
+                    ${(active.steps || []).slice(-3).map(s => `
+                    <div class="chain-step">
+                        <span class="chain-step-agent">${esc(s.agent || '')}</span>
+                        <span class="chain-step-stance" style="color:${STANCE_COLORS[s.stance]||'#445566'}">${s.stance||''}</span>
+                        <span class="chain-step-text">${esc((s.contribution||'').substring(0,100))}</span>
+                    </div>`).join('')}
+                </div>
+            </div>`;
+        } else {
+            $('chain-status').textContent = 'idle';
+            $('chain-dot').style.background = '#445566';
+            $('chain-dot').style.boxShadow = 'none';
+            chainDisplay.innerHTML = '<div class="chain-empty">No active reasoning chain</div>';
+        }
+
+        const conclusions = data.recent_conclusions || [];
+        if (conclusions.length) {
+            chainConclusions.innerHTML = `
+            <div class="conclusions-label">RECENT CONCLUSIONS</div>
+            ${conclusions.slice(0,3).map(c => `
+            <div class="conclusion-item">
+                <span class="conclusion-topic">${esc(c.topic||'')}</span>
+                <span class="conclusion-text">${esc((c.conclusion||'').substring(0,100))}</span>
+            </div>`).join('')}`;
+        }
+    } catch(e) {}
+}
+
+// ─── CONTRADICTIONS ──────────────────────────
+async function loadContradictions() {
+    try {
+        const data = await fetch('/api/contradictions').then(r => r.json());
+        const list = $('contradiction-list');
+        const unresolved = data.unresolved || [];
+        const resolved = data.resolved_count || 0;
+
+        if (!unresolved.length) {
+            list.innerHTML = `<div class="chain-empty">No active contradictions<div class="resolved-count">${resolved} resolved total</div></div>`;
+            return;
+        }
+
+        list.innerHTML = unresolved.slice(0,3).map(c => `
+        <div class="contra-item">
+            <div class="contra-beliefs">
+                <div class="contra-belief belief-a">${esc((c.belief_a?.statement||'').substring(0,80))}</div>
+                <div class="contra-vs">vs</div>
+                <div class="contra-belief belief-b">${esc((c.belief_b?.statement||'').substring(0,80))}</div>
+            </div>
+            <div class="contra-meta">Detected cycle ${c.detected_cycle||'?'}</div>
+        </div>`).join('');
+    } catch(e) {}
+}
+
+// ─── LOOP MONITOR ────────────────────────────
+async function loadLoopMonitor() {
+    try {
+        const data = await fetch('/api/cognition/all').then(r => r.json());
+        const entries = data.entries || [];
+        const topTopics = data.top_topics || [];
+        const monitor = $('loop-monitor');
+
+        const threadData = entries[0]?.cognition?.workspace_thread;
+        const direction = threadData || '—';
+
+        $('thread-dir').textContent = direction;
+
+        // Topic repetition analysis
+        const recentTopics = entries.slice(0, 15).map(e => e.cognition?.search_term || '').filter(Boolean);
+        const topicCounts = {};
+        recentTopics.forEach(t => topicCounts[t] = (topicCounts[t]||0) + 1);
+        const sortedTopics = Object.entries(topicCounts).sort((a,b) => b[1]-a[1]);
+
+        monitor.innerHTML = `
+        <div class="loop-health">
+            <div class="loop-item">
+                <span class="loop-label">Thread Direction</span>
+                <span class="loop-val ${direction === 'converging' ? 'val-good' : direction === 'diverging' ? 'val-warn' : ''}">${direction}</span>
+            </div>
+            <div class="loop-item">
+                <span class="loop-label">Top Topics (15 cycles)</span>
+                <div class="loop-topics">
+                    ${sortedTopics.slice(0,5).map(([t,c]) => `
+                    <div class="loop-topic-row">
+                        <span class="loop-topic-name">${esc(t.substring(0,25))}</span>
+                        <span class="loop-topic-bar" style="width:${Math.round(c/15*100)}%"></span>
+                        <span class="loop-topic-count ${c >= 4 ? 'loop-warn' : ''}">${c}x${c >= 4 ? ' ⚠' : ''}</span>
+                    </div>`).join('')}
+                </div>
+            </div>
+        </div>`;
+    } catch(e) {}
+}
+
+// ─── BOOT ────────────────────────────────────
+loadStream();
+loadChain();
+loadContradictions();
+loadLoopMonitor();
+setInterval(loadStream, 4000);
+setInterval(loadChain, 8000);
+setInterval(loadContradictions, 15000);
+setInterval(loadLoopMonitor, 10000);
+</script>
+{% endblock %}

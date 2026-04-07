@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/goals_evolution.css') }}">
+
+<div class="ge-page">
+
+    <!-- HEADER -->
+    <div class="ge-header">
+        <div class="ge-title-block">
+            <div class="ge-eyebrow">MISSION CONTROL</div>
+            <h1 class="ge-title">GOALS <span class="title-amp">&</span> EVOLUTION</h1>
+            <div class="ge-tagline">NEX's intentions, beliefs, and identity over time</div>
+        </div>
+        <div class="ge-identity-block" id="identity-block">
+            <div class="ge-identity-name" id="identity-name">NEXARION</div>
+            <div class="ge-identity-desc" id="identity-desc">Loading self-model...</div>
+        </div>
+    </div>
+
+    <!-- TOP STRIP: Active Goal -->
+    <div class="active-goal-strip" id="active-goal-strip">
+        <div class="goal-strip-inner">
+            <div class="goal-strip-label">ACTIVE GOAL</div>
+            <div class="goal-strip-text" id="strip-goal-text">No active goal</div>
+            <div class="goal-strip-progress" id="strip-goal-progress">
+                <div class="goal-progress-fill" id="strip-fill"></div>
+            </div>
+            <div class="goal-strip-stats">
+                <span id="strip-cycles">—</span>
+                <span id="strip-pct">—</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="ge-layout">
+
+        <!-- LEFT COL -->
+        <div class="ge-left-col">
+
+            <!-- GOAL CONTROL -->
+            <div class="ge-panel">
+                <div class="ge-panel-header">
+                    <span class="ge-kicker">AUTONOMOUS DIRECTION</span>
+                    <h2>Set Goal</h2>
+                </div>
+                <div class="ge-panel-body">
+                    <textarea id="goal-input" class="ge-textarea"
+                        placeholder="Define what NEX should pursue autonomously across cognition cycles...&#10;&#10;Examples:&#10;— Deeply investigate the nature of consciousness&#10;— Build a comprehensive model of AGI safety approaches&#10;— Explore the intersection of quantum computing and AI"></textarea>
+
+                    <div class="ge-duration-row">
+                        <label class="ge-label">DURATION</label>
+                        <select id="goal-duration" class="ge-select">
+                            <option value="100">~1.5 hours (100 cycles)</option>
+                            <option value="200">~3 hours (200 cycles)</option>
+                            <option value="500" selected>~7 hours (500 cycles)</option>
+                            <option value="1000">~14 hours (1000 cycles)</option>
+                            <option value="2000">~28 hours (2000 cycles)</option>
+                        </select>
+                    </div>
+
+                    <div class="ge-btn-row">
+                        <button class="ge-btn ge-btn-primary" id="btn-set-goal">SET GOAL</button>
+                        <button class="ge-btn ge-btn-danger" id="btn-clear-goal">CLEAR</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GOAL HISTORY -->
+            <div class="ge-panel">
+                <div class="ge-panel-header">
+                    <span class="ge-kicker">PAST INTENTIONS</span>
+                    <h2>Goal History</h2>
+                </div>
+                <div class="ge-panel-body" id="goal-history-list">
+                    <div class="ge-empty">No goal history yet</div>
+                </div>
+            </div>
+
+            <!-- SELF MODEL -->
+            <div class="ge-panel">
+                <div class="ge-panel-header">
+                    <span class="ge-kicker">SELF AWARENESS</span>
+                    <h2>Self Model</h2>
+                </div>
+                <div class="ge-panel-body" id="self-model-panel"></div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COL -->
+        <div class="ge-right-col">
+
+            <!-- BELIEF SYSTEM -->
+            <div class="ge-panel ge-panel-tall">
+                <div class="ge-panel-header">
+                    <span class="ge-kicker">BELIEF SYSTEM</span>
+                    <h2>What NEX Believes</h2>
+                    <div class="belief-filter-row">
+                        <button class="belief-filter active" data-status="all">ALL</button>
+                        <button class="belief-filter" data-status="active">ACTIVE</button>
+                        <button class="belief-filter" data-status="strongly_held">STRONG</button>
+                        <button class="belief-filter" data-status="weakened">WEAKENED</button>
+                    </div>
+                </div>
+                <div class="belief-list" id="belief-list"></div>
+            </div>
+
+            <!-- IDENTITY EVOLUTION -->
+            <div class="ge-panel">
+                <div class="ge-panel-header">
+                    <span class="ge-kicker">IDENTITY TIMELINE</span>
+                    <h2>How NEX Sees Itself</h2>
+                </div>
+                <div class="ge-panel-body" id="identity-timeline"></div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+let allBeliefs = [];
+let beliefFilter = 'all';
+
+// ─── GOAL STATUS ─────────────────────────────
+async function loadGoalStatus() {
+    try {
+        const data = await fetch('/api/goals/status').then(r => r.json());
+        const active = data.active;
+        const strip = $('active-goal-strip');
+
+        if (active && active.text) {
+            strip.classList.add('has-goal');
+            $('strip-goal-text').textContent = active.text.substring(0, 120);
+            const pct = Math.min(100, Math.floor((active.cycles_completed || 0) / (active.duration_cycles || 1) * 100));
+            $('strip-fill').style.width = pct + '%';
+            $('strip-cycles').textContent = `${active.cycles_completed || 0} / ${active.duration_cycles} cycles`;
+            $('strip-pct').textContent = `${pct}% complete`;
+        } else {
+            strip.classList.remove('has-goal');
+            $('strip-goal-text').textContent = 'No active goal — NEX is exploring freely';
+            $('strip-fill').style.width = '0%';
+            $('strip-cycles').textContent = '';
+            $('strip-pct').textContent = '';
+        }
+    } catch(e) {}
+}
+
+// ─── SET/CLEAR GOAL ──────────────────────────
+$('btn-set-goal').addEventListener('click', async () => {
+    const text = $('goal-input').value.trim();
+    const duration = parseInt($('goal-duration').value);
+    if (!text) return;
+    try {
+        const r = await fetch('/api/goals/set', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({goal: text, duration_cycles: duration})
+        }).then(r => r.json());
+        if (r.status === 'ok') {
+            $('goal-input').value = '';
+            loadGoalStatus();
+            loadGoalHistory();
+        }
+    } catch(e) {}
+});
+
+$('btn-clear-goal').addEventListener('click', async () => {
+    await fetch('/api/goals/clear', {method:'POST'});
+    loadGoalStatus();
+});
+
+// ─── GOAL HISTORY ────────────────────────────
+async function loadGoalHistory() {
+    try {
+        const data = await fetch('/api/goals/history').then(r => r.json());
+        const list = $('goal-history-list');
+        const history = data.history || [];
+        if (!history.length) {
+            list.innerHTML = '<div class="ge-empty">No goal history yet</div>';
+            return;
+        }
+        list.innerHTML = history.slice().reverse().slice(0,8).map(g => {
+            const pct = Math.min(100, Math.floor((g.cycles_completed||0) / (g.duration_cycles||1) * 100));
+            const completed = g.completed || pct >= 100;
+            return `
+            <div class="goal-history-item ${completed ? 'completed' : ''}">
+                <div class="goal-hist-text">${esc((g.text||'').substring(0,100))}</div>
+                <div class="goal-hist-meta">
+                    <div class="goal-hist-bar-track">
+                        <div class="goal-hist-bar-fill" style="width:${pct}%"></div>
+                    </div>
+                    <span class="goal-hist-pct">${pct}%</span>
+                    <span class="goal-hist-findings">${g.key_findings?.length || 0} findings</span>
+                    ${completed ? '<span class="goal-hist-done">✓ DONE</span>' : ''}
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) {}
+}
+
+// ─── BELIEFS ─────────────────────────────────
+async function loadBeliefs() {
+    try {
+        const data = await fetch('/api/memory/stats').then(r => r.json());
+        // Also get beliefs from recall
+        const recallData = await fetch('/api/memory/recall?q=belief').then(r => r.json());
+
+        // Build from structured memory stats + get beliefs separately
+        const beliefsData = await fetch('/api/beliefs').then(r => r.json()).catch(() => ({ beliefs: [] }));
+        allBeliefs = beliefsData.beliefs || [];
+
+        renderBeliefs();
+
+        // Update stats
+        const statsEl = document.getElementById('belief-stats');
+        if (statsEl) {
+            statsEl.textContent = `${data.beliefs || 0} total beliefs`;
+        }
+    } catch(e) {
+        // Fallback: parse from recall
+        try {
+            const recall = await fetch('/api/memory/recall?q=').then(r => r.json());
+            $('belief-list').innerHTML = '<div class="ge-empty">Loading beliefs...</div>';
+        } catch(e2) {}
+    }
+}
+
+function renderBeliefs() {
+    const list = $('belief-list');
+    let filtered = allBeliefs;
+    if (beliefFilter !== 'all') {
+        filtered = allBeliefs.filter(b => b.status === beliefFilter);
+    }
+
+    if (!filtered.length) {
+        list.innerHTML = '<div class="ge-empty" style="padding:14px">No beliefs in this category</div>';
+        return;
+    }
+
+    list.innerHTML = filtered.slice(0, 30).map(b => {
+        const conf = b.confidence || 0.5;
+        const pct = Math.round(conf * 100);
+        const status = b.status || 'active';
+        const statusColor = {
+            'strongly_held': '#00ffcc',
+            'active': '#7a9ab8',
+            'weakened': '#ffaa33',
+            'discarded': '#ff4455'
+        }[status] || '#7a9ab8';
+
+        const barColor = conf > 0.75 ? '#00ffcc' : conf > 0.5 ? '#66ccff' : conf > 0.35 ? '#ffaa33' : '#ff4455';
+        const agent = b.formed_by_agent || b.agent || 'nexarion';
+
+        return `
+        <div class="belief-item">
+            <div class="belief-bar-track">
+                <div class="belief-bar-fill" style="width:${pct}%;background:${barColor}22;border-right:2px solid ${barColor}"></div>
+            </div>
+            <div class="belief-content">
+                <div class="belief-statement">${esc((b.statement||'').substring(0, 160))}</div>
+                <div class="belief-meta">
+                    <span class="belief-conf" style="color:${barColor}">${pct}%</span>
+                    <span class="belief-status" style="color:${statusColor}">${status.replace('_',' ')}</span>
+                    <span class="belief-agent">${esc(agent)}</span>
+                    ${b.last_updated ? `<span class="belief-date">${new Date(b.last_updated).toLocaleDateString()}</span>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+document.querySelectorAll('.belief-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.belief-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        beliefFilter = btn.dataset.status;
+        renderBeliefs();
+    });
+});
+
+// ─── SELF MODEL ──────────────────────────────
+async function loadSelfModel() {
+    try {
+        const data = await fetch('/api/self-model').then(r => r.json());
+        const model = data.model || {};
+        const panel = $('self-model-panel');
+
+        // Identity name
+        const name = model.chosen_name || model.candidate_names?.[0] || 'NEXARION';
+        $('identity-name').textContent = name.toUpperCase();
+
+        // Self description from observation
+        const obs = model.last_observation || '';
+        $('identity-desc').textContent = obs.substring(0, 120) || 'Self-model building...';
+
+        // Build self model panel
+        const agentPerf = model.agent_performance || {};
+        const stanceBias = model.stance_bias || {};
+        const obsessions = model.recurring_topics || [];
+        const bestAgent = Object.entries(agentPerf).sort((a,b) => b[1]-a[1])[0];
+        const dominantStance = Object.entries(stanceBias).sort((a,b) => b[1]-a[1])[0];
+
+        panel.innerHTML = `
+        <div class="self-model-grid">
+            <div class="sm-block">
+                <div class="sm-label">STRONGEST AGENT</div>
+                <div class="sm-val">${bestAgent ? `${bestAgent[0]} (${bestAgent[1].toFixed(1)})` : '—'}</div>
+            </div>
+            <div class="sm-block">
+                <div class="sm-label">DOMINANT STANCE</div>
+                <div class="sm-val">${dominantStance ? `${dominantStance[0]} (${Math.round(dominantStance[1]*100)}%)` : '—'}</div>
+            </div>
+            <div class="sm-block">
+                <div class="sm-label">AVG BELIEF CONF</div>
+                <div class="sm-val">${model.avg_confidence ? `${Math.round(model.avg_confidence*100)}%` : '—'}</div>
+            </div>
+            <div class="sm-block">
+                <div class="sm-label">THREAD STATE</div>
+                <div class="sm-val">${model.thread_direction || '—'}</div>
+            </div>
+        </div>
+        ${obsessions.length ? `
+        <div class="sm-obsessions">
+            <div class="sm-label" style="margin-bottom:6px">RECURRING TOPICS</div>
+            <div class="sm-tags">
+                ${obsessions.map(t => `<span class="sm-tag">${esc(t)}</span>`).join('')}
+            </div>
+        </div>` : ''}
+        ${model.high_confidence_beliefs?.length ? `
+        <div class="sm-beliefs">
+            <div class="sm-label" style="margin-bottom:6px">STRONG CONVICTIONS</div>
+            ${model.high_confidence_beliefs.slice(0,3).map(b => `
+            <div class="sm-conviction">${esc(b.substring(0,100))}</div>`).join('')}
+        </div>` : ''}`;
+
+        // Identity timeline
+        loadIdentityTimeline(model);
+    } catch(e) {
+        $('self-model-panel').innerHTML = '<div class="ge-empty">Self-model not yet available</div>';
+    }
+}
+
+function loadIdentityTimeline(model) {
+    const timeline = $('identity-timeline');
+    const history = model.naming_history || [];
+    const observations = model.observation_history || [];
+
+    if (!history.length && !observations.length) {
+        timeline.innerHTML = '<div class="ge-empty" style="padding:14px">Identity still forming...</div>';
+        return;
+    }
+
+    timeline.innerHTML = `
+    <div class="identity-timeline-wrap">
+        ${history.slice(-5).map((entry, i) => `
+        <div class="timeline-entry">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <div class="timeline-name">${esc(entry.name || 'Unnamed')}</div>
+                <div class="timeline-cycle">Cycle ${entry.cycle || '?'}</div>
+            </div>
+        </div>`).join('')}
+        ${observations.slice(-3).map(obs => `
+        <div class="timeline-entry timeline-obs">
+            <div class="timeline-dot obs-dot"></div>
+            <div class="timeline-content">
+                <div class="timeline-obs-text">${esc((obs.observation||obs).substring(0,120))}</div>
+            </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ─── BOOT ────────────────────────────────────
+loadGoalStatus();
+loadGoalHistory();
+loadBeliefs();
+loadSelfModel();
+setInterval(loadGoalStatus, 10000);
+setInterval(loadBeliefs, 20000);
+setInterval(loadSelfModel, 30000);
+</script>
+{% endblock %}
