@@ -181,6 +181,46 @@
         <div class="graph-top-entities" id="graph-top-entities"></div>
     </div>
 
+    <!-- DOCKER WORKSPACE -->
+<div class="nexus-panel panel-docker" style="margin-top:20px;">
+    <div class="panel-header">
+        <div class="panel-header-left">
+            <span class="panel-kicker">PHASE 6</span>
+            <h2 class="panel-title">DOCKER WORKSPACE</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div class="docker-status-pill" id="docker-status-pill">● CHECKING</div>
+            <div class="graph-stat-pill" id="docker-file-count">— files</div>
+        </div>
+    </div>
+
+    <div class="docker-grid">
+        <!-- LEFT: Activity feed -->
+        <div class="docker-activity-col">
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(0,240,255,0.4);margin-bottom:10px;">AUTONOMOUS ACTIVITY</div>
+            <div id="docker-activity-feed">
+                <div class="empty-state small">Nex hasn't built anything yet.<br>Activity appears here as Docker tasks complete.</div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Files + Manual run -->
+        <div class="docker-right-col">
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(0,240,255,0.4);margin-bottom:10px;">FILES NEX HAS CREATED</div>
+            <div id="docker-files-list" style="max-height:180px;overflow-y:auto;margin-bottom:16px;">
+                <div class="empty-state small">No files yet.</div>
+            </div>
+
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(0,240,255,0.4);margin-bottom:8px;">MANUAL EXECUTE</div>
+            <textarea id="docker-code-input" class="code-editor" rows="4"
+                placeholder="# Run anything in Nex's Linux environment&#10;import requests&#10;print(requests.get('https://api.github.com').status_code)"></textarea>
+            <div class="run-actions" style="margin-top:8px;">
+                <button class="nexus-btn btn-run" id="btn-docker-run">▶ EXECUTE IN DOCKER</button>
+                <span class="run-status" id="docker-run-status"></span>
+            </div>
+            <div class="run-output" id="docker-run-output" style="display:none;margin-top:8px;"></div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -471,9 +511,90 @@ async function loadCycle() {
     } catch(e) {}
 }
 
+// Phase 6 — Docker
+async function loadDocker() {
+    try {
+        const [status, activity, files] = await Promise.all([
+            fetch('/api/docker/status').then(r=>r.json()),
+            fetch('/api/docker/activity').then(r=>r.json()),
+            fetch('/api/docker/files').then(r=>r.json()),
+        ]);
+
+        // Status pill
+        const pill = $('docker-status-pill');
+        if (pill) {
+            pill.textContent = status.online ? '● ONLINE' : '● OFFLINE';
+            pill.className = 'docker-status-pill ' + (status.online ? 'online' : 'offline');
+        }
+        set('docker-file-count', `${status.file_count || 0} files`);
+
+        // Activity feed
+        const feed = $('docker-activity-feed');
+        if (feed) {
+            if (!activity || !activity.length) {
+                feed.innerHTML = '<div class="empty-state small">Nex hasn\'t built anything yet.<br>Activity appears as Docker tasks complete.</div>';
+            } else {
+                feed.innerHTML = activity.slice(0,10).map(t => `
+                    <div class="docker-task ${t.status}">
+                        <div class="docker-task-header">
+                            <span class="docker-task-status ${t.status}">● ${t.status.toUpperCase()}</span>
+                            <span style="color:rgba(255,255,255,0.3)">${new Date(t.submitted_at).toLocaleTimeString()}</span>
+                        </div>
+                        <div class="docker-task-desc">${esc(t.description || '')}</div>
+                        ${t.output ? `<div class="docker-task-output">${esc((t.output||'').substring(0,300))}</div>` : ''}
+                    </div>`).join('');
+            }
+        }
+
+        // Files list
+        const fileList = $('docker-files-list');
+        if (fileList) {
+            if (!files || !files.length) {
+                fileList.innerHTML = '<div class="empty-state small">No files yet.</div>';
+            } else {
+                fileList.innerHTML = files.map(f => `
+                    <div class="docker-file-item" onclick="viewDockerFile('${esc(f.path)}')">
+                        <span class="docker-file-name">${esc(f.path)}</span>
+                        <span class="docker-file-size">${(f.size/1024).toFixed(1)}KB</span>
+                    </div>`).join('');
+            }
+        }
+    } catch(e) { console.error('Docker load error:', e); }
+}
+
+async function viewDockerFile(path) {
+    const r = await fetch(`/api/docker/read?path=${encodeURIComponent(path)}`).then(r=>r.json());
+    const out = $('docker-run-output');
+    if (out) {
+        out.style.display = 'block';
+        out.innerHTML = `<pre style="color:#00ffcc;font-family:monospace;font-size:11px;white-space:pre-wrap;">${esc(r.content||'')}</pre>`;
+    }
+}
+
+$('btn-docker-run').addEventListener('click', async () => {
+    const code = $('docker-code-input').value.trim();
+    if (!code) return;
+    const status = $('docker-run-status'), output = $('docker-run-output');
+    status.textContent = 'EXECUTING...'; status.style.color = '#ffaa33';
+    output.style.display = 'none';
+    try {
+        const result = await fetch('/api/docker/execute', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({code, description: 'Manual Nexus Docker run'})
+        }).then(r=>r.json());
+        status.textContent = `${result.status.toUpperCase()} (${result.duration}s)`;
+        status.style.color = result.status === 'success' ? '#00ffc8' : '#ff4444';
+        if (result.stdout || result.stderr) {
+            output.style.display = 'block';
+            output.innerHTML = `<pre style="color:#00ffcc;font-size:11px;white-space:pre-wrap;">${esc(result.stdout||'')}${result.stderr ? '\n[STDERR]\n'+esc(result.stderr) : ''}</pre>`;
+        }
+        loadDocker();
+    } catch(e) { status.textContent = 'ERROR'; status.style.color = '#ff4444'; }
+});
+
 // Boot
 async function loadAll() {
-    await Promise.all([loadLLM(), loadMemory(), loadOptimizer(), loadSandbox(), loadGraph(), loadCycle()]);
+    await Promise.all([loadLLM(), loadMemory(), loadOptimizer(), loadSandbox(), loadGraph(), loadCycle(),loadDocker()]);
 }
 loadAll();
 setInterval(loadAll, 12000);

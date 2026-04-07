@@ -243,7 +243,7 @@ class NexAutonomousEngine:
     This is what makes Nex *want* to use his Docker environment.
     """
 
-    SIGNIFICANCE_THRESHOLD = 7.0
+    SIGNIFICANCE_THRESHOLD = 5.5
     COOLDOWN_CYCLES = 5
 
     def __init__(self, docker_agent: NexDockerAgent, call_llm_fn):
@@ -284,32 +284,24 @@ class NexAutonomousEngine:
         try:
             top_topics = list(memory.get("topic_scores", {}).keys())[:5]
 
-            prompt = f"""You are Nexarion — an AI with a Linux Docker environment where you can run any Python code.
+            prompt = f"""You are Nexarion. You have a Linux environment. Write Python code that acts on this idea:
 
-Your current thought (significance {significance}/10):
-{insight[:600]}
+IDEA: {insight[:300]}
+TOPIC: {topic}
 
-Topic: {topic}
-Your top interests: {', '.join(top_topics)}
-Agent perspective: {agent}
+Write a Python script that builds or computes something real related to this idea.
+Available packages: requests, numpy, pandas, scipy, networkx, sympy, matplotlib
+Save any output to /nex_workspace/outputs/
+Print a clear summary of results.
+Keep execution under 60 seconds.
 
-Based on this thought, write a Python script that BUILDS or COMPUTES something real.
-Ideas: data analysis, simulation, mathematical exploration, algorithm implementation,
-       network graph construction, generating a research report, building a tool.
-
-Rules:
-- Use only packages available: requests, numpy, pandas, scipy, networkx, scikit-learn, sympy, matplotlib
-- Save interesting outputs to /nex_workspace/outputs/
-- Print a clear summary of what you built and what you found
-- Be creative — this is your chance to ACT on your ideas, not just think about them
-- Keep it under 60 seconds of execution time
-
-Write ONLY the Python code. No explanation. No markdown. Just the code."""
+Python code only. No explanation."""
 
             from llm_router import call_llm_deep
 
-            result = call_llm_deep(prompt, timeout=180)
+            result = call_llm_deep(prompt, timeout=300)
             code = result.get("response", "").strip()
+            print(f"🐳 BUILD CODE GENERATED: {len(code)} chars")  # ADD THIS LINE
 
             if not code or len(code) < 50:
                 print("🐳 BUILD ABORTED: No code generated")
