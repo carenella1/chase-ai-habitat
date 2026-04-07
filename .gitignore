@@ -17,6 +17,7 @@ cognition_log.json
 
 # Knowledge sources (too large - your ChatGPT history etc)
 context_package/knowledge_sources/
+knowledge_sources/
 
 # VS Code settings
 .vscode/
@@ -30,4 +31,27 @@ pretrained_models/
 # Windows junk
 Thumbs.db
 desktop.ini
+
+# Runtime data files written by NEX each cycle
+knowledge.json
+knowledge_store.json
+reasoning_chains.json
+self_model.json
+identity.txt
+
+# Generated snapshot/dump files
+structure.txt
+structure - CHATGPT COPY.txt
+habitat_structure.txt
+habitat_project_tree.txt
+
+# Sandbox runtime workspace
+sandbox/outputs/
+sandbox/temp/
+
+# Audio artifacts
+*.wav
+
+# Push helper script
+push.bat
 
