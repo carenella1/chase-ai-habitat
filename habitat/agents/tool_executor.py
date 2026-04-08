@@ -128,6 +128,10 @@ def tool_python_exec(code: str) -> dict:
         }
 
 
+def tool_market_data(symbol: str) -> dict:
+    symbol = symbol.upper().strip()
+
+
 # =========================
 # MARKET DATA
 # =========================
@@ -182,7 +186,7 @@ def tool_market_data(symbol: str) -> dict:
                 "source": "yahoo_api",
             }
     except Exception as e:
-        return {"error": f"Market data unavailable: {e}", "symbol": symbol}
+        print(f"⚠️ Yahoo API error for {symbol}: {e}")
     return {"error": "No market data source available", "symbol": symbol}
 
 

@@ -205,6 +205,22 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) { }
     }
 
+    async function checkHealth() {
+        try {
+            const res = await fetch('/api/health', { signal: AbortSignal.timeout(3000) });
+            const data = await res.json();
+            const pill = document.getElementById('chat-cycle-pill');
+            if (pill) pill.style.color = data.status === 'ok' ? '' : '#ff4455';
+        } catch (e) {
+            const pill = document.getElementById('chat-cycle-pill');
+            if (pill) {
+                pill.textContent = 'SERVER UNREACHABLE';
+                pill.style.color = '#ff4455';
+            }
+        }
+    }
+    setInterval(checkHealth, 5000);
+
     // Domain detection on the fly (from last trace response)
     function updateContextFromTrace(trace) {
         if (!trace) return;

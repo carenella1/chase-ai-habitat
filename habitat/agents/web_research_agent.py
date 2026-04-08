@@ -2,16 +2,15 @@
 web_research_agent.py
 
 Nexarion's primary knowledge acquisition system.
-Replaces the shallow DuckDuckGo instant API with real full-text fetching.
+UPGRADED: Full internet access — real pages, not just Wikipedia.
 
-Strategy per query:
-1. Try Wikipedia full article (best quality, structured)
-2. Try arXiv for scientific/technical topics
-3. Try DuckDuckGo HTML search → fetch top result full text
-4. Fall back to DuckDuckGo instant API snippet
+Strategy per query (in priority order):
+1. Topic-routed: arXiv for science/ML, Wikipedia for humanities
+2. DuckDuckGo HTML search → fetch top 3 results full text
+3. DuckDuckGo instant API snippet fallback
 
-Each source returns a dict:
-  {summary, source_url, domain, quality_score}
+Sources now include: news sites, research papers, tech blogs,
+scientific journals, forums, government sites — the full web.
 """
 
 import re
@@ -20,17 +19,122 @@ import requests
 from urllib.parse import quote, urlparse
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; NexarionResearch/1.0; educational use)"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 }
-REQUEST_TIMEOUT = 8
+REQUEST_TIMEOUT = 10
+
+# Domains to always skip — low quality or require JS
+SKIP_DOMAINS = {
+    "duckduckgo.com",
+    "duck.com",
+    "bing.com",
+    "google.com",
+    "youtube.com",
+    "facebook.com",
+    "twitter.com",
+    "instagram.com",
+    "tiktok.com",
+    "pinterest.com",
+    "reddit.com",  # reddit blocks scrapers
+    "linkedin.com",
+    "amazon.com",
+    "ebay.com",
+}
+
+# High quality domains — prioritize these in results
+PRIORITY_DOMAINS = {
+    "arxiv.org",
+    "nature.com",
+    "sciencedirect.com",
+    "pubmed.ncbi.nlm.nih.gov",
+    "scholar.google.com",
+    "semanticscholar.org",
+    "biorxiv.org",
+    "medrxiv.org",
+    "ieee.org",
+    "acm.org",
+    "springer.com",
+    "mit.edu",
+    "stanford.edu",
+    "en.wikipedia.org",
+    "britannica.com",
+    "techcrunch.com",
+    "wired.com",
+    "arstechnica.com",
+    "thenextweb.com",
+    "towardsdatascience.com",
+    "medium.com",
+    "substack.com",
+    "bbc.com",
+    "reuters.com",
+    "apnews.com",
+    "theguardian.com",
+    "ourworldindata.org",
+    "statista.com",
+}
 
 
 # =========================
-# WIKIPEDIA — full sections
+# TEXT EXTRACTION
+# =========================
+def _fetch_page_text(url: str, max_chars: int = 3000) -> str:
+    """Fetch a URL and extract meaningful text content."""
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+        if r.status_code != 200:
+            return ""
+        html = r.text
+
+        # Strip scripts, styles, nav
+        html = re.sub(
+            r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE
+        )
+        html = re.sub(
+            r"<style[^>]*>.*?</style>", "", html, flags=re.DOTALL | re.IGNORECASE
+        )
+        html = re.sub(r"<nav[^>]*>.*?</nav>", "", html, flags=re.DOTALL | re.IGNORECASE)
+        html = re.sub(
+            r"<footer[^>]*>.*?</footer>", "", html, flags=re.DOTALL | re.IGNORECASE
+        )
+        html = re.sub(
+            r"<header[^>]*>.*?</header>", "", html, flags=re.DOTALL | re.IGNORECASE
+        )
+
+        # Extract article/main content first if possible
+        article_match = re.search(
+            r"<article[^>]*>(.*?)</article>", html, re.DOTALL | re.IGNORECASE
+        )
+        main_match = re.search(
+            r"<main[^>]*>(.*?)</main>", html, re.DOTALL | re.IGNORECASE
+        )
+
+        content_html = ""
+        if article_match:
+            content_html = article_match.group(1)
+        elif main_match:
+            content_html = main_match.group(1)
+        else:
+            content_html = html
+
+        # Strip remaining tags
+        text = re.sub(r"<[^>]+>", " ", content_html)
+        text = re.sub(r"\s+", " ", text).strip()
+
+        # Extract meaningful sentences
+        sentences = [s.strip() for s in text.split(".") if len(s.strip()) > 40]
+        result = ". ".join(sentences[:30])
+
+        return result[:max_chars]
+    except Exception:
+        return ""
+
+
+# =========================
+# WIKIPEDIA
 # =========================
 def _try_wikipedia(query: str) -> dict:
     try:
-        # First try exact match
         url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(query)}"
         r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         if r.status_code == 200:
@@ -40,7 +144,7 @@ def _try_wikipedia(query: str) -> dict:
             extract = data.get("extract", "")
             if len(extract) > 100:
                 return {
-                    "summary": extract[:2000],
+                    "summary": extract[:2500],
                     "source_url": data.get("content_urls", {})
                     .get("desktop", {})
                     .get("page", ""),
@@ -53,7 +157,7 @@ def _try_wikipedia(query: str) -> dict:
 
 
 # =========================
-# ARXIV — research papers
+# ARXIV
 # =========================
 ARXIV_TOPICS = {
     "machine learning",
@@ -77,44 +181,55 @@ ARXIV_TOPICS = {
     "market",
     "stock",
     "portfolio",
+    "chemistry",
+    "mathematics",
+    "topology",
+    "graph theory",
+    "information theory",
+    "robotics",
+    "autonomous",
+    "transformer",
+    "diffusion",
+    "generative",
+    "llm",
+    "reasoning",
+    "consciousness",
+    "neuroscience",
+    "climate",
+    "astrophysics",
+    "cosmology",
 }
 
 
-def _is_arxiv_topic(query: str) -> bool:
-    q = query.lower()
-    return any(t in q for t in ARXIV_TOPICS)
-
-
 def _try_arxiv(query: str) -> dict:
-    if not _is_arxiv_topic(query):
+    if not any(t in query.lower() for t in ARXIV_TOPICS):
         return {}
     try:
         url = f"https://export.arxiv.org/api/query?search_query=all:{quote(query)}&start=0&max_results=3&sortBy=relevance"
         r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         if r.status_code != 200:
             return {}
-        # Parse atom XML minimally
         entries = re.findall(r"<entry>(.*?)</entry>", r.text, re.DOTALL)
         if not entries:
             return {}
         summaries = []
         best_url = ""
-        for entry in entries[:2]:
+        for entry in entries[:3]:
             title_m = re.search(r"<title>(.*?)</title>", entry, re.DOTALL)
             summary_m = re.search(r"<summary>(.*?)</summary>", entry, re.DOTALL)
             link_m = re.search(r"<id>(.*?)</id>", entry)
             if title_m and summary_m:
-                title = title_m.group(1).strip()
+                title = re.sub(r"\s+", " ", title_m.group(1).strip())
                 summary = re.sub(r"\s+", " ", summary_m.group(1).strip())
-                summaries.append(f"{title}: {summary[:400]}")
-            if link_m and not best_url:
-                best_url = link_m.group(1).strip()
+                summaries.append(f"[{title[:80]}] {summary[:400]}")
+                if not best_url and link_m:
+                    best_url = link_m.group(1).strip().replace("abs", "pdf")
         if summaries:
             return {
-                "summary": " | ".join(summaries)[:2000],
-                "source_url": best_url,
+                "summary": "\n\n".join(summaries)[:2500],
+                "source_url": best_url or "https://arxiv.org",
                 "domain": "arxiv.org",
-                "quality_score": 8,
+                "quality_score": 10,
             }
     except Exception:
         pass
@@ -122,54 +237,12 @@ def _try_arxiv(query: str) -> dict:
 
 
 # =========================
-# FULL PAGE FETCH
+# DUCKDUCKGO SEARCH → FULL PAGE FETCH
 # =========================
-def _extract_text_from_html(html: str, max_chars: int = 2000) -> str:
-    """Extract readable text from HTML. No BeautifulSoup dependency."""
-    # Remove scripts, styles, nav
-    html = re.sub(
-        r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE
-    )
-    html = re.sub(r"<style[^>]*>.*?</style>", "", html, flags=re.DOTALL | re.IGNORECASE)
-    html = re.sub(r"<nav[^>]*>.*?</nav>", "", html, flags=re.DOTALL | re.IGNORECASE)
-    html = re.sub(
-        r"<header[^>]*>.*?</header>", "", html, flags=re.DOTALL | re.IGNORECASE
-    )
-    html = re.sub(
-        r"<footer[^>]*>.*?</footer>", "", html, flags=re.DOTALL | re.IGNORECASE
-    )
-    # Convert paragraph tags to newlines
-    html = re.sub(r"<p[^>]*>", "\n", html, flags=re.IGNORECASE)
-    html = re.sub(r"<br[^>]*>", "\n", html, flags=re.IGNORECASE)
-    html = re.sub(r"<h[1-6][^>]*>", "\n", html, flags=re.IGNORECASE)
-    # Strip remaining tags
-    text = re.sub(r"<[^>]+>", "", html)
-    # Clean whitespace
-    lines = [l.strip() for l in text.splitlines() if len(l.strip()) > 40]
-    return " ".join(lines)[:max_chars]
-
-
-def _fetch_page_text(url: str) -> str:
-    """Fetch a URL and extract text content."""
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
-        if r.status_code != 200:
-            return ""
-        content_type = r.headers.get("content-type", "")
-        if "text/html" not in content_type:
-            return ""
-        return _extract_text_from_html(r.text)
-    except Exception:
-        return ""
-
-
-# =========================
-# DUCKDUCKGO HTML SEARCH
-# =========================
-def _try_duckduckgo_full(query: str) -> dict:
+def _try_duckduckgo_web(query: str) -> dict:
     """
-    Search DuckDuckGo HTML (not the instant API), extract top result URLs,
-    fetch the actual pages, return the best text found.
+    Real web search: DuckDuckGo HTML search results → fetch actual pages.
+    This is the full internet — any domain, any topic.
     """
     try:
         search_url = f"https://html.duckduckgo.com/html/?q={quote(query)}"
@@ -178,48 +251,64 @@ def _try_duckduckgo_full(query: str) -> dict:
             return {}
 
         # Extract result URLs from DDG HTML
-        urls = re.findall(r'href="(https?://[^"&]+)"', r.text)
-        # Filter out DDG's own URLs and ad trackers
-        SKIP_DOMAINS = {
-            "duckduckgo.com",
-            "duck.com",
-            "bing.com",
-            "google.com",
-            "youtube.com",
-            "facebook.com",
-            "twitter.com",
-            "instagram.com",
-        }
+        urls = re.findall(r'class="result__url"[^>]*>\s*([^\s<]+)', r.text)
+        if not urls:
+            # Try alternate pattern
+            urls = re.findall(r'href="//duckduckgo\.com/l/\?uddg=([^"&]+)"', r.text)
+            urls = [requests.utils.unquote(u) for u in urls]
+
+        # Also try extracting from result links
+        if not urls:
+            links = re.findall(
+                r'<a[^>]+href="(https?://[^"]+)"[^>]*class="result__a"', r.text
+            )
+            urls = links
+
+        # Filter and prioritize
         clean_urls = []
-        seen = set()
+        seen_domains = set()
         for url in urls:
-            domain = urlparse(url).netloc.replace("www.", "")
+            if not url.startswith("http"):
+                url = "https://" + url
+            try:
+                domain = urlparse(url).netloc.replace("www.", "")
+            except Exception:
+                continue
             if domain in SKIP_DOMAINS:
                 continue
-            if url in seen:
+            if domain in seen_domains:
                 continue
-            seen.add(url)
-            clean_urls.append((url, domain))
-            if len(clean_urls) >= 4:
+            seen_domains.add(domain)
+
+            # Prioritize quality domains
+            priority = 1 if domain in PRIORITY_DOMAINS else 0
+            clean_urls.append((url, domain, priority))
+
+            if len(clean_urls) >= 6:
                 break
 
-        # Try fetching each, return first good result
-        for url, domain in clean_urls:
-            text = _fetch_page_text(url)
-            if len(text) > 200:
+        # Sort: priority domains first
+        clean_urls.sort(key=lambda x: x[2], reverse=True)
+
+        # Try fetching each URL — return first good result
+        for url, domain, _ in clean_urls[:4]:
+            text = _fetch_page_text(url, max_chars=2500)
+            if len(text) > 300:
+                print(f"🌐 WEB HIT: {domain}")
                 return {
-                    "summary": text[:2000],
+                    "summary": text,
                     "source_url": url,
                     "domain": domain,
-                    "quality_score": 6,
+                    "quality_score": 8 if domain in PRIORITY_DOMAINS else 6,
                 }
-    except Exception:
-        pass
+
+    except Exception as e:
+        print(f"⚠️ DDG web search error: {e}")
     return {}
 
 
 # =========================
-# DUCKDUCKGO INSTANT API FALLBACK
+# DUCKDUCKGO INSTANT API (FALLBACK)
 # =========================
 def _try_duckduckgo_instant(query: str) -> dict:
     try:
@@ -235,7 +324,7 @@ def _try_duckduckgo_instant(query: str) -> dict:
             )
         if len(text) > 80:
             return {
-                "summary": text[:1000],
+                "summary": text[:1500],
                 "source_url": data.get("AbstractURL", ""),
                 "domain": "duckduckgo.com",
                 "quality_score": 3,
@@ -246,40 +335,39 @@ def _try_duckduckgo_instant(query: str) -> dict:
 
 
 # =========================
-# DOMAIN ROUTING
+# NEWS SEARCH — current events
 # =========================
-# For certain topic types, route to the best source directly
-DOMAIN_ROUTES = {
-    # Finance / markets
-    "stock": "arxiv",
-    "trading": "arxiv",
-    "portfolio": "arxiv",
-    "market": "web",
-    "investment": "web",
-    "economy": "wikipedia",
-    "inflation": "wikipedia",
-    # Science
-    "quantum": "arxiv",
-    "machine learning": "arxiv",
-    "deep learning": "arxiv",
-    "neural": "arxiv",
-    "protein": "arxiv",
-    "genome": "arxiv",
-    # Philosophy / humanities
-    "philosophy": "wikipedia",
-    "ethics": "wikipedia",
-    "epistemology": "wikipedia",
-    "consciousness": "wikipedia",
-    "history": "wikipedia",
-}
+def _try_news(query: str) -> dict:
+    """Fetch recent news on a topic."""
+    try:
+        news_url = (
+            f"https://html.duckduckgo.com/html/?q={quote(query + ' news 2026')}&df=w"
+        )
+        r = requests.get(news_url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
 
+        # Extract snippets and URLs
+        snippets = re.findall(
+            r'class="result__snippet"[^>]*>(.*?)</a>', r.text, re.DOTALL
+        )
+        titles = re.findall(r'class="result__a"[^>]*>(.*?)</a>', r.text, re.DOTALL)
 
-def _get_preferred_source(query: str) -> str:
-    q = query.lower()
-    for keyword, source in DOMAIN_ROUTES.items():
-        if keyword in q:
-            return source
-    return "wikipedia"  # default
+        results = []
+        for title, snippet in zip(titles[:5], snippets[:5]):
+            t = re.sub(r"<[^>]+>", "", title).strip()
+            s = re.sub(r"<[^>]+>", "", snippet).strip()
+            if t and s and len(s) > 30:
+                results.append(f"{t}: {s}")
+
+        if results:
+            return {
+                "summary": "\n".join(results[:4]),
+                "source_url": f"https://duckduckgo.com/?q={quote(query)}+news",
+                "domain": "news_aggregated",
+                "quality_score": 7,
+            }
+    except Exception:
+        pass
+    return {}
 
 
 # =========================
@@ -287,60 +375,74 @@ def _get_preferred_source(query: str) -> str:
 # =========================
 def web_research(query: str, max_results: int = 3) -> dict:
     """
-    Primary knowledge acquisition function called by the brain loop.
-    Tries sources in priority order based on topic type.
-    Returns the highest-quality result found.
+    Full internet research for any query.
 
-    Returns: {summary, source_url, domain, quality_score}
+    Routing strategy:
+    - Science/ML/tech → arXiv first, then web
+    - Current events → news search first, then web
+    - Everything else → web search first, Wikipedia fallback
     """
-    if not query or len(query.strip()) < 3:
-        return {"summary": "", "source_url": "", "domain": "", "quality_score": 0}
+    if not query or len(query.strip()) < 2:
+        return {}
 
     query = query.strip()
-    preferred = _get_preferred_source(query)
+    q_lower = query.lower()
 
-    # Build attempt order based on preferred source
-    if preferred == "arxiv":
-        attempts = [
-            _try_arxiv,
-            _try_wikipedia,
-            _try_duckduckgo_full,
-            _try_duckduckgo_instant,
-        ]
-    elif preferred == "web":
-        attempts = [
-            _try_duckduckgo_full,
-            _try_wikipedia,
-            _try_arxiv,
-            _try_duckduckgo_instant,
-        ]
-    else:  # wikipedia default
-        attempts = [
-            _try_wikipedia,
-            _try_arxiv,
-            _try_duckduckgo_full,
-            _try_duckduckgo_instant,
-        ]
+    print(f"🌐 RESEARCHING: '{query}'")
 
-    best = {"summary": "", "source_url": "", "domain": "", "quality_score": 0}
+    # Route 1: arXiv for scientific topics (highest quality)
+    if any(t in q_lower for t in ARXIV_TOPICS):
+        result = _try_arxiv(query)
+        if result:
+            return result
 
-    for attempt_fn in attempts:
-        try:
-            result = attempt_fn(query)
-            if result and result.get("quality_score", 0) > best.get("quality_score", 0):
-                best = result
-                # If we have a high-quality result, stop early
-                if best["quality_score"] >= 8:
-                    break
-        except Exception as e:
-            print(f"⚠️ Research attempt failed ({attempt_fn.__name__}): {e}")
-            continue
+    # Route 2: Wikipedia for well-established topics
+    WIKI_TOPICS = {
+        "history",
+        "philosophy",
+        "ethics",
+        "economics",
+        "biology",
+        "mathematics",
+        "chemistry",
+        "physics",
+        "geography",
+        "politics",
+        "sociology",
+        "anthropology",
+        "linguistics",
+        "psychology",
+        "culture",
+        "literature",
+        "art",
+        "music",
+        "religion",
+        "mythology",
+    }
+    if any(t in q_lower for t in WIKI_TOPICS):
+        result = _try_wikipedia(query)
+        if result:
+            return result
 
-    if best["summary"]:
-        print(
-            f"✅ RESEARCH: {best['domain']} (quality={best['quality_score']}) for '{query}'"
-        )
-    else:
-        print(f"❌ RESEARCH: No result for '{query}'")
+    # Route 3: Full web search (the open internet)
+    result = _try_duckduckgo_web(query)
+    if result:
+        return result
 
-    return best
+    # Route 4: Wikipedia fallback
+    result = _try_wikipedia(query)
+    if result:
+        return result
+
+    # Route 5: News search for current events
+    result = _try_news(query)
+    if result:
+        return result
+
+    # Route 6: DuckDuckGo instant API (last resort)
+    result = _try_duckduckgo_instant(query)
+    if result:
+        return result
+
+    print(f"❌ ALL SOURCES FAILED: '{query}'")
+    return {}

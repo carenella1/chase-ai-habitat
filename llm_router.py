@@ -30,9 +30,9 @@ OLLAMA_BASE = "http://localhost:11434"
 # CHAT BRAIN — fast, used for live conversation with Chase
 # Priority order: first one found installed wins
 CHAT_MODEL_PRIORITY = [
-    "deepseek-r1:14b",
-    "deepseek-r1:7b",
-    "llama3.1:8b",
+    "gemma4:26b",  # New chat brain — native system prompts, fast MoE
+    "llama3.1:latest",  # Fallback — already working well
+    "deepseek-r1:14b",  # Last resort
 ]
 
 # DEEP BRAIN — powerful, used for background cognition only
@@ -64,8 +64,8 @@ _model_lock = threading.Lock()
 
 _failure_count = 0
 _last_success = 0.0
-_BACKOFF_THRESHOLD = 5  # raised from 3 — more tolerance before lockout
-_BACKOFF_SECONDS = 60  # reduced from 120 — shorter penalty
+_BACKOFF_THRESHOLD = 8  # raised from 3 — more tolerance before lockout
+_BACKOFF_SECONDS = 30  # reduced from 120 — shorter penalty
 
 
 # ─────────────────────────────────────────────
