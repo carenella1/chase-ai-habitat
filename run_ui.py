@@ -23,6 +23,7 @@ from nex_sandbox import NexSandbox
 from knowledge_graph import NexKnowledgeGraph
 from nex_docker_agent import NexDockerAgent, NexAutonomousEngine
 
+
 nex_docker = NexDockerAgent()
 nex_autonomous = NexAutonomousEngine(nex_docker, call_llm)
 knowledge_graph = NexKnowledgeGraph()
@@ -44,6 +45,8 @@ import requests
 from flask import Flask, render_template, jsonify, request
 
 from habitat.memory.memory_manager import MemoryManager
+
+_api_memory_manager = MemoryManager()
 
 
 def generate_local_voice(text, persona="analytical"):
@@ -964,22 +967,35 @@ def api_docker_read():
 
 @app.route("/api/beliefs")
 def api_beliefs():
-    """Get all active beliefs from structured memory."""
     try:
-        beliefs = nex_memory.beliefs.get_active_beliefs(limit=100)
-        return jsonify({"status": "ok", "beliefs": beliefs})
+        beliefs = _api_memory_manager.get_all_beliefs(limit=100)
+        normalized = []
+        for b in beliefs:
+            normalized.append(
+                {
+                    "id": b.get("belief_id", b.get("id")),
+                    "statement": b.get("statement", ""),
+                    "confidence": b.get("confidence", 0.5),
+                    "status": b.get("status", "active"),
+                    "formed_by_agent": b.get(
+                        "created_by_agent", b.get("formed_by_agent", "nexarion")
+                    ),
+                    "last_updated": b.get("last_updated", ""),
+                }
+            )
+        return jsonify({"status": "ok", "beliefs": normalized})
     except Exception as e:
         return jsonify({"status": "error", "error": str(e), "beliefs": []})
 
 
 @app.route("/api/memory/facts")
 def api_memory_facts():
-    """Get world facts from structured memory."""
     try:
         conn = nex_memory.db._conn()
         rows = conn.execute(
-            """SELECT * FROM world_facts WHERE valid_until IS NULL
-               ORDER BY created_at DESC LIMIT 100"""
+            """SELECT id, content, source, confidence, valid_from, topic
+               FROM world_facts WHERE valid_until IS NULL
+               ORDER BY valid_from DESC LIMIT 100"""
         ).fetchall()
         facts = [dict(r) for r in rows]
         return jsonify({"status": "ok", "facts": facts})
@@ -989,11 +1005,11 @@ def api_memory_facts():
 
 @app.route("/api/memory/episodes")
 def api_memory_episodes():
-    """Get episodic memories."""
     try:
         conn = nex_memory.db._conn()
         rows = conn.execute(
-            """SELECT * FROM episodic_memory
+            """SELECT id, event, agent, cycle, timestamp, importance, topic
+               FROM episodic_memory
                ORDER BY cycle DESC, importance DESC LIMIT 80"""
         ).fetchall()
         episodes = [dict(r) for r in rows]
@@ -1004,9 +1020,15 @@ def api_memory_episodes():
 
 @app.route("/api/memory/entities")
 def api_memory_entities():
-    """Get entity summaries."""
     try:
-        entities = nex_memory.entities.get_most_known(limit=80)
+        conn = nex_memory.db._conn()
+        rows = conn.execute(
+            """SELECT entity, entity_type, summary, first_seen, last_updated,
+                      mention_count, related_entities
+               FROM entity_summaries
+               ORDER BY mention_count DESC, last_updated DESC LIMIT 80"""
+        ).fetchall()
+        entities = [dict(r) for r in rows]
         return jsonify({"status": "ok", "entities": entities})
     except Exception as e:
         return jsonify({"status": "error", "error": str(e), "entities": []})
