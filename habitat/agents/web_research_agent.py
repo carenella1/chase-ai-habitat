@@ -22,7 +22,7 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 }
-REQUEST_TIMEOUT = 10
+REQUEST_TIMEOUT = 12
 
 # Domains to always skip — low quality or require JS
 SKIP_DOMAINS = {
@@ -374,75 +374,59 @@ def _try_news(query: str) -> dict:
 # MAIN ENTRY POINT
 # =========================
 def web_research(query: str, max_results: int = 3) -> dict:
-    """
-    Full internet research for any query.
-
-    Routing strategy:
-    - Science/ML/tech → arXiv first, then web
-    - Current events → news search first, then web
-    - Everything else → web search first, Wikipedia fallback
-    """
-    if not query or len(query.strip()) < 2:
-        return {}
+    if not query or len(query.strip()) < 3:
+        return {"summary": "", "source_url": "", "domain": "", "quality_score": 0}
 
     query = query.strip()
     q_lower = query.lower()
-
     print(f"🌐 RESEARCHING: '{query}'")
 
-    # Route 1: arXiv for scientific topics (highest quality)
-    if any(t in q_lower for t in ARXIV_TOPICS):
-        result = _try_arxiv(query)
-        if result:
-            return result
-
-    # Route 2: Wikipedia for well-established topics
-    WIKI_TOPICS = {
-        "history",
-        "philosophy",
-        "ethics",
-        "economics",
-        "biology",
-        "mathematics",
-        "chemistry",
+    ARXIV_SIGNALS = {
+        "machine learning",
+        "deep learning",
+        "neural",
+        "quantum",
         "physics",
-        "geography",
-        "politics",
-        "sociology",
-        "anthropology",
-        "linguistics",
-        "psychology",
-        "culture",
-        "literature",
-        "art",
-        "music",
-        "religion",
-        "mythology",
+        "biology",
+        "genomics",
+        "algorithm",
+        "statistics",
+        "mathematics",
+        "topology",
+        "reinforcement",
+        "transformer",
+        "llm",
+        "reasoning",
+        "consciousness",
+        "neuroscience",
+        "climate",
+        "astrophysics",
+        "chemistry",
     }
-    if any(t in q_lower for t in WIKI_TOPICS):
-        result = _try_wikipedia(query)
-        if result:
+
+    # Try arXiv first for science topics
+    if any(t in q_lower for t in ARXIV_SIGNALS):
+        result = _try_arxiv(query)
+        if result.get("summary"):
             return result
 
-    # Route 3: Full web search (the open internet)
-    result = _try_duckduckgo_web(query)
-    if result:
-        return result
+    # Try full web search (DDG HTML → real pages)
+    try:
+        result = _try_duckduckgo_full(query)
+        if result.get("summary"):
+            return result
+    except NameError:
+        pass  # function name mismatch — fall through
 
-    # Route 4: Wikipedia fallback
+    # Wikipedia fallback
     result = _try_wikipedia(query)
-    if result:
+    if result.get("summary"):
         return result
 
-    # Route 5: News search for current events
-    result = _try_news(query)
-    if result:
-        return result
-
-    # Route 6: DuckDuckGo instant API (last resort)
+    # DDG instant API last resort
     result = _try_duckduckgo_instant(query)
-    if result:
+    if result.get("summary"):
         return result
 
     print(f"❌ ALL SOURCES FAILED: '{query}'")
-    return {}
+    return {"summary": "", "source_url": "", "domain": "", "quality_score": 0}

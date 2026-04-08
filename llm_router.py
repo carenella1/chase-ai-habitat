@@ -62,10 +62,11 @@ _chat_model: str | None = None
 _deep_model: str | None = None
 _model_lock = threading.Lock()
 
-_failure_count = 0
+_failure_count = 0  # chat failures only
+_deep_failure_count = 0  # deep cognition failures — separate
 _last_success = 0.0
-_BACKOFF_THRESHOLD = 8  # raised from 3 — more tolerance before lockout
-_BACKOFF_SECONDS = 30  # reduced from 120 — shorter penalty
+_BACKOFF_THRESHOLD = 8
+_BACKOFF_SECONDS = 30
 
 
 # ─────────────────────────────────────────────
@@ -166,18 +167,6 @@ def _strip_thinking_tags(text: str):
 
 
 def call_llm(prompt: str, timeout: int = None, log_thinking: bool = False) -> str:
-    """
-    Fast chat call. Always uses the 14b chat brain.
-    This is the drop-in replacement for the old call_llm() in run_ui.py.
-
-    Args:
-        prompt:       The full prompt string.
-        timeout:      Max seconds to wait. Defaults to CHAT_TIMEOUT (120s).
-        log_thinking: If True, returns (response, thinking_steps) tuple.
-
-    Returns:
-        str: Nex's response with thinking tags stripped.
-    """
     global _failure_count, _last_success
 
     if timeout is None:
@@ -188,7 +177,7 @@ def call_llm(prompt: str, timeout: int = None, log_thinking: bool = False) -> st
         elapsed = time.time() - _last_success
         if elapsed < _BACKOFF_SECONDS:
             print(
-                f"⏸️ LLM BACKOFF: {_failure_count} failures, cooling down {int(_BACKOFF_SECONDS - elapsed)}s"
+                f"⏸️ LLM BACKOFF: {_failure_count} failures, cooling {int(_BACKOFF_SECONDS - elapsed)}s"
             )
             return ""
         else:
@@ -196,24 +185,47 @@ def call_llm(prompt: str, timeout: int = None, log_thinking: bool = False) -> st
 
     model = get_chat_model()
     is_thinking = any(tm in model for tm in THINKING_MODELS)
+    use_chat_api = "gemma" in model.lower()  # Gemma requires /api/chat
 
     try:
-        response = requests.post(
-            f"{OLLAMA_BASE}/api/generate",
-            json={
-                "model": model,
-                "prompt": prompt,
-                "stream": False,
-                "options": {
-                    "num_predict": 1024,
-                    "temperature": 0.7,
-                    "top_p": 0.9,
+        if use_chat_api:
+            # Gemma 4 requires chat format — /api/generate returns empty
+            response = requests.post(
+                f"{OLLAMA_BASE}/api/chat",
+                json={
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "stream": False,
+                    "options": {
+                        "num_predict": 512,
+                        "temperature": 0.8,
+                        "top_p": 0.9,
+                        "num_ctx": 4096,
+                        "repeat_penalty": 1.3,
+                    },
                 },
-            },
-            timeout=timeout,
-        )
-
-        raw = response.json().get("response", "")
+                timeout=timeout,
+            )
+            raw = response.json().get("message", {}).get("content", "")
+        else:
+            # DeepSeek, Llama etc — standard generate endpoint
+            response = requests.post(
+                f"{OLLAMA_BASE}/api/generate",
+                json={
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "num_predict": 512,
+                        "temperature": 0.8,
+                        "top_p": 0.9,
+                        "num_ctx": 4096,
+                        "repeat_penalty": 1.3,
+                    },
+                },
+                timeout=timeout,
+            )
+            raw = response.json().get("response", "")
 
         if not raw:
             _failure_count += 1
@@ -227,16 +239,15 @@ def call_llm(prompt: str, timeout: int = None, log_thinking: bool = False) -> st
             if log_thinking and thinking:
                 return clean, thinking
             return clean
-        else:
-            return raw
+        return raw
 
     except requests.exceptions.Timeout:
         _failure_count += 1
-        print(f"⏱️ CHAT TIMEOUT ({_failure_count}) model={model} timeout={timeout}s")
+        print(f"⏱️ CHAT TIMEOUT ({_failure_count}) model={model}")
         return ""
     except requests.exceptions.ConnectionError:
         _failure_count += 1
-        print(f"🔌 CONNECTION ERROR ({_failure_count}) — is Ollama running?")
+        print(f"🔌 CONNECTION ERROR ({_failure_count})")
         return ""
     except Exception as e:
         _failure_count += 1
@@ -263,6 +274,7 @@ def call_llm_deep(prompt: str, timeout: int = None) -> dict:
           "reasoning_available": bool
         }
     """
+    global _deep_failure_count
     if timeout is None:
         timeout = DEEP_TIMEOUT
 
@@ -278,9 +290,11 @@ def call_llm_deep(prompt: str, timeout: int = None) -> dict:
                 "prompt": prompt,
                 "stream": False,
                 "options": {
-                    "num_predict": 2048,
-                    "temperature": 0.7,
+                    "num_predict": 1024,
+                    "temperature": 0.6,
                     "top_p": 0.9,
+                    "num_ctx": 8192,
+                    "repeat_penalty": 1.2,
                 },
             },
             timeout=timeout,
@@ -313,9 +327,8 @@ def call_llm_deep(prompt: str, timeout: int = None) -> dict:
             }
 
     except requests.exceptions.Timeout:
-        print(
-            f"⏱️ DEEP TIMEOUT — model={model} took >{timeout}s (this is ok for background tasks)"
-        )
+        _deep_failure_count += 1
+        print(f"⏱️ DEEP TIMEOUT ({_deep_failure_count}) — model={model}")
         return {
             "response": "",
             "thinking": [],
@@ -323,6 +336,7 @@ def call_llm_deep(prompt: str, timeout: int = None) -> dict:
             "reasoning_available": False,
         }
     except Exception as e:
+        _deep_failure_count += 1
         print(f"❌ DEEP ERROR: {e}")
         return {
             "response": "",
@@ -362,6 +376,7 @@ def get_llm_status() -> dict:
         "available_models": available,
         "is_thinking_model": any(tm in chat for tm in THINKING_MODELS),
         "failure_count": _failure_count,
+        "deep_failure_count": _deep_failure_count,
         "status": "backoff" if _failure_count >= _BACKOFF_THRESHOLD else "ok",
         "architecture": "two-brain",
     }

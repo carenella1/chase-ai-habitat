@@ -1896,8 +1896,8 @@ def enforce_structure(agent, stance, text):
             else "Further analysis required."
         )
         insight = sentences[2][:180] + "." if len(sentences) > 2 else response
-        return f"--- Debate Response ---\nAgent: {agent}\nStance: {stance}\n\nClaim:\n{claim}\n\nResponse:\n{response}\n\nInsight:\n{insight}"
-    return f"--- Debate Response ---\nAgent: {agent}\nStance: {stance}\n\nClaim:\nStructure enforcement triggered.\n\nResponse:\nOutput failed validation.\n\nInsight:\nRetry pending."
+        return ""
+        # empty string — will be caught by the empty check and retried
 
 
 # Track auto-research streak at module level
@@ -2335,6 +2335,8 @@ Claim:
                 "Sure!",
                 "Of course!",
             ]
+            if not insight:
+                insight = ""
             for bad in BAD_PATTERNS:
                 if bad.lower() in insight.lower():
                     insight = insight.replace(bad, "").replace(bad.lower(), "")
@@ -2343,6 +2345,7 @@ Claim:
                     "--- Debate Response ---"
                     + insight.split("--- Debate Response ---", 1)[1]
                 )
+
             insight = insight.strip()[:700]
 
             goal = memory.get("active_goal", "")
@@ -2365,6 +2368,9 @@ Claim:
             )
             memory["goal_progress"] = progress_log[-50:]
             save_memory(memory)
+
+            if not insight:
+                raise StopIteration("empty_insight_skip")
 
             search_term = normalize_topic_name(
                 generate_search_topic(insight).split(":")[-1].strip()[:80]
@@ -2426,10 +2432,6 @@ Claim:
             source = "llm"
             source_url = ""
             domain = ""
-            research = ""
-            source = "llm"
-            source_url = ""
-            domain = ""
 
             if search_term:
                 try:
@@ -2443,6 +2445,7 @@ Claim:
                         except concurrent.futures.TimeoutError:
                             print(f"⚠️ RESEARCH TIMEOUT: {search_term}")
                             web_result = {}
+
                     if web_result.get("summary") and len(web_result["summary"]) > 100:
                         research = web_result["summary"]
                         source_url = web_result.get("source_url", "")
@@ -2453,7 +2456,7 @@ Claim:
                             source = "arxiv"
                         else:
                             source = "web"
-                        print(f"✅ RESEARCH HIT: {domain}")
+                        print(f"✅ RESEARCH HIT: {domain} [{source}]")
                     else:
                         print(f"❌ RESEARCH MISS: {search_term}")
                 except Exception as e:
