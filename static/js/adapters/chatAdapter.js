@@ -11,6 +11,7 @@ export async function sendMessage(message) {
 
     return {
         text: res.response || "",
-        audio: res.audio || ""
+        audio: res.audio || "",
+        trace: res.trace || {}
     };
 }

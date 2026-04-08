@@ -8,6 +8,19 @@
 
     <!-- MAIN CHAT -->
     <div class="chat-main chat-panel">
+
+        <div class="chat-panel-header">
+            <div class="chat-header-left">
+                <span class="chat-nex-name" id="chat-nex-name">NEXARION</span>
+                <span class="chat-cycle-pill" id="chat-cycle-pill"></span>
+            </div>
+            <div class="chat-header-right">
+                <button id="trace-toggle-btn" class="chat-btn chat-btn-trace" title="Toggle thinking trace">
+                    <span class="trace-icon">◈</span> TRACE <span class="trace-state">OFF</span>
+                </button>
+            </div>
+        </div>
+
         <div id="chat-thread"></div>
 
         <div class="chat-input-area">
@@ -26,6 +39,31 @@
                 + New Chat
             </button>
             <div id="chat-list"></div>
+        </div>
+
+        <!-- LIVE CONTEXT PANEL -->
+        <div class="panel" id="live-context-panel" style="margin-top:14px">
+            <h3 class="panel-title">Live Context</h3>
+            <div class="ctx-row">
+                <span class="ctx-label">CYCLE</span>
+                <span class="ctx-val" id="ctx-cycle">—</span>
+            </div>
+            <div class="ctx-row">
+                <span class="ctx-label">ACTIVE GOAL</span>
+                <span class="ctx-val ctx-goal" id="ctx-goal">—</span>
+            </div>
+            <div class="ctx-row">
+                <span class="ctx-label">TOP TOPIC</span>
+                <span class="ctx-val" id="ctx-topic">—</span>
+            </div>
+            <div class="ctx-row">
+                <span class="ctx-label">BELIEFS HELD</span>
+                <span class="ctx-val" id="ctx-beliefs">—</span>
+            </div>
+            <div class="ctx-row">
+                <span class="ctx-label">DOMAIN</span>
+                <span class="ctx-val" id="ctx-domain">—</span>
+            </div>
         </div>
     </div>
 

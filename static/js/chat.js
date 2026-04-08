@@ -16,17 +16,136 @@ document.addEventListener("DOMContentLoaded", () => {
     const orbReply = document.getElementById("orb-response-text");
     const newChatBtn = document.getElementById("new-chat-btn");
     const chatList = document.getElementById("chat-list");
+    const traceToggleBtn = document.getElementById("trace-toggle-btn");
 
     let isListening = false;
     let isSending = false;
     let orbMode = false;
     let activeConvId = null;
-    let lastResponse = null;  // track last response for finally block
+    let lastResponse = null;
+    let traceEnabled = false;
+
+    /* =========================
+       TRACE TOGGLE
+    ========================= */
+    if (traceToggleBtn) {
+        traceToggleBtn.addEventListener("click", () => {
+            traceEnabled = !traceEnabled;
+            traceToggleBtn.classList.toggle("trace-on", traceEnabled);
+            traceToggleBtn.querySelector(".trace-state").textContent = traceEnabled ? "ON" : "OFF";
+
+            // Show/hide all existing trace panels
+            document.querySelectorAll(".trace-panel").forEach(p => {
+                p.style.display = traceEnabled ? "" : "none";
+            });
+        });
+    }
+
+    /* =========================
+       TRACE PANEL BUILDER
+    ========================= */
+    function buildTracePanel(trace) {
+        if (!trace || Object.keys(trace).length === 0) return null;
+
+        const panel = document.createElement("div");
+        panel.className = "trace-panel";
+        panel.style.display = traceEnabled ? "" : "none";
+
+        // Header (clickable to collapse)
+        panel.innerHTML = `
+        <div class="trace-panel-header">
+            <span class="trace-panel-title">◈ Thinking Trace</span>
+            <span class="trace-panel-toggle">▼</span>
+        </div>
+        <div class="trace-panel-body"></div>`;
+
+        const header = panel.querySelector(".trace-panel-header");
+        header.addEventListener("click", () => {
+            panel.classList.toggle("collapsed");
+        });
+
+        const body = panel.querySelector(".trace-panel-body");
+
+        // Meta row — cycle, domain, tools
+        const metaChips = [];
+        if (trace.cycle) metaChips.push(`<span class="trace-meta-chip chip-cycle">cycle ${trace.cycle}</span>`);
+        if (trace.domain) metaChips.push(`<span class="trace-meta-chip chip-domain">${esc(trace.domain)}</span>`);
+        if (trace.tools_used?.length) {
+            trace.tools_used.forEach(t => metaChips.push(`<span class="trace-meta-chip chip-tool">⚙ ${esc(t)}</span>`));
+        }
+        if (metaChips.length) {
+            const metaRow = document.createElement("div");
+            metaRow.className = "trace-meta-row";
+            metaRow.innerHTML = metaChips.join("");
+            body.appendChild(metaRow);
+        }
+
+        // Active goal
+        if (trace.active_goal) {
+            const sec = document.createElement("div");
+            sec.className = "trace-section";
+            sec.innerHTML = `
+                <div class="trace-section-label">Active Goal</div>
+                <div class="trace-goal">${esc(trace.active_goal)}</div>`;
+            body.appendChild(sec);
+        }
+
+        // Memory pulled
+        if (trace.memory?.length) {
+            const sec = document.createElement("div");
+            sec.className = "trace-section";
+            sec.innerHTML = `<div class="trace-section-label">Memory Retrieved</div>`;
+            trace.memory.forEach(line => {
+                const typeMatch = line.match(/^\[(FACT|BELIEF \d+%|MEMORY|ENTITY)\]/);
+                const typeLabel = typeMatch ? typeMatch[1] : "MEM";
+                const content = line.replace(/^\[.*?\]\s*/, "").trim();
+                const item = document.createElement("div");
+                item.className = "trace-memory-item";
+                item.innerHTML = `<span class="mem-type">${esc(typeLabel)}</span>${esc(content.substring(0, 120))}`;
+                sec.appendChild(item);
+            });
+            body.appendChild(sec);
+        }
+
+        // Top beliefs activated
+        if (trace.beliefs?.length) {
+            const sec = document.createElement("div");
+            sec.className = "trace-section";
+            sec.innerHTML = `<div class="trace-section-label">Beliefs Informing Response</div>`;
+            trace.beliefs.slice(0, 4).forEach(b => {
+                const conf = Math.round((b.confidence || 0.5) * 100);
+                const color = conf > 75 ? "#00ffcc" : conf > 50 ? "#66ccff" : "#ffaa33";
+                const item = document.createElement("div");
+                item.className = "trace-belief-item";
+                item.innerHTML = `
+                    <span class="trace-belief-conf" style="color:${color}">${conf}%</span>
+                    <span class="trace-belief-text">${esc((b.statement || "").substring(0, 110))}</span>`;
+                sec.appendChild(item);
+            });
+            body.appendChild(sec);
+        }
+
+        // Topics context
+        if (trace.topics?.length) {
+            const sec = document.createElement("div");
+            sec.className = "trace-section";
+            sec.innerHTML = `
+                <div class="trace-section-label">Topic Context</div>
+                <div class="trace-section-content">${trace.topics.map(t => esc(t)).join(" · ")}</div>`;
+            body.appendChild(sec);
+        }
+
+        return panel;
+    }
+
+    function esc(s) {
+        return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
 
     /* =========================
        MESSAGE RENDERER
     ========================= */
-    function addMessage(text, role = "habitat", skipScroll = false) {
+    function addMessage(text, role = "habitat", skipScroll = false, trace = null) {
         const wrap = document.createElement("div");
         wrap.className = `chat-message ${role}`;
 
@@ -40,6 +159,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         wrap.appendChild(meta);
         wrap.appendChild(bubble);
+
+        // Add trace panel for NEX responses
+        if (role === "habitat" && trace && Object.keys(trace).length > 0) {
+            const tracePanel = buildTracePanel(trace);
+            if (tracePanel) wrap.appendChild(tracePanel);
+        }
+
         thread.appendChild(wrap);
         if (!skipScroll) thread.scrollTop = thread.scrollHeight;
     }
@@ -55,6 +181,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function clearThread() {
         thread.innerHTML = "";
+    }
+
+    /* =========================
+       LIVE CONTEXT SIDEBAR
+    ========================= */
+    async function updateLiveContext() {
+        try {
+            const data = await fetch("/api/chat/context").then(r => r.json());
+            if (data.status !== "ok") return;
+
+            const cycleEl = document.getElementById("ctx-cycle");
+            const goalEl = document.getElementById("ctx-goal");
+            const topicEl = document.getElementById("ctx-topic");
+            const beliefsEl = document.getElementById("ctx-beliefs");
+            const cyclePill = document.getElementById("chat-cycle-pill");
+
+            if (cycleEl) cycleEl.textContent = (data.cycle || 0).toLocaleString();
+            if (cyclePill) cyclePill.textContent = `cycle ${(data.cycle || 0).toLocaleString()}`;
+            if (goalEl) goalEl.textContent = data.active_goal || "Exploring freely";
+            if (topicEl) topicEl.textContent = data.top_topic || "—";
+            if (beliefsEl) beliefsEl.textContent = data.belief_count || "—";
+        } catch (e) { }
+    }
+
+    // Domain detection on the fly (from last trace response)
+    function updateContextFromTrace(trace) {
+        if (!trace) return;
+        const domainEl = document.getElementById("ctx-domain");
+        if (domainEl) domainEl.textContent = trace.domain || "general";
     }
 
     /* =========================
@@ -213,7 +368,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            addMessage(res.text, "habitat");
+            // Add message with trace
+            addMessage(res.text, "habitat", false, res.trace || null);
+
+            // Update live context from trace
+            updateContextFromTrace(res.trace);
+            updateLiveContext();
 
             if (orbReply) orbReply.textContent = res.text;
 
@@ -250,8 +410,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } finally {
             isSending = false;
             sendBtn.disabled = false;
-
-            // In orb mode without audio, restart listening after delay
             if (orbMode && !isListening && !lastResponse?.audio) {
                 setTimeout(startListening, 4000);
             }
@@ -287,84 +445,93 @@ document.addEventListener("DOMContentLoaded", () => {
 
             isListening = false;
             if (micBtn) micBtn.classList.remove("mic-active");
-            input.classList.remove("listening");
             input.placeholder = "Speak to Nexarion...";
+            input.classList.remove("listening", "interim");
 
-            console.log("🎤 Voice result:", data.status, "|", data.text);
-
-            if (data.text && data.text.trim()) {
-                handleSend(data.text.trim());
-            } else {
-                if (orbMode) setOrbState("idle");
-                if (orbMode) setTimeout(startListening, 1200);
+            if (data.status === "ok" && data.text) {
+                if (orbMode) {
+                    await handleSend(data.text);
+                } else {
+                    input.value = data.text;
+                    input.focus();
+                }
+            } else if (data.status === "timeout") {
+                if (orbMode) {
+                    setOrbState("idle");
+                    setTimeout(startListening, 2000);
+                }
             }
-
         } catch (err) {
             isListening = false;
             if (micBtn) micBtn.classList.remove("mic-active");
-            input.classList.remove("listening");
             input.placeholder = "Speak to Nexarion...";
+            input.classList.remove("listening");
+            console.error("🎤 Listen error:", err);
             if (orbMode) setOrbState("idle");
-            console.error("🎤 Voice fetch error:", err);
         }
-    }
-
-    function toggleMic() {
-        if (isListening) return;
-        startListening();
     }
 
     /* =========================
        ORB MODE
     ========================= */
     function setOrbState(state) {
-        if (!orbEl || !orbStatus) return;
-        orbEl.classList.remove("orb-idle", "orb-listening", "orb-thinking", "orb-speaking");
-        orbEl.classList.add(`orb-${state}`);
-        orbStatus.textContent = {
+        if (!orbOverlay) return;
+        orbOverlay.dataset.state = state;
+        const states = {
             idle: "Nexarion is ready",
             listening: "Listening…",
-            thinking: "Nexarion is thinking…",
-            speaking: "Nexarion is speaking…"
-        }[state] || "";
+            thinking: "Processing…",
+            speaking: "Speaking…"
+        };
+        if (orbStatus) orbStatus.textContent = states[state] || "Ready";
+        if (orbEl) {
+            orbEl.classList.remove("state-listening", "state-thinking", "state-speaking");
+            if (state !== "idle") orbEl.classList.add(`state-${state}`);
+        }
     }
 
-    function openOrb() {
-        orbMode = true;
-        if (orbOverlay) orbOverlay.classList.add("orb-visible");
-        if (orbReply) orbReply.textContent = "";
-        setOrbState("idle");
-        setTimeout(startListening, 500);
+    if (modeBtn) {
+        modeBtn.addEventListener("click", () => {
+            orbMode = true;
+            if (orbOverlay) {
+                orbOverlay.style.display = "flex";
+                setOrbState("idle");
+            }
+        });
     }
 
-    function closeOrb() {
-        orbMode = false;
-        isListening = false;
-        if (orbOverlay) orbOverlay.classList.remove("orb-visible");
-        if (micBtn) micBtn.classList.remove("mic-active");
-        input.placeholder = "Speak to Nexarion...";
+    if (exitOrbBtn) {
+        exitOrbBtn.addEventListener("click", () => {
+            orbMode = false;
+            isListening = false;
+            if (orbOverlay) orbOverlay.style.display = "none";
+        });
+    }
+
+    if (orbEl) {
+        orbEl.addEventListener("click", () => {
+            if (!isListening && !isSending) startListening();
+        });
     }
 
     /* =========================
-       EVENTS
+       EVENT LISTENERS
     ========================= */
-    sendBtn?.addEventListener("click", () => handleSend());
-    input?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    });
-    micBtn?.addEventListener("click", toggleMic);
-    modeBtn?.addEventListener("click", openOrb);
-    exitOrbBtn?.addEventListener("click", closeOrb);
-    orbEl?.addEventListener("click", () => { if (orbMode && !isSending) toggleMic(); });
-    newChatBtn?.addEventListener("click", startNewChat);
-
+    if (sendBtn) sendBtn.addEventListener("click", () => handleSend());
+    if (input) {
+        input.addEventListener("keydown", e => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        });
+    }
+    if (micBtn) micBtn.addEventListener("click", startListening);
+    if (newChatBtn) newChatBtn.addEventListener("click", startNewChat);
 
     /* =========================
-    NEXARION INITIATION POLLER
-    Checks every 10s if Nexarion has something to say.
-    When it does, renders a visually distinct "initiated" message.
+       INITIATION POLLING
     ========================= */
-
     function addInitiationMessage(text, agent, significance) {
         const msg = document.createElement("div");
         msg.className = "chat-message habitat nexarion-initiated";
@@ -385,12 +552,9 @@ document.addEventListener("DOMContentLoaded", () => {
             for (const item of items) {
                 addInitiationMessage(item.message, item.agent, item.significance);
             }
-        } catch (e) {
-            // silent — polling should never crash the chat
-        }
+        } catch (e) { }
     }
 
-    // Start polling — check immediately, then every 10 seconds
     pollInitiations();
     setInterval(pollInitiations, 10000);
 
@@ -399,4 +563,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ========================= */
     initSpeech();
     restoreHistory();
+    updateLiveContext();
+    setInterval(updateLiveContext, 15000);
 });

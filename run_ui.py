@@ -845,6 +845,26 @@ def api_voice_listen():
         return jsonify({"status": "error", "text": "", "error": str(e)})
 
 
+@app.route("/api/chat/context")
+def api_chat_context():
+    """Returns live context data for the chat sidebar."""
+    try:
+        memory = ensure_memory(load_memory())
+        top_topics = get_top_topics(memory, limit=1)
+        belief_count = len(_api_memory_manager.get_all_beliefs(limit=200))
+        return jsonify(
+            {
+                "status": "ok",
+                "cycle": workspace.get_cycle(),
+                "active_goal": (memory.get("active_goal") or "")[:80],
+                "top_topic": top_topics[0][0] if top_topics else "—",
+                "belief_count": belief_count,
+            }
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
 @app.route("/api/workspace")
 def api_workspace():
     try:
@@ -1621,12 +1641,56 @@ def api_chat():
         data = request.get_json() or {}
         msg = data.get("message", "").strip()
         if not msg:
-            return jsonify({"response": "Didn't catch that, Chase.", "audio": ""})
+            return jsonify(
+                {"response": "Didn't catch that, Chase.", "audio": "", "trace": {}}
+            )
 
         memory = ensure_memory(load_memory())
         history = _load_chat_history()
 
-        # Check if Chase is setting a persistent goal
+        # ── Build trace object ──────────────────────────────
+        trace = {}
+        try:
+            # Memory context
+            memory_context_raw = nex_memory.get_memory_context_for_prompt(msg)
+            if memory_context_raw:
+                mem_lines = [
+                    l.strip()
+                    for l in memory_context_raw.strip().split("\n")
+                    if l.strip()
+                ]
+                trace["memory"] = mem_lines[:6]
+
+            # Active beliefs
+            top_beliefs = _api_memory_manager.get_all_beliefs(limit=50)
+            top_beliefs = sorted(
+                top_beliefs, key=lambda b: b.get("confidence", 0), reverse=True
+            )[:5]
+            trace["beliefs"] = [
+                {
+                    "statement": b.get("statement", "")[:120],
+                    "confidence": b.get("confidence", 0.5),
+                    "agent": b.get("created_by_agent", "nexarion"),
+                }
+                for b in top_beliefs
+                if b.get("statement")
+            ]
+
+            # Active goal
+            active_goal = memory.get("active_goal", "")
+            if active_goal:
+                trace["active_goal"] = active_goal[:120]
+
+            # Top topics
+            top_topics = get_top_topics(memory, limit=3)
+            trace["topics"] = [t[0] for t in top_topics]
+
+            # Workspace cycle
+            trace["cycle"] = workspace.get_cycle()
+        except Exception as e:
+            print(f"⚠️ Trace build error: {e}")
+
+        # ── Existing goal detection ─────────────────────────
         import re as _re
 
         goal_patterns = [
@@ -1654,7 +1718,7 @@ def api_chat():
             except Exception as e:
                 print(f"⚠️ Goal setting error: {e}")
 
-        # Tool execution
+        # ── Tool execution ──────────────────────────────────
         tool_context = ""
         try:
             from habitat.agents.tool_selector import (
@@ -1671,6 +1735,7 @@ def api_chat():
                     result = execute_tool(tool_name, param)
                     tool_results.append(result)
                 tool_context = format_tools_for_prompt(tool_results)
+                trace["tools_used"] = [t[0] for t in detected]
             else:
                 print("🔧 NO TOOL SELECTED")
         except ImportError as e:
@@ -1679,7 +1744,7 @@ def api_chat():
             print(f"❌ TOOL EXECUTION ERROR: {e}")
             traceback.print_exc()
 
-        # Domain knowledge
+        # ── Domain knowledge ────────────────────────────────
         domain_briefing = ""
         try:
             from habitat.agents.domain_knowledge import (
@@ -1691,9 +1756,11 @@ def api_chat():
             if task_domain:
                 print(f"🎯 TASK DOMAIN DETECTED: {task_domain}")
                 domain_briefing = get_domain_briefing(task_domain, depth=3)
+                trace["domain"] = task_domain
         except Exception as e:
             print(f"⚠️ Domain knowledge error: {e}")
 
+        # ── Build prompt and call LLM ───────────────────────
         from habitat.memory.memory_manager import MemoryManager as _MM
 
         _mm = _MM()
@@ -1712,6 +1779,7 @@ def api_chat():
                 {
                     "response": "My language model isn't responding, Chase. Check that Ollama is running.",
                     "audio": "",
+                    "trace": trace,
                 }
             )
 
@@ -1731,11 +1799,11 @@ def api_chat():
         except Exception:
             pass
 
-        return jsonify({"response": output, "audio": audio_b64})
+        return jsonify({"response": output, "audio": audio_b64, "trace": trace})
 
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"response": f"Error: {str(e)}", "audio": ""})
+        return jsonify({"response": f"Error: {str(e)}", "audio": "", "trace": {}})
 
 
 @app.route("/api/build/pending", methods=["GET"])
