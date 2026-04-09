@@ -593,7 +593,7 @@ def get_agents_data():
     return agents
 
 
-_llm_failure_count = 0
+_llm_failure_count = 0  # legacy — actual backoff handled by llm_router.py
 _llm_last_success = 0
 
 
@@ -2292,7 +2292,7 @@ Stance: {stance}
 Claim:
 {claim_seed}"""
 
-            raw_output = call_llm(prompt, timeout=180)
+            raw_output = call_llm(prompt, timeout=90)
             import re
 
             raw_output = re.sub(
@@ -2302,7 +2302,8 @@ Claim:
                 print("✅ LLM OUTPUT VALID")
                 insight = raw_output.strip()
             elif not raw_output or not raw_output.strip():
-                print("⚠️ LLM RETURNED EMPTY")
+                print("⚠️ LLM RETURNED EMPTY — waiting 20s before fallback")
+                time.sleep(20)
                 insight = enforce_structure(agent, stance, "")
             else:
                 print("⚠️ LLM OUTPUT INVALID — retrying")
@@ -2372,6 +2373,8 @@ Claim:
             save_memory(memory)
 
             if not insight:
+                print("⚠️ No insight after all fallbacks — sleeping 30s")
+                time.sleep(30)
                 raise StopIteration("empty_insight_skip")
 
             search_term = normalize_topic_name(
