@@ -22,6 +22,8 @@ from self_optimizer import SelfOptimizer
 from nex_sandbox import NexSandbox
 from knowledge_graph import NexKnowledgeGraph
 from nex_docker_agent import NexDockerAgent, NexAutonomousEngine
+from nex_trainer import nex_trainer
+from llm_router import warmup_models
 
 
 nex_docker = NexDockerAgent()
