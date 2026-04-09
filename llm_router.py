@@ -185,11 +185,10 @@ def call_llm(prompt: str, timeout: int = None, log_thinking: bool = False) -> st
 
     model = get_chat_model()
     is_thinking = any(tm in model for tm in THINKING_MODELS)
-    use_chat_api = "gemma" in model.lower()  # Gemma requires /api/chat
+    use_chat_api = "gemma" in model.lower()
 
     try:
         if use_chat_api:
-            # Gemma 4 requires chat format — /api/generate returns empty
             response = requests.post(
                 f"{OLLAMA_BASE}/api/chat",
                 json={
@@ -208,7 +207,6 @@ def call_llm(prompt: str, timeout: int = None, log_thinking: bool = False) -> st
             )
             raw = response.json().get("message", {}).get("content", "")
         else:
-            # DeepSeek, Llama etc — standard generate endpoint
             response = requests.post(
                 f"{OLLAMA_BASE}/api/generate",
                 json={
