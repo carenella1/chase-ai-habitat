@@ -50,12 +50,12 @@ OLLAMA_BASE = "http://localhost:11434"
 # CHAT BRAIN — fast, used for live conversation with Chase
 # First installed model in this list wins
 CHAT_MODEL_PRIORITY = [
-    "gemma4:27b",  # Best chat brain — native system prompts, fast MoE
-    "gemma4:26b",  # Alias some installs use
-    "qwen3:14b",  # Excellent fallback — fast, smart, system prompt support
-    "qwen3:8b",  # Lighter fallback
-    "llama3.1:8b",  # Emergency fallback
-    "deepseek-r1:14b",  # Last resort (slower due to thinking tags)
+    "qwen3:14b",
+    "qwen3:8b",
+    "gemma4:27b",
+    "gemma4:26b",
+    "llama3.1:latest",
+    "deepseek-r1:14b",
 ]
 
 # DEEP BRAIN — powerful, used for background cognition only
@@ -377,7 +377,7 @@ def call_llm(
                     "messages": messages,
                     "stream": False,
                     "options": {
-                        "num_predict": 768,
+                        "num_predict": 1536,
                         "temperature": 0.75,
                         "top_p": 0.9,
                         "top_k": 40,
@@ -440,6 +440,9 @@ def call_llm(
         if _failure_count >= 3:
             global _chat_model
             _chat_model = None
+            print(
+                f"🔄 Chat model reset after {_failure_count} failures — will re-detect"
+            )
         return ""
 
     except requests.exceptions.ConnectionError:

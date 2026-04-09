@@ -15,10 +15,11 @@ import base64
 import traceback
 import glob
 import random
-from llm_router import call_llm, get_llm_status
+from llm_router import call_llm, get_llm_status, call_llm_deep
 from habitat.agents.domain_knowledge import get_domain_briefing, detect_task_domain
 from structured_memory import NexMemory, migrate_from_memory_json
 from self_optimizer import SelfOptimizer
+from deep_research_trigger import DeepResearchTrigger
 from nex_sandbox import NexSandbox
 from knowledge_graph import NexKnowledgeGraph
 from nex_docker_agent import NexDockerAgent, NexAutonomousEngine
@@ -31,6 +32,7 @@ nex_autonomous = NexAutonomousEngine(nex_docker, call_llm)
 knowledge_graph = NexKnowledgeGraph()
 nex_sandbox = NexSandbox()
 self_optimizer = SelfOptimizer(call_llm)
+deep_research_trigger = DeepResearchTrigger(call_llm, call_llm_deep)
 nex_memory = NexMemory()
 from habitat.agents.curriculum import (
     advance_curriculum,
@@ -745,6 +747,15 @@ def api_cognition_all():
             },
         }
     )
+
+
+@app.route("/api/deep-research/status")
+def api_deep_research_status():
+    from deep_research_trigger import get_deep_research_status, get_recent_deep_research
+
+    status = get_deep_research_status()
+    status["recent"] = get_recent_deep_research(limit=3)
+    return jsonify(status)
 
 
 @app.route("/api/llm/status")
@@ -2308,7 +2319,7 @@ Claim:
             else:
                 print("⚠️ LLM OUTPUT INVALID — retrying")
                 rescue_prompt = f"""Complete this template exactly.\n\n--- Debate Response ---\nAgent: {agent}\nStance: {stance}\n\nClaim:\n[One sentence about {topic_context}]\n\nResponse:\n[One or two sentences]\n\nInsight:\n[One or two sentences]\n\n--- Debate Response ---\nAgent: {agent}\nStance: {stance}\n\nClaim:\n"""
-                retry_output = call_llm(rescue_prompt, timeout=30)
+                retry_output = call_llm(rescue_prompt, timeout=60)
                 insight = (
                     retry_output.strip()
                     if has_valid_structure(retry_output)
@@ -2719,7 +2730,18 @@ Claim:
                     print(f"⚠️ Voice evaluation error: {e}")
 
             # Run significance check and store score for autonomous research trigger
-            run_significance_check(insight, agent, stance, source, memory)
+            run_significance_check(
+                insight,
+                agent,
+                stance,
+                source,
+                memory,
+                broadcast_salience=(
+                    broadcast_record.get("salience", 0)
+                    if broadcast_record.get("broadcast")
+                    else 0
+                ),
+            )
             # --- MEMORY MAINTENANCE (every 500 cycles) ---
             if current_cycle % 500 == 0:
                 try:
@@ -2750,51 +2772,25 @@ Claim:
             # --- AUTONOMOUS DEEP RESEARCH TRIGGER ---
             try:
                 sig_score = memory.get("_last_significance", 0)
-                if sig_score >= 7.5 and search_term:
-                    if search_term == _auto_research_streak["topic"]:
-                        _auto_research_streak["count"] += 1
-                    else:
-                        _auto_research_streak["topic"] = search_term
-                        _auto_research_streak["count"] = 1
-                    _auto_research_streak["last_cycle"] = current_cycle
-
-                    if _auto_research_streak["count"] >= 3:
-                        _auto_research_streak["count"] = 0
-                        print(
-                            f"🔬 AUTO-RESEARCH TRIGGERED: {search_term} (significance streak)"
-                        )
-
-                        def _run_auto_research(topic, mm):
-                            try:
-                                from habitat.agents.deep_research import DeepResearcher
-
-                                researcher = DeepResearcher(call_llm)
-                                report = researcher.investigate(
-                                    f"What are the most important and recent developments in {topic}?",
-                                    depth="quick",
-                                )
-                                print(
-                                    f"🔬 AUTO-RESEARCH COMPLETE: {topic} ({report['sources_consulted']} sources)"
-                                )
-                                if report.get("synthesis"):
-                                    mm.store_memory(
-                                        content=report["synthesis"],
-                                        summary=f"Auto-research on {topic}: "
-                                        + report["synthesis"][:100],
-                                        source="deep_research",
-                                        tier="high_value",
-                                        importance=8,
-                                    )
-                            except Exception as e:
-                                print(f"⚠️ Auto-research error: {e}")
-
-                        threading.Thread(
-                            target=_run_auto_research,
-                            args=(search_term, memory_manager),
-                            daemon=True,
-                        ).start()
-            except Exception:
-                pass
+                broadcast_sig = (
+                    broadcast_record.get("salience", 0)
+                    if broadcast_record.get("broadcast")
+                    else 0
+                )
+                if broadcast_sig >= 8.0:
+                    sig_score = min(sig_score + 2.5, 10.0)
+                elif broadcast_sig >= 6.0:
+                    sig_score = min(sig_score + 1.5, 10.0)
+                if sig_score >= 5.5 and search_term:
+                    deep_research_trigger.maybe_trigger(
+                        insight=insight,
+                        topic=search_term,
+                        significance=sig_score,
+                        cycle=current_cycle,
+                        source=source,
+                    )
+            except Exception as e:
+                print(f"⚠️ Deep research trigger error: {e}")
             # --- END AUTONOMOUS DEEP RESEARCH TRIGGER ---
 
             # Record progress toward persistent goal
@@ -2812,6 +2808,17 @@ Claim:
                         record_progress(pg["id"], insight, relevance)
             except Exception:
                 pass
+
+            try:
+                deep_research_trigger.maybe_trigger(
+                    insight=insight,
+                    topic=search_term,
+                    significance=score,
+                    cycle=current_cycle,
+                    source=source,
+                )
+            except Exception as e:
+                print(f"⚠️ Deep research trigger error: {e}")
 
             time.sleep(30)
 
@@ -3040,11 +3047,22 @@ actual idea. Make it feel like the opening of a real conversation."""
 # =========================
 # 🧠 BRAIN HOOK
 # =========================
-def run_significance_check(insight, agent, stance, source, memory):
+def run_significance_check(
+    insight, agent, stance, source, memory, broadcast_salience=0
+):
     try:
         significance = score_insight_significance(
             insight=insight, source=source, agent=agent, memory=memory
         )
+        print(f"⭐ SIGNIFICANCE: {significance}/10")
+
+        # Broadcast salience is the strongest signal — add it proportionally
+        if broadcast_salience >= 8.0:
+            significance = min(significance + 2.5, 10.0)
+        elif broadcast_salience >= 6.0:
+            significance = min(significance + 1.5, 10.0)
+
+        significance = round(significance, 2)
         print(f"⭐ SIGNIFICANCE: {significance}/10")
 
         # Store for autonomous research trigger

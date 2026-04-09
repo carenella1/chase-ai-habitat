@@ -297,9 +297,10 @@ Keep execution under 60 seconds.
 
 Python code only. No explanation."""
 
-            from llm_router import call_llm_deep
+            from llm_router import call_llm
 
-            result = call_llm_deep(prompt, timeout=300)
+            result = {"response": call_llm(prompt, timeout=120)}
+
             code = result.get("response", "").strip()
             print(f"🐳 BUILD CODE GENERATED: {len(code)} chars")  # ADD THIS LINE
 
