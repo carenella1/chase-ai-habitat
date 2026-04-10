@@ -1910,15 +1910,10 @@ def enforce_structure(agent, stance, text):
         )
         insight = sentences[2][:180] + "." if len(sentences) > 2 else response
         return ""
-        # empty string — will be caught by the empty check and retried
-
-
-# Track auto-research streak at module level
-_auto_research_streak = {"topic": "", "count": 0, "last_cycle": 0}
+        # empty string — will be caught by the empty check and retries
 
 
 def run():
-    global _auto_research_streak
     print("🧠 BRAIN THREAD STARTED")
     print("🌐 GLOBAL WORKSPACE ACTIVE")
     memory_manager = MemoryManager()
