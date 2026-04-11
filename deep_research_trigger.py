@@ -61,7 +61,7 @@ from typing import Callable, Optional
 DEEP_THRESHOLD = 7.0  # Full 5-stage deep research
 QUICK_THRESHOLD = 5.5  # Quick 3-question research
 
-TOPIC_COOLDOWN_CYCLES = 500  # Don't deep-research same topic within N cycles
+TOPIC_COOLDOWN_CYCLES = 0  # Don't deep-research same topic within N cycles
 MAX_CONCURRENT = 1  # Only one deep research at a time (VRAM constraint)
 
 RESULTS_FILE = "data/deep_research_results.jsonl"
@@ -257,6 +257,9 @@ class DeepResearchTrigger:
         cycle: int,
         source: str = "llm",
     ):
+        print(
+            f"🔬 MAYBE_TRIGGER: sig={significance} threshold={QUICK_THRESHOLD} active={self._active.is_set()}"
+        )
         """
         Called after each cognition cycle.
         Decides whether to trigger deep research and if so, fires it
@@ -265,6 +268,7 @@ class DeepResearchTrigger:
 
         # Below quick threshold — skip entirely
         if significance < QUICK_THRESHOLD:
+            print(f"🔬 SKIP: below threshold")
             return
 
         # Already running one — skip (VRAM constraint)
@@ -273,15 +277,18 @@ class DeepResearchTrigger:
             return
         status = get_deep_research_status()
         if status.get("active"):
+            print(f"🔬 SKIP: status file says active")
             return
 
         # Topic on cooldown
         if not topic or _is_on_cooldown(topic, cycle):
+            print(
+                f"🔬 SKIP: cooldown topic={topic} on_cooldown={_is_on_cooldown(topic, cycle)}"
+            )
             return
 
         # Determine depth
         depth = "standard" if significance >= DEEP_THRESHOLD else "quick"
-
         print(
             f"🔬 DEEP RESEARCH TRIGGERED: topic='{topic}' sig={significance:.1f} depth={depth} cycle={cycle}"
         )
@@ -356,7 +363,7 @@ Core insight: {core}
 Write ONE specific research question (not a yes/no question, but one that requires investigation).
 Question:"""
 
-        question = self._call_llm(prompt, timeout=20)
+        question = self._call_llm(prompt, timeout=45)
 
         # Clean up
         import re

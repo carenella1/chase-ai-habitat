@@ -2776,6 +2776,9 @@ Claim:
                     sig_score = min(sig_score + 2.5, 10.0)
                 elif broadcast_sig >= 6.0:
                     sig_score = min(sig_score + 1.5, 10.0)
+                print(
+                    f"🔬 TRIGGER CHECK: sig={sig_score} broadcast_sig={broadcast_sig} topic={search_term}"
+                )
                 if sig_score >= 5.5 and search_term:
                     deep_research_trigger.maybe_trigger(
                         insight=insight,
@@ -2785,7 +2788,10 @@ Claim:
                         source=source,
                     )
             except Exception as e:
+                import traceback
+
                 print(f"⚠️ Deep research trigger error: {e}")
+                traceback.print_exc()
             # --- END AUTONOMOUS DEEP RESEARCH TRIGGER ---
 
             # Record progress toward persistent goal
@@ -2803,17 +2809,6 @@ Claim:
                         record_progress(pg["id"], insight, relevance)
             except Exception:
                 pass
-
-            try:
-                deep_research_trigger.maybe_trigger(
-                    insight=insight,
-                    topic=search_term,
-                    significance=score,
-                    cycle=current_cycle,
-                    source=source,
-                )
-            except Exception as e:
-                print(f"⚠️ Deep research trigger error: {e}")
 
             time.sleep(30)
 
