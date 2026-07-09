@@ -1,12 +1,6 @@
 # =========================
 # IMPORTS
 # =========================
-from habitat.knowledge.knowledge_manager import (
-    add_knowledge_entry,
-    search_knowledge,
-    get_recent_knowledge,
-)
-
 import json
 import os
 import threading
