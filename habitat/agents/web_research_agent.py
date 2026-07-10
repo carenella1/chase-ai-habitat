@@ -16,7 +16,9 @@ scientific journals, forums, government sites — the full web.
 import re
 import time
 import requests
-from urllib.parse import quote, urlparse
+from html import unescape as _html_unescape
+from urllib.parse import quote, urlparse, urljoin
+from habitat.agents.web_safety import safe_get, is_safe_url, wrap_untrusted_web_content
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -78,12 +80,19 @@ PRIORITY_DOMAINS = {
 # =========================
 # TEXT EXTRACTION
 # =========================
-def _fetch_page_text(url: str, max_chars: int = 3000) -> str:
-    """Fetch a URL and extract meaningful text content."""
+def _fetch_page_text(url: str, max_chars: int = 3000, with_links: bool = False):
+    """
+    Fetch a URL and extract meaningful text content.
+    If with_links=True, returns (text, links) where links is a list of
+    (absolute_url, link_text) pulled from the same content area, for
+    optional one-hop follow-up browsing. Otherwise returns just the text
+    (kept as the default so existing callers don't need to change).
+    """
+    empty = ("", []) if with_links else ""
     try:
-        r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+        r = safe_get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         if r.status_code != 200:
-            return ""
+            return empty
         html = r.text
 
         # Strip scripts, styles, nav
@@ -117,17 +126,72 @@ def _fetch_page_text(url: str, max_chars: int = 3000) -> str:
         else:
             content_html = html
 
+        links = []
+        if with_links:
+            links = _extract_links(content_html, url)
+
         # Strip remaining tags
         text = re.sub(r"<[^>]+>", " ", content_html)
+        text = _html_unescape(text)
         text = re.sub(r"\s+", " ", text).strip()
 
         # Extract meaningful sentences
         sentences = [s.strip() for s in text.split(".") if len(s.strip()) > 40]
-        result = ". ".join(sentences[:30])
+        result = ". ".join(sentences[:30])[:max_chars]
 
-        return result[:max_chars]
+        return (result, links) if with_links else result
+    except (ValueError, requests.RequestException):
+        return empty  # blocked unsafe URL or fetch failure — not fatal, just skip
     except Exception:
-        return ""
+        return empty
+
+
+def _extract_links(content_html: str, base_url: str, limit: int = 8) -> list:
+    """
+    Pulls candidate (absolute_url, link_text) pairs out of an already-
+    scoped content region (e.g. an <article>/<main> block), for optional
+    one-hop follow-up browsing. Filters out anchors too short/long to be
+    a real link caption (nav junk, boilerplate) and anything that isn't
+    a plain http(s) link.
+    """
+    candidates = []
+    for m in re.finditer(
+        r'<a[^>]+href="([^"#][^"]*)"[^>]*>(.*?)</a>', content_html, re.DOTALL | re.IGNORECASE
+    ):
+        href, text = m.group(1), m.group(2)
+        text = re.sub(r"<[^>]+>", " ", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        if len(text) < 15 or len(text) > 120:
+            continue
+        try:
+            absolute = urljoin(base_url, href)
+        except Exception:
+            continue
+        parsed = urlparse(absolute)
+        if parsed.scheme not in ("http", "https"):
+            continue
+        domain = parsed.netloc.replace("www.", "")
+        if domain in SKIP_DOMAINS:
+            continue
+        candidates.append((absolute, text))
+        if len(candidates) >= limit:
+            break
+    return candidates
+
+
+def _pick_best_link(links: list, query: str):
+    """Ranks candidate links by how many query words appear in their link text."""
+    if not links:
+        return None
+    query_words = {w for w in query.lower().split() if len(w) > 3}
+    if not query_words:
+        return links[0]
+    best, best_score = None, 0
+    for url, text in links:
+        score = sum(1 for w in query_words if w in text.lower())
+        if score > best_score:
+            best, best_score = (url, text), score
+    return best or links[0]
 
 
 # =========================
@@ -292,13 +356,40 @@ def _try_duckduckgo_web(query: str) -> dict:
 
         # Try fetching each URL — return first good result
         for url, domain, _ in clean_urls[:4]:
-            text = _fetch_page_text(url, max_chars=2500)
+            text, links = _fetch_page_text(url, max_chars=2500, with_links=True)
             if len(text) > 300:
                 print(f"🌐 WEB HIT: {domain}")
+                summary = text
+                followed_domain = ""
+
+                # One-hop follow-up: if the page links somewhere that looks
+                # relevant to the query, fetch that too and fold it in.
+                # Capped at a single hop with a short timeout — this is a
+                # bonus for depth, not something worth blowing the research
+                # budget on.
+                best_link = _pick_best_link(links, query)
+                if best_link:
+                    link_url, link_text = best_link
+                    link_domain = urlparse(link_url).netloc.replace("www.", "")
+                    if link_domain != domain and is_safe_url(link_url):
+                        try:
+                            follow_text = _fetch_page_text(
+                                link_url, max_chars=1500
+                            )
+                        except Exception:
+                            follow_text = ""
+                        if len(follow_text) > 200:
+                            summary += (
+                                f"\n\nFollow-up ({link_domain}, via link "
+                                f"\"{link_text}\"): {follow_text}"
+                            )
+                            followed_domain = link_domain
+
                 return {
-                    "summary": text,
+                    "summary": summary,
                     "source_url": url,
                     "domain": domain,
+                    "followed_domain": followed_domain,
                     "quality_score": 8 if domain in PRIORITY_DOMAINS else 6,
                 }
 
@@ -411,12 +502,9 @@ def web_research(query: str, max_results: int = 3) -> dict:
             return result
 
     # Try full web search (DDG HTML → real pages)
-    try:
-        result = _try_duckduckgo_full(query)
-        if result.get("summary"):
-            return result
-    except NameError:
-        pass  # function name mismatch — fall through
+    result = _try_duckduckgo_web(query)
+    if result.get("summary"):
+        return result
 
     # Wikipedia fallback
     result = _try_wikipedia(query)

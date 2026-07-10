@@ -62,7 +62,11 @@ from typing import Callable, Optional
 DEEP_THRESHOLD = 7.0  # Full 5-stage deep research
 QUICK_THRESHOLD = 5.5  # Quick 3-question research
 
-TOPIC_COOLDOWN_CYCLES = 0  # Don't deep-research same topic within N cycles
+TOPIC_COOLDOWN_CYCLES = 500  # Don't deep-research same topic within N cycles
+# NOTE: this was found set to 0 (i.e. disabled) despite the module docstring
+# above documenting 500 as the intended value — meaning deep research could
+# re-trigger on the same topic every single cycle once significance cleared
+# the threshold. Restored to match the documented behavior.
 MAX_CONCURRENT = 1  # Only one deep research at a time (VRAM constraint)
 
 RESULTS_FILE = "data/deep_research_results.jsonl"

@@ -2541,17 +2541,24 @@ Claim:
                 try:
                     import concurrent.futures
                     from habitat.agents.web_research_agent import web_research
+                    from habitat.agents.web_safety import wrap_untrusted_web_content
 
                     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
                         future = ex.submit(web_research, search_term, 3)
                         try:
-                            web_result = future.result(timeout=15)
+                            # 22s, not 15s — a one-hop link follow-up can push
+                            # a single research call past the old ceiling, and
+                            # nothing is waiting on this in real time (it runs
+                            # in the background cognition thread).
+                            web_result = future.result(timeout=22)
                         except concurrent.futures.TimeoutError:
                             print(f"⚠️ RESEARCH TIMEOUT: {search_term}")
                             web_result = {}
 
                     if web_result.get("summary") and len(web_result["summary"]) > 100:
-                        research = web_result["summary"]
+                        research = wrap_untrusted_web_content(
+                            web_result["summary"], source=web_result.get("domain", "web")
+                        )
                         source_url = web_result.get("source_url", "")
                         domain = web_result.get("domain", "")
                         if "wikipedia" in domain:

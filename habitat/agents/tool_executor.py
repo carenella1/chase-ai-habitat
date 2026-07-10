@@ -18,8 +18,10 @@ import json
 import time
 import traceback
 import requests
+from html import unescape as _html_unescape
 from urllib.parse import quote, urlparse, unquote
 from nex_sandbox import NexSandbox
+from habitat.agents.web_safety import safe_get, wrap_untrusted_web_content
 
 nex_sandbox = NexSandbox()
 
@@ -34,7 +36,7 @@ def tool_web_fetch(url: str) -> dict:
     try:
         if not url.startswith("http"):
             url = "https://" + url
-        r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+        r = safe_get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         if r.status_code != 200:
             return {"error": f"HTTP {r.status_code}", "content": ""}
         html = r.text
@@ -45,7 +47,7 @@ def tool_web_fetch(url: str) -> dict:
             r"<style[^>]*>.*?</style>", "", html, flags=re.DOTALL | re.IGNORECASE
         )
         html = re.sub(r"<[^>]+>", " ", html)
-        text = re.sub(r"\s+", " ", html).strip()
+        text = _html_unescape(re.sub(r"\s+", " ", html)).strip()
         lines = [l.strip() for l in text.split(".") if len(l.strip()) > 40]
         content = ". ".join(lines[:30])
         domain = urlparse(url).netloc.replace("www.", "")
@@ -312,12 +314,26 @@ def tool_web_search(query: str) -> dict:
                 results.append(f"{title}: {snippet}")
         if not results:
             return {"error": "No search results found", "query": query, "results": []}
-        top_content = ""
+
+        # Fetch and synthesize the top few result pages, not just the first —
+        # one page can be thin, wrong, or paywalled; a handful gives Nex
+        # something to actually cross-reference.
+        page_sections = []
         try:
-            actual_urls = re.findall(r'uddg=(https?[^&"]+)', r.text)
-            if actual_urls:
-                top_url = unquote(actual_urls[0])
-                fetch_r = requests.get(top_url, headers=HEADERS, timeout=8)
+            actual_urls = [unquote(u) for u in re.findall(r'uddg=(https?[^&"]+)', r.text)]
+            fetched_domains = set()
+            for top_url in actual_urls:
+                if len(page_sections) >= 3:
+                    break
+                domain = urlparse(top_url).netloc.replace("www.", "")
+                if domain in fetched_domains:
+                    continue
+                try:
+                    fetch_r = safe_get(top_url, headers=HEADERS, timeout=8)
+                except ValueError:
+                    continue  # blocked unsafe URL — skip, don't fail the whole search
+                except Exception:
+                    continue
                 html = fetch_r.text
                 html = re.sub(
                     r"<script[^>]*>.*?</script>",
@@ -332,15 +348,19 @@ def tool_web_search(query: str) -> dict:
                     flags=re.DOTALL | re.IGNORECASE,
                 )
                 html = re.sub(r"<[^>]+>", " ", html)
-                text = re.sub(r"\s+", " ", html).strip()
+                text = _html_unescape(re.sub(r"\s+", " ", html)).strip()
                 sentences = [s.strip() for s in text.split(".") if len(s.strip()) > 40]
-                top_content = ". ".join(sentences[:8])
+                page_text = ". ".join(sentences[:6])
+                if page_text:
+                    fetched_domains.add(domain)
+                    page_sections.append(f"[{domain}] {page_text}")
         except Exception:
             pass
+        top_content = "\n\n".join(page_sections)
         return {
             "query": query,
             "results": results,
-            "top_content": top_content[:1500] if top_content else "",
+            "top_content": top_content[:2500] if top_content else "",
             "summary": " | ".join(results[:3]),
         }
     except Exception as e:
@@ -457,7 +477,7 @@ def format_tool_result(result: dict) -> str:
         content = result.get("summary", result.get("content", ""))
         topic = result.get("topic", "")
         sections = result.get("sections", [])
-        lines = [f"[Wikipedia: {topic}]", content[:1500]]
+        lines = [f"[Wikipedia: {topic}]", wrap_untrusted_web_content(content[:1500], source="en.wikipedia.org")]
         if sections:
             lines.append(f"Article sections: {', '.join(sections[:5])}")
         return "\n".join(lines)
@@ -465,7 +485,7 @@ def format_tool_result(result: dict) -> str:
     elif tool == "web_fetch":
         content = result.get("content", "")
         domain = result.get("domain", "")
-        return f"[Web content from {domain}]\n{content[:2000]}"
+        return f"[Web content from {domain}]\n{wrap_untrusted_web_content(content[:2000], source=domain)}"
 
     elif tool == "news_search":
         results = result.get("results", [])
@@ -473,7 +493,8 @@ def format_tool_result(result: dict) -> str:
         if not results:
             return f"[News: {query}] No results found"
         lines = [f"[Recent news: {query}]"]
-        lines.extend(f"• {r}" for r in results[:4])
+        body = "\n".join(f"• {r}" for r in results[:4])
+        lines.append(wrap_untrusted_web_content(body, source="news search"))
         return "\n".join(lines)
 
     elif tool == "web_search":
@@ -482,9 +503,10 @@ def format_tool_result(result: dict) -> str:
         query = result.get("query", "")
         lines = [f"[Web search: {query}]"]
         if top:
-            lines.append(top[:1000])
+            lines.append(wrap_untrusted_web_content(top[:1800], source="web search"))
         elif results:
-            lines.extend(f"• {r}" for r in results[:4])
+            body = "\n".join(f"• {r}" for r in results[:4])
+            lines.append(wrap_untrusted_web_content(body, source="web search"))
         return "\n".join(lines)
 
     content = result.get(
