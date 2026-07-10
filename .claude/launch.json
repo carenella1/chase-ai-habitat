@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nex-habitat",
+      "runtimeExecutable": "habitat-env/Scripts/python.exe",
+      "runtimeArgs": ["run_ui.py"],
+      "port": 5000
+    }
+  ]
+}

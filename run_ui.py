@@ -642,34 +642,19 @@ def chat_page():
     return render_template("chat.html", active="chat")
 
 
-@app.route("/habitat")
-def habitat_page():
-    return render_template("habitat.html", active="habitat")
+@app.route("/memory")
+def memory_page():
+    return render_template("memory.html", active="memory")
 
 
-@app.route("/stream")
-def stream_page():
-    return render_template("cognition_stream.html", active="stream")
+@app.route("/discovery")
+def discovery_page():
+    return render_template("discovery.html", active="discovery")
 
 
-@app.route("/evolution")
-def evolution_page():
-    return render_template("goals_evolution.html", active="evolution")
-
-
-@app.route("/atlas")
-def atlas_page():
-    return render_template("memory_atlas.html", active="atlas")
-
-
-@app.route("/research")
-def research_page():
-    return render_template("research.html", active="research")
-
-
-@app.route("/nexus")
-def nexus_page():
-    return render_template("nexus.html", active="nexus")
+@app.route("/self")
+def self_page():
+    return render_template("self.html", active="self")
 
 
 @app.route("/api/cognition/all")
@@ -975,7 +960,7 @@ def api_memory_facts():
     try:
         conn = nex_memory.db._conn()
         rows = conn.execute(
-            """SELECT id, content, source, confidence, valid_from, topic
+            """SELECT id, content, source, confidence, valid_from, topic, source_url
                FROM world_facts WHERE valid_until IS NULL
                ORDER BY valid_from DESC LIMIT 100"""
         ).fetchall()
@@ -2501,8 +2486,17 @@ Claim:
                     )
                 if research:
                     nex_memory.learn(
-                        research[:400], source="research", topic=search_term
+                        research[:400],
+                        source=source,
+                        topic=search_term,
+                        source_url=source_url,
                     )
+                    try:
+                        knowledge_graph.extractor.extract_from_text(
+                            research, source=source
+                        )
+                    except Exception as e:
+                        print(f"⚠️ Graph extraction error: {e}")
                 print("✅ PHASE 2: Memory written")
             except Exception as e:
                 print(f"❌ PHASE 2 ERROR: {e}")
@@ -2576,6 +2570,12 @@ Claim:
                     nex_memory.beliefs.form_belief(
                         statement=belief_statement, agent=agent, confidence=0.6
                     )
+                    try:
+                        knowledge_graph.extractor.extract_from_text(
+                            belief_statement, source="belief"
+                        )
+                    except Exception as e:
+                        print(f"⚠️ Graph extraction error: {e}")
                     print(f"🧠 NEW BELIEF: {belief_statement}")
                 else:
                     belief_id = existing_belief["id"]
@@ -3072,7 +3072,7 @@ def journal_page():
         except Exception:
             pass
     entries = list(reversed(entries[-50:]))
-    return render_template("journal.html", entries=entries)
+    return render_template("journal.html", entries=entries, active="journal")
 
 
 @app.route("/api/journal/entries", methods=["GET"])

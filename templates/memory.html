@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/memory_atlas.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/memory.css') }}">
 
 <div class="ma-page">
 
@@ -9,7 +9,7 @@
     <div class="ma-header">
         <div class="ma-title-block">
             <div class="ma-eyebrow">STRUCTURED MEMORY</div>
-            <h1 class="ma-title">MEMORY ATLAS</h1>
+            <h1 class="ma-title">MEMORY &amp; BELIEFS</h1>
             <div class="ma-tagline">Everything NEX knows, believes, remembers, and understands</div>
         </div>
         <div class="ma-stats-strip" id="ma-stats-strip">
@@ -57,7 +57,8 @@
         <button class="ma-tab active" data-tab="facts">WORLD FACTS</button>
         <button class="ma-tab" data-tab="episodes">EPISODES</button>
         <button class="ma-tab" data-tab="entities">ENTITIES</button>
-        <button class="ma-tab" data-tab="beliefs">BELIEF MAP</button>
+        <button class="ma-tab" data-tab="beliefs">BELIEFS</button>
+        <button class="ma-tab" data-tab="contradictions">CONTRADICTIONS</button>
     </div>
 
     <!-- TAB CONTENT -->
@@ -94,19 +95,37 @@
             <div class="entity-grid" id="entity-grid"></div>
         </div>
 
-        <!-- BELIEF MAP -->
+        <!-- BELIEFS -->
         <div class="ma-pane" id="pane-beliefs">
             <div class="ma-pane-header">
                 <span class="ma-pane-desc">NEX's own opinions — confidence heatmap showing conviction strength</span>
-                <div class="belief-legend">
-                    <span class="bl-item"><span class="bl-dot" style="background:#00ffcc"></span>Strong (75%+)</span>
-                    <span class="bl-item"><span class="bl-dot" style="background:#66ccff"></span>Active (50%+)</span>
-                    <span class="bl-item"><span class="bl-dot" style="background:#ffaa33"></span>Weakened (35%+)</span>
-                    <span class="bl-item"><span class="bl-dot" style="background:#ff4455"></span>Fading (&lt;35%)</span>
+                <div class="belief-filter-row">
+                    <button class="belief-filter active" data-status="all">ALL</button>
+                    <button class="belief-filter" data-status="strongly_held">STRONG</button>
+                    <button class="belief-filter" data-status="active">ACTIVE</button>
+                    <button class="belief-filter" data-status="weakened">WEAKENED</button>
                 </div>
             </div>
+            <div class="belief-legend">
+                <span class="bl-item"><span class="bl-dot" style="background:#00ffcc"></span>Strong (75%+)</span>
+                <span class="bl-item"><span class="bl-dot" style="background:#66ccff"></span>Active (50%+)</span>
+                <span class="bl-item"><span class="bl-dot" style="background:#ffaa33"></span>Weakened (35%+)</span>
+                <span class="bl-item"><span class="bl-dot" style="background:#ff4455"></span>Fading (&lt;35%)</span>
+            </div>
             <div class="belief-heatmap" id="belief-heatmap"></div>
-            <canvas id="belief-canvas" class="belief-canvas"></canvas>
+        </div>
+
+        <!-- CONTRADICTIONS -->
+        <div class="ma-pane" id="pane-contradictions">
+            <div class="ma-pane-header">
+                <span class="ma-pane-desc">Beliefs NEX has caught contradicting each other, and how they were resolved</span>
+                <span class="ma-results-query" id="contra-resolved-count"></span>
+            </div>
+            <div class="contra-unresolved" id="contra-unresolved"></div>
+            <div class="contra-resolved-block">
+                <div class="contra-section-label">RECENT RESOLUTIONS</div>
+                <div class="contra-resolved" id="contra-resolved"></div>
+            </div>
         </div>
 
     </div>
@@ -121,6 +140,7 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 
 let activeTab = 'facts';
 let allFacts = [], allEpisodes = [], allEntities = [], allBeliefs = [];
+let beliefFilter = 'all';
 
 // ─── TABS ─────────────────────────────────────
 document.querySelectorAll('.ma-tab').forEach(btn => {
@@ -206,6 +226,7 @@ async function loadTabData(tab) {
     else if (tab === 'episodes') loadEpisodes();
     else if (tab === 'entities') loadEntities();
     else if (tab === 'beliefs') loadBeliefMap();
+    else if (tab === 'contradictions') loadContradictions();
 }
 
 // ─── FACTS ────────────────────────────────────
@@ -249,13 +270,16 @@ function renderFacts(facts) {
     grid.innerHTML = facts.slice(0, 50).map(f => {
         const conf = f.confidence || 0.7;
         const barColor = conf > 0.8 ? '#00ffcc' : conf > 0.6 ? '#66ccff' : '#ffaa33';
+        const sourceLabel = f.source_url
+            ? `<a href="${esc(f.source_url)}" target="_blank" rel="noopener" class="fact-source-link" title="${esc(f.source_url)}">${esc(f.source || 'source')} ↗</a>`
+            : esc(f.source || '—');
         return `
         <div class="fact-card">
             <div class="fact-confidence-bar" style="width:${Math.round(conf*100)}%;background:${barColor}"></div>
             <div class="fact-topic">${esc(f.topic || 'general')}</div>
             <div class="fact-content">${esc((f.content || '').substring(0, 180))}</div>
             <div class="fact-meta">
-                <span>${esc(f.source || '—')}</span>
+                <span>${sourceLabel}</span>
                 <span>${Math.round(conf*100)}% confidence</span>
             </div>
         </div>`;
@@ -398,11 +422,29 @@ async function loadBeliefMap() {
     }
 }
 
+document.querySelectorAll('.belief-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.belief-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        beliefFilter = btn.dataset.status;
+        renderBeliefHeatmap(allBeliefs);
+    });
+});
+
 function renderBeliefHeatmap(beliefs) {
     const heatmap = $('belief-heatmap');
 
+    const filtered = beliefFilter === 'all'
+        ? beliefs
+        : beliefs.filter(b => (b.status || 'active') === beliefFilter);
+
+    if (!filtered.length) {
+        heatmap.innerHTML = '<div class="ma-empty">No beliefs in this category</div>';
+        return;
+    }
+
     // Sort by confidence
-    const sorted = [...beliefs].sort((a,b) => (b.confidence||0) - (a.confidence||0));
+    const sorted = [...filtered].sort((a,b) => (b.confidence||0) - (a.confidence||0));
 
     heatmap.innerHTML = sorted.slice(0, 50).map(b => {
         const conf = b.confidence || 0.5;
@@ -424,6 +466,42 @@ function renderBeliefHeatmap(beliefs) {
             </div>
         </div>`;
     }).join('');
+}
+
+// ─── CONTRADICTIONS ───────────────────────────
+async function loadContradictions() {
+    const unresolvedEl = $('contra-unresolved');
+    const resolvedEl = $('contra-resolved');
+    unresolvedEl.innerHTML = '<div class="ma-loading">Loading contradictions...</div>';
+    try {
+        const data = await fetch('/api/contradictions').then(r => r.json());
+        const unresolved = data.unresolved || [];
+        const resolved = data.recent_resolutions || [];
+
+        $('contra-resolved-count').textContent = `${data.resolved_count || 0} resolved total`;
+
+        unresolvedEl.innerHTML = unresolved.length
+            ? unresolved.map(c => `
+                <div class="contra-card">
+                    <div class="contra-pair">
+                        <div class="contra-side">${esc((c.belief_a?.statement || '').substring(0, 140))}</div>
+                        <div class="contra-vs">vs</div>
+                        <div class="contra-side">${esc((c.belief_b?.statement || '').substring(0, 140))}</div>
+                    </div>
+                    <div class="contra-detected">Detected cycle ${c.detected_cycle || '?'} — unresolved</div>
+                </div>`).join('')
+            : '<div class="ma-empty">No active contradictions right now</div>';
+
+        resolvedEl.innerHTML = resolved.length
+            ? resolved.slice().reverse().slice(0, 5).map(c => `
+                <div class="contra-resolved-item">
+                    <span class="contra-verdict contra-verdict-${(c.verdict || '').toLowerCase()}">${esc(c.verdict || '')}</span>
+                    <span class="contra-resolution-text">${esc((c.resolution_text || '').substring(0, 160))}</span>
+                </div>`).join('')
+            : '<div class="ma-empty small">Nothing resolved yet</div>';
+    } catch(e) {
+        unresolvedEl.innerHTML = '<div class="ma-empty">Could not load contradictions</div>';
+    }
 }
 
 // ─── BOOT ────────────────────────────────────

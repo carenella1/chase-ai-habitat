@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/research.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/discovery.css') }}">
 
 <div class="research-page">
 
   <!-- Header -->
   <div class="research-header">
     <div class="header-left">
-      <h1 class="page-title">NEXARION <span class="title-accent">RESEARCH</span></h1>
-      <p class="page-subtitle">Deep multi-source investigation engine</p>
+      <h1 class="page-title">NEXARION <span class="title-accent">DISCOVERY</span></h1>
+      <p class="page-subtitle">Autonomous research, knowledge synthesis &amp; the concept graph</p>
     </div>
     <div class="header-right">
       <div class="goal-pill" id="goal-pill">
@@ -103,6 +103,14 @@
         </div>
       </div>
 
+      <!-- Goal history -->
+      <div class="panel-section">
+        <label class="panel-label">PAST INTENTIONS</label>
+        <div class="goal-history-list" id="goal-history-list">
+          <div class="empty-sub">No goal history yet</div>
+        </div>
+      </div>
+
     </div>
 
     <!-- RIGHT: Results Panel -->
@@ -186,6 +194,57 @@
     </div>
   </div>
 
+  <!-- ============================
+       AUTONOMOUS DISCOVERY FEED
+  ============================= -->
+  <div class="discovery-section">
+    <div class="discovery-section-header">
+      <div>
+        <label class="panel-label">AUTONOMOUS DISCOVERY FEED</label>
+        <p class="discovery-section-sub">What NEX has been investigating on its own, between cognition cycles</p>
+      </div>
+      <div class="live-status-pill" id="live-status-pill">
+        <span class="live-dot"></span>
+        <span id="live-status-text">Idle</span>
+      </div>
+    </div>
+    <div class="discovery-feed" id="discovery-feed">
+      <div class="empty-state small-empty">
+        <div class="empty-icon" style="font-size:28px">◈</div>
+        <div class="empty-sub">Autonomous discoveries appear here as NEX researches in the background</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================
+       KNOWLEDGE GRAPH EXPLORER
+  ============================= -->
+  <div class="discovery-section">
+    <div class="discovery-section-header">
+      <div>
+        <label class="panel-label">KNOWLEDGE GRAPH EXPLORER</label>
+        <p class="discovery-section-sub">Concepts NEX has connected — trace how any two ideas relate</p>
+      </div>
+      <div class="graph-controls">
+        <input class="graph-search" id="graph-from" placeholder="Entity A..." />
+        <span class="graph-arrow">→</span>
+        <input class="graph-search" id="graph-to" placeholder="Entity B..." />
+        <button class="action-btn" id="btn-find-path">FIND PATH</button>
+        <div class="graph-stat-pill" id="graph-pill">— nodes · — edges</div>
+      </div>
+    </div>
+    <div class="graph-path-result" id="graph-path" style="display:none;"></div>
+    <div class="graph-canvas-wrap graph-canvas-wrap-large">
+      <canvas id="graph-canvas"></canvas>
+      <div class="graph-empty" id="graph-empty">
+        <div class="empty-icon large">◈</div>
+        <div>Knowledge graph is building...</div>
+        <div class="empty-sub">Nodes appear as NEX researches and extracts relationships.</div>
+      </div>
+    </div>
+    <div class="graph-top-entities" id="graph-top-entities"></div>
+  </div>
+
 </div>
 
 <script>
@@ -201,11 +260,20 @@ let currentReport = null;
 // =========================
 document.addEventListener('DOMContentLoaded', () => {
     loadGoalStatus();
+    loadGoalHistory();
     loadSynthesisStatus();
+    loadDiscoveryFeed();
+    loadGraph();
     bindEvents();
     setInterval(loadGoalStatus, 15000);
+    setInterval(loadGoalHistory, 30000);
     setInterval(loadSynthesisStatus, 30000);
+    setInterval(loadDiscoveryFeed, 12000);
+    setInterval(loadGraph, 20000);
 });
+
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const $ = id => document.getElementById(id);
 
 // =========================
 // EVENTS
@@ -426,6 +494,183 @@ async function loadSynthesisStatus() {
         document.getElementById('syn-crossdomain').textContent = data.cross_domain_connections || 0;
     } catch (e) { console.error(e); }
 }
+
+// =========================
+// GOAL HISTORY
+// =========================
+async function loadGoalHistory() {
+    try {
+        const data = await fetch('/api/goals/history').then(r => r.json());
+        const list = $('goal-history-list');
+        const history = data.history || [];
+        if (!history.length) {
+            list.innerHTML = '<div class="empty-sub">No goal history yet</div>';
+            return;
+        }
+        list.innerHTML = history.slice().reverse().slice(0, 6).map(g => {
+            const pct = Math.min(100, Math.floor((g.cycles_completed || 0) / (g.duration_cycles || 1) * 100));
+            const completed = g.completed || pct >= 100;
+            return `
+            <div class="goal-history-item ${completed ? 'completed' : ''}">
+                <div class="goal-hist-text">${esc((g.text || '').substring(0, 90))}</div>
+                <div class="goal-hist-meta">
+                    <span class="goal-hist-pct">${pct}%</span>
+                    <span class="goal-hist-findings">${g.key_findings?.length || 0} findings</span>
+                    ${completed ? '<span class="goal-hist-done">✓ DONE</span>' : ''}
+                </div>
+            </div>`;
+        }).join('');
+    } catch (e) { console.error(e); }
+}
+
+// =========================
+// AUTONOMOUS DISCOVERY FEED
+// =========================
+async function loadDiscoveryFeed() {
+    try {
+        const data = await fetch('/api/deep-research/status').then(r => r.json());
+        const pill = $('live-status-pill');
+        const text = $('live-status-text');
+
+        if (data.active) {
+            pill.classList.add('active');
+            text.textContent = `${data.stage || 'investigating'} — ${(data.topic || '').substring(0, 60)} (cycle ${data.cycle || '?'})`;
+        } else {
+            pill.classList.remove('active');
+            text.textContent = 'Idle — no autonomous research running right now';
+        }
+
+        const feed = $('discovery-feed');
+        const recent = data.recent || [];
+        if (!recent.length) {
+            feed.innerHTML = `<div class="empty-state small-empty">
+                <div class="empty-icon" style="font-size:28px">◈</div>
+                <div class="empty-sub">Autonomous discoveries appear here as NEX researches in the background</div>
+            </div>`;
+            return;
+        }
+
+        feed.innerHTML = recent.map(r => {
+            const when = r.timestamp ? new Date(r.timestamp * 1000).toLocaleString() : '';
+            const synthesis = (r.synthesis || '').trim();
+            const critique = (r.critique || '').trim();
+            return `
+            <div class="discovery-card">
+                <div class="discovery-card-header">
+                    <span class="discovery-question">${esc(r.question || '')}</span>
+                    <span class="discovery-depth-badge">${esc(r.depth || 'standard')}</span>
+                </div>
+                ${synthesis
+                    ? `<div class="discovery-synthesis">${esc(synthesis.substring(0, 400))}</div>`
+                    : `<div class="discovery-synthesis discovery-empty-synthesis">No synthesis produced this cycle</div>`}
+                ${critique ? `<div class="discovery-critique"><span class="dc-label">SELF-CRITIQUE</span> ${esc(critique.substring(0, 220))}</div>` : ''}
+                <div class="discovery-card-meta">
+                    <span>${r.sources || 0} sources</span>
+                    <span>${(r.elapsed || 0).toFixed ? r.elapsed.toFixed(1) : r.elapsed}s</span>
+                    <span>${esc(when)}</span>
+                </div>
+            </div>`;
+        }).join('');
+    } catch (e) { console.error(e); }
+}
+
+// =========================
+// KNOWLEDGE GRAPH
+// =========================
+async function loadGraph() {
+    try {
+        const [stats, viz] = await Promise.all([
+            fetch('/api/graph/stats').then(r => r.json()),
+            fetch('/api/graph/visualize').then(r => r.json()),
+        ]);
+        const n = stats.total_nodes || 0, e = stats.total_edges || 0;
+        $('graph-pill').textContent = `${n} nodes · ${e} edges`;
+        if (n > 0) {
+            $('graph-empty').style.display = 'none';
+            drawGraph(viz);
+        } else {
+            $('graph-empty').style.display = 'flex';
+        }
+        const top = $('graph-top-entities');
+        if (top && stats.top_entities?.length) {
+            top.innerHTML = stats.top_entities.map(e =>
+                `<div class="entity-pill">${esc(e.name)} <span class="entity-count">${e.mentions}</span></div>`).join('');
+        }
+    } catch (e) { console.error(e); }
+}
+
+function drawGraph(data) {
+    const canvas = $('graph-canvas');
+    if (!canvas || !data.nodes?.length) return;
+    const ctx = canvas.getContext('2d');
+    const wrap = canvas.parentElement;
+    canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight;
+    const W = canvas.width, H = canvas.height;
+    const nodes = data.nodes.slice(0, 120).map(n => ({
+        ...n, x: W/2 + (Math.random()-.5)*W*.7, y: H/2 + (Math.random()-.5)*H*.7,
+        vx: 0, vy: 0, r: Math.min(5 + Math.sqrt(n.mention_count||1)*2, 20)
+    }));
+    const nodeMap = {};
+    nodes.forEach(n => nodeMap[n.id] = n);
+    const edges = data.edges.filter(e => nodeMap[e.source] && nodeMap[e.target]).slice(0, 220);
+    let frame = 0;
+    function tick() {
+        for (let i = 0; i < nodes.length; i++) for (let j = i+1; j < nodes.length; j++) {
+            const dx = nodes[j].x-nodes[i].x, dy = nodes[j].y-nodes[i].y;
+            const d = Math.sqrt(dx*dx+dy*dy)||1, f = 1200/(d*d);
+            nodes[i].vx -= dx/d*f; nodes[i].vy -= dy/d*f;
+            nodes[j].vx += dx/d*f; nodes[j].vy += dy/d*f;
+        }
+        edges.forEach(e => {
+            const a = nodeMap[e.source], b = nodeMap[e.target];
+            if (!a||!b) return;
+            const dx = b.x-a.x, dy = b.y-a.y, d = Math.sqrt(dx*dx+dy*dy)||1;
+            const f = (d-90)*.015, fx = dx/d*f, fy = dy/d*f;
+            a.vx+=fx; a.vy+=fy; b.vx-=fx; b.vy-=fy;
+        });
+        nodes.forEach(n => {
+            n.vx += (W/2-n.x)*.001; n.vy += (H/2-n.y)*.001;
+            n.vx *= .85; n.vy *= .85;
+            n.x = Math.max(n.r, Math.min(W-n.r, n.x+n.vx));
+            n.y = Math.max(n.r, Math.min(H-n.r, n.y+n.vy));
+        });
+    }
+    function draw() {
+        ctx.clearRect(0,0,W,H);
+        edges.forEach(e => {
+            const a = nodeMap[e.source], b = nodeMap[e.target];
+            if (!a||!b) return;
+            ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+            ctx.strokeStyle = `rgba(0,255,200,${Math.min((e.weight||.5)*.5,.4)})`;
+            ctx.lineWidth = .8; ctx.stroke();
+        });
+        nodes.forEach(n => {
+            const g = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*2.5);
+            g.addColorStop(0,'rgba(0,255,200,0.25)'); g.addColorStop(1,'rgba(0,255,200,0)');
+            ctx.beginPath(); ctx.arc(n.x,n.y,n.r*2.5,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+            ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+            ctx.fillStyle='rgba(0,20,18,.9)'; ctx.fill();
+            ctx.strokeStyle='#00ffc8'; ctx.lineWidth=1; ctx.stroke();
+            if (n.r > 8) {
+                ctx.fillStyle='rgba(0,255,200,.9)';
+                ctx.font=`${Math.min(n.r,12)}px "Space Mono",monospace`;
+                ctx.textAlign='center';
+                ctx.fillText(n.name.substring(0,16), n.x, n.y+n.r+12);
+            }
+        });
+    }
+    function animate() { if (frame < 140) { tick(); frame++; } draw(); requestAnimationFrame(animate); }
+    animate();
+}
+
+$('btn-find-path').addEventListener('click', async () => {
+    const from = $('graph-from').value.trim(), to = $('graph-to').value.trim();
+    if (!from || !to) return;
+    const r = await fetch(`/api/graph/path?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`).then(r=>r.json());
+    const el = $('graph-path');
+    el.textContent = r.path || 'No path found.';
+    el.style.display = 'block';
+});
 </script>
 {% endblock %}
 

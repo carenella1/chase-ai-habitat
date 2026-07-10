@@ -106,6 +106,12 @@ class StructuredMemoryDB:
             embedding BLOB
         )"""
         )
+        # Additive migration: real citation URL, when the source was an
+        # actual web/wikipedia/arxiv fetch rather than NEX's own reasoning.
+        try:
+            cursor.execute("ALTER TABLE world_facts ADD COLUMN source_url TEXT")
+        except sqlite3.OperationalError:
+            pass  # column already exists
 
         # ── Episodic Memory ──────────────────────────────────────────
         cursor.execute(
@@ -241,6 +247,7 @@ class WorldFactStore:
         source: str = "research",
         topic: str = None,
         confidence: float = 0.7,
+        source_url: str = "",
     ) -> int:
         conn = self.db._conn()
         chash = _content_hash(content)
@@ -256,9 +263,9 @@ class WorldFactStore:
         emb = _embed(content)
         cursor = conn.execute(
             """INSERT INTO world_facts
-               (content, source, confidence, valid_from, topic, content_hash, embedding)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (content, source, confidence, now, topic, chash, emb),
+               (content, source, confidence, valid_from, topic, content_hash, embedding, source_url)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (content, source, confidence, now, topic, chash, emb, source_url or None),
         )
         conn.commit()
         return cursor.lastrowid
@@ -660,9 +667,10 @@ class NexMemory:
         source: str = "research",
         topic: str = None,
         confidence: float = 0.7,
+        source_url: str = "",
     ) -> int:
         """Store a world fact."""
-        return self.facts.add_fact(content, source, topic, confidence)
+        return self.facts.add_fact(content, source, topic, confidence, source_url)
 
     def remember(
         self,

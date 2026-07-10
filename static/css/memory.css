@@ -332,6 +332,16 @@
     color: var(--text-dim);
 }
 
+.fact-source-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(102, 204, 255, 0.4);
+}
+.fact-source-link:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
 /* EPISODES TIMELINE */
 .episode-timeline {
     display: flex;
@@ -571,3 +581,73 @@
 }
 
 .belief-canvas { display: none; }
+
+/* BELIEF FILTERS */
+.belief-filter-row { display: flex; gap: 5px; }
+
+.belief-filter {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+}
+
+.belief-filter:hover { color: var(--text-primary); box-shadow: none; }
+
+.belief-filter.active {
+    color: var(--accent);
+    border-color: rgba(0,255,204,0.35);
+    background: rgba(0,255,204,0.05);
+}
+
+/* CONTRADICTIONS */
+.contra-unresolved { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+
+.contra-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-left: 2px solid var(--accent-danger);
+    border-radius: 8px;
+    padding: 14px 16px;
+}
+
+.contra-pair { display: flex; align-items: center; gap: 12px; }
+
+.contra-side {
+    flex: 1;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+}
+
+.contra-vs { flex-shrink: 0; font-family: var(--font-mono); font-size: 10px; color: var(--accent-danger); letter-spacing: 1px; }
+.contra-detected { margin-top: 10px; font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
+.contra-resolved-block { margin-top: 8px; }
+.contra-section-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 10px; }
+.contra-resolved { display: flex; flex-direction: column; gap: 8px; }
+
+.contra-resolved-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.015);
+    border-radius: 6px;
+    border-left: 2px solid var(--border-mid);
+}
+
+.contra-verdict { flex-shrink: 0; font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; padding: 2px 8px; border-radius: 10px; }
+.contra-verdict-reconciled { color: var(--accent); background: var(--accent-dim); }
+.contra-verdict-a_wins, .contra-verdict-b_wins { color: var(--accent-blue); background: rgba(102,204,255,0.1); }
+.contra-resolution-text { color: var(--text-secondary); line-height: 1.5; }
