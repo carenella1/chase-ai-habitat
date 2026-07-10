@@ -38,6 +38,7 @@ DESIGN:
 
 import json
 import os
+import re
 import sqlite3
 import threading
 import time
@@ -546,6 +547,74 @@ class GraphExtractor:
 
         return found
 
+    def extract_from_text_llm(
+        self, text: str, source: str, call_llm_fn, max_triples: int = 8
+    ) -> list:
+        """
+        LLM-based entity/relationship extraction. Catches implicit
+        relationships the regex patterns above miss entirely (they only
+        match a handful of literal sentence structures). This is much
+        more expensive than the regex pass, so callers should gate how
+        often it runs -- e.g. once per synthesis pass or deep research
+        result, not on every single cognition cycle.
+        """
+        if not text or len(text.strip()) < 50:
+            return []
+
+        prompt = f"""Extract key entity relationships from this text as a knowledge graph.
+
+Text:
+{text[:1500]}
+
+List up to {max_triples} relationships, one per line, in exactly this format:
+ENTITY_A | relationship_verb | ENTITY_B
+
+Only extract relationships that are clearly stated or strongly implied. Use short
+relationship verbs like "enables", "causes", "requires", "is_a", "part_of", "opposes",
+"correlates_with". Skip vague or trivial connections.
+
+Relationships:"""
+
+        try:
+            raw = call_llm_fn(prompt, timeout=90)
+        except Exception as e:
+            print(f"⚠️ LLM graph extraction call failed: {e}")
+            return []
+
+        # call_llm returns a plain string; call_llm_deep returns a dict.
+        # Accept either so this works with whichever brain the caller wired in.
+        if isinstance(raw, dict):
+            raw = raw.get("response", "")
+        elif isinstance(raw, tuple):
+            raw = raw[0]  # call_llm(..., log_thinking=True) returns (text, thinking)
+
+        if not raw:
+            return []
+        raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+
+        edge_mgr = EdgeManager(self.db)
+        found = []
+        for line in raw.split("\n"):
+            line = line.strip()
+            if line.count("|") != 2:
+                continue
+            src, rel, tgt = (p.strip() for p in line.split("|"))
+            if not (3 <= len(src) <= 60 and 3 <= len(tgt) <= 60 and 2 <= len(rel) <= 30):
+                continue
+            rel_clean = rel.lower().replace(" ", "_")
+            edge_mgr.connect(
+                src,
+                rel_clean,
+                tgt,
+                weight=0.6,
+                evidence=text[:200],
+                confidence=0.75,
+                created_by=source,
+            )
+            found.append((src, rel_clean, tgt))
+
+        return found
+
 
 # ─────────────────────────────────────────────
 # UNIFIED INTERFACE
@@ -613,6 +682,58 @@ class NexKnowledgeGraph:
                 )
 
         return "\n".join(lines)
+
+    # Regex-based extraction (the old per-cycle path) often captures raw
+    # sentence fragments rather than clean entities -- e.g. "Recognizing
+    # this interplay". Filter those out so gap-driven topics stay usable
+    # as actual search queries. LLM-extracted nodes (newer) don't have
+    # this problem, so this filter matters less over time.
+    _GAP_FRAGMENT_STARTERS = {
+        "this", "that", "these", "those", "while", "embracing", "recognizing",
+        "overlooking", "expanding", "focusing", "combining", "developing",
+        "for", "showing", "whether", "based", "and", "or", "the", "a", "an",
+        "if", "when", "because", "since", "such",
+    }
+
+    def find_research_gaps(self, limit: int = 10) -> list:
+        """
+        Surface entities NEX has touched only briefly and never followed up
+        on -- nodes with few mentions and few (or zero) connections. These
+        are legitimate "loose threads": concepts that appeared once and
+        were never actually explored, as opposed to the well-connected
+        hubs `export_for_visualization`/top_entities already surface.
+        Used to drive curiosity toward real gaps instead of random topics.
+        """
+        conn = self.db._conn()
+        rows = conn.execute(
+            """
+            SELECT n.id, n.name, n.mention_count,
+                   (SELECT COUNT(*) FROM edges e
+                    WHERE (e.source_id = n.id OR e.target_id = n.id)
+                    AND e.valid_until IS NULL) AS edge_count
+            FROM nodes n
+            WHERE n.mention_count <= 2
+            ORDER BY RANDOM()
+            LIMIT 200
+            """
+        ).fetchall()
+
+        gaps = []
+        for r in rows:
+            d = dict(r)
+            if d["edge_count"] > 1:
+                continue
+            name = d["name"].strip()
+            words = name.split()
+            if not name or not name[0].isupper():
+                continue
+            if not words or words[0].lower() in self._GAP_FRAGMENT_STARTERS:
+                continue
+            if len(words) > 6:
+                continue
+            gaps.append(d)
+
+        return gaps[:limit]
 
     def export_for_visualization(self, limit: int = 100) -> dict:
         """Export graph as nodes+edges JSON for UI visualization."""

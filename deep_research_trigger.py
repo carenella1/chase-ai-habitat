@@ -48,6 +48,7 @@ HOW TO WIRE INTO run_ui.py:
 
 import json
 import os
+import re
 import threading
 import time
 from datetime import datetime
@@ -153,12 +154,41 @@ def _set_cooldown(topic: str, current_cycle: int):
 # ─────────────────────────────────────────────
 
 
-def _store_result(report: dict, cycle: int):
+def _parse_critique_confidence(critique_text: str) -> float:
+    """
+    The critique stage already assesses its own confidence (High/Medium/Low)
+    but that assessment was previously discarded in favor of a hardcoded
+    number. Extract it so weak research actually gets stored as weak.
+    """
+    match = re.search(
+        r"CONFIDENCE LEVEL.*?:?\s*(High|Medium|Low)", critique_text, re.IGNORECASE
+    )
+    if match:
+        return {"high": 0.85, "medium": 0.65, "low": 0.4}.get(
+            match.group(1).lower(), 0.7
+        )
+    return 0.7
+
+
+def _parse_uncertainties(critique_text: str) -> list:
+    """Extract the critique's own '? key uncertainty' lines."""
+    return [
+        line.lstrip("? ").strip()
+        for line in critique_text.split("\n")
+        if line.strip().startswith("?") and len(line.strip()) > 20
+    ]
+
+
+def _store_result(report: dict, cycle: int, call_llm_fn=None):
     """
     Store deep research result in three places:
     1. Full report on disk
     2. Compressed knowledge card in trainer DB
     3. High-confidence facts in structured memory
+    Also runs LLM-based knowledge graph extraction on the synthesis, since
+    deep research completions are infrequent enough to absorb the extra
+    LLM call (unlike per-cycle regex extraction, which stays cheap and
+    runs everywhere else).
     """
 
     # 1. Full report to disk
@@ -180,6 +210,11 @@ def _store_result(report: dict, cycle: int):
     except Exception as e:
         print(f"⚠️ Deep research disk save error: {e}")
 
+    # The critique already assesses its own confidence -- use that instead
+    # of a hardcoded number, so weak research actually gets stored as weak.
+    critique = report.get("critique", {}).get("critique", "")
+    assessed_confidence = _parse_critique_confidence(critique) if critique else 0.7
+
     # 2. Knowledge card in trainer DB
     synthesis = report.get("synthesis", "")
     topic = report.get("question", "unknown")[:80]
@@ -195,39 +230,72 @@ def _store_result(report: dict, cycle: int):
                         """INSERT INTO knowledge_cards
                            (topic, card_text, source_type, confidence, created_at, updated_at)
                            VALUES (?,?,?,?,?,?)""",
-                        (topic, synthesis[:1500], "deep_research", 0.85, now, now),
+                        (topic, synthesis[:1500], "deep_research", assessed_confidence, now, now),
                     )
-                print(f"📚 DEEP RESEARCH: Knowledge card stored (confidence=0.85)")
+                print(f"📚 DEEP RESEARCH: Knowledge card stored (confidence={assessed_confidence})")
         except Exception as e:
             print(f"⚠️ Deep research card store error: {e}")
 
-    # 3. Key conclusions into structured memory
-    critique = report.get("critique", {}).get("critique", "")
+    # 3. Key conclusions into structured memory, at the critique's own
+    #    assessed confidence rather than a flat number
     if critique:
         conclusions = [
             line.strip()
             for line in critique.split("\n")
             if line.strip().startswith("✓")
         ]
-        if conclusions:
-            try:
-                from structured_memory import NexMemory
+        uncertainties = _parse_uncertainties(critique)
+        try:
+            from structured_memory import NexMemory
 
-                mem = NexMemory()
-                for conclusion in conclusions[:3]:
-                    clean = conclusion.lstrip("✓ ").strip()
-                    if len(clean) > 20:
-                        mem.learn(
-                            clean,
-                            source="deep_research",
-                            topic=topic,
-                            confidence=0.8,
-                        )
+            mem = NexMemory()
+            for conclusion in conclusions[:3]:
+                clean = conclusion.lstrip("✓ ").strip()
+                if len(clean) > 20:
+                    mem.learn(
+                        clean,
+                        source="deep_research",
+                        topic=topic,
+                        confidence=assessed_confidence,
+                    )
+            if conclusions:
                 print(
-                    f"🧠 DEEP RESEARCH: {len(conclusions[:3])} conclusions → structured memory"
+                    f"🧠 DEEP RESEARCH: {len(conclusions[:3])} conclusions → structured memory "
+                    f"(confidence={assessed_confidence})"
                 )
-            except Exception as e:
-                print(f"⚠️ Deep research memory store error: {e}")
+            # Uncertainties become low-confidence open questions -- not
+            # settled facts, but not discarded either. A future curiosity
+            # pass can query these back out as research gaps.
+            for gap in uncertainties[:2]:
+                if len(gap) > 20:
+                    mem.learn(
+                        gap,
+                        source="deep_research_uncertainty",
+                        topic=topic,
+                        confidence=0.3,
+                    )
+            if uncertainties:
+                print(
+                    f"❓ DEEP RESEARCH: {len(uncertainties[:2])} open uncertainties recorded"
+                )
+        except Exception as e:
+            print(f"⚠️ Deep research memory store error: {e}")
+
+    # 4. LLM-based knowledge graph extraction on the synthesis -- catches
+    #    relationships the cheap regex pass (used elsewhere, per-cycle)
+    #    misses. Gated to this infrequent, already-expensive event.
+    if synthesis and call_llm_fn:
+        try:
+            from knowledge_graph import NexKnowledgeGraph
+
+            kg = NexKnowledgeGraph()
+            triples = kg.extractor.extract_from_text_llm(
+                synthesis, source="deep_research", call_llm_fn=call_llm_fn
+            )
+            if triples:
+                print(f"🕸️ DEEP RESEARCH: {len(triples)} graph relationships extracted")
+        except Exception as e:
+            print(f"⚠️ Deep research graph extraction error: {e}")
 
 
 # ─────────────────────────────────────────────
@@ -325,7 +393,10 @@ class DeepResearchTrigger:
             _set_status(active=True, topic=topic, stage="storing", cycle=cycle)
 
             # Store results
-            _store_result(report, cycle)
+            # Use the deep brain for graph extraction: the chat brain is a
+            # hybrid-reasoning model that can burn its whole token budget
+            # "thinking" on a short extraction prompt and never emit output.
+            _store_result(report, cycle, call_llm_fn=self._call_llm_deep)
             self._sessions += 1
 
             elapsed = report.get("elapsed_seconds", 0)

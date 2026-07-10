@@ -612,6 +612,35 @@ def generate_search_topic(insight):
     )
 
 
+def get_gap_driven_escape_topic():
+    """
+    When the loop detector needs to escape a stuck topic, prefer pointing
+    NEX at a real gap -- an unresolved contradiction it hasn't reconciled,
+    or a concept it touched once and never followed up on -- instead of a
+    fixed rotation of generic topics. Returns None if no real gap is found,
+    so the caller can fall back to the old random-topic behavior.
+    """
+    try:
+        from habitat.reasoning.contradiction_engine import get_oldest_unresolved
+
+        contradiction = get_oldest_unresolved()
+        if contradiction:
+            statement = contradiction.get("belief_a", {}).get("statement", "")
+            if statement:
+                return statement[:80]
+    except Exception as e:
+        print(f"⚠️ Gap-driven topic (contradiction) error: {e}")
+
+    try:
+        gaps = knowledge_graph.find_research_gaps(limit=5)
+        if gaps:
+            return random.choice(gaps)["name"][:80]
+    except Exception as e:
+        print(f"⚠️ Gap-driven topic (graph) error: {e}")
+
+    return None
+
+
 def fetch_wikipedia_summary(query):
     try:
         from urllib.parse import quote
@@ -873,6 +902,21 @@ def api_sandbox_agents():
 @app.route("/api/sandbox/activity")
 def api_sandbox_activity():
     return jsonify(nex_sandbox.get_activity())
+
+
+@app.route("/api/sandbox/pending")
+def api_sandbox_pending():
+    return jsonify({"pending": nex_sandbox.get_pending_approvals()})
+
+
+@app.route("/api/sandbox/approve/<task_id>", methods=["POST"])
+def api_sandbox_approve(task_id):
+    return jsonify(nex_sandbox.approve_pending(task_id))
+
+
+@app.route("/api/sandbox/reject/<task_id>", methods=["POST"])
+def api_sandbox_reject(task_id):
+    return jsonify(nex_sandbox.reject_pending(task_id))
 
 
 @app.route("/api/graph/stats")
@@ -2209,6 +2253,10 @@ def run():
             ai_name = get_identity_name()
             agent_identity = f"{agent} (part of {ai_name})" if ai_name else agent
             task_instruction = chain_context if chain_context else stance_instruction
+            try:
+                optimizer_guidance = self_optimizer.get_prompt_for_agent(agent)
+            except Exception:
+                optimizer_guidance = ""
             claim_seed = random.choice(
                 [
                     "The evidence suggests",
@@ -2244,6 +2292,7 @@ Insight:
 
 Context: {context_line}
 {f"Self-knowledge: {self_context}" if self_context else ""}
+{f"Agent guidance (self-improved over time): {optimizer_guidance}" if optimizer_guidance else ""}
 Task: {task_instruction}
 
 --- Debate Response ---
@@ -2365,25 +2414,30 @@ Claim:
                 if force_escape and topic_context not in ("none yet",):
                     search_term = topic_context
                 else:
-                    search_term = random.choice(
-                        [
-                            "quantum entanglement",
-                            "evolutionary psychology",
-                            "game theory",
-                            "emergence complexity",
-                            "information theory",
-                            "neural plasticity",
-                            "thermodynamics entropy",
-                            "linguistic semantics",
-                            "moral philosophy",
-                            "consciousness neuroscience",
-                            "systems thinking",
-                            "chaos theory",
-                            "cognitive architecture",
-                            "social networks",
-                            "epistemology",
-                        ]
-                    )
+                    gap_topic = get_gap_driven_escape_topic()
+                    if gap_topic:
+                        print(f"🕳️ GAP-DRIVEN ESCAPE TOPIC → {gap_topic}")
+                        search_term = gap_topic
+                    else:
+                        search_term = random.choice(
+                            [
+                                "quantum entanglement",
+                                "evolutionary psychology",
+                                "game theory",
+                                "emergence complexity",
+                                "information theory",
+                                "neural plasticity",
+                                "thermodynamics entropy",
+                                "linguistic semantics",
+                                "moral philosophy",
+                                "consciousness neuroscience",
+                                "systems thinking",
+                                "chaos theory",
+                                "cognitive architecture",
+                                "social networks",
+                                "epistemology",
+                            ]
+                        )
 
             memory = ensure_memory(load_memory())
             web_stats = memory.get(

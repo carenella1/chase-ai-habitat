@@ -28,6 +28,7 @@ from datetime import datetime
 
 
 SYNTHESIS_FILE = "data/knowledge_synthesis.json"
+DEEP_RESEARCH_FILE = "data/deep_research_results.jsonl"
 SYNTHESIS_INTERVAL = 100  # cycles between synthesis passes
 MIN_ENTRIES_FOR_SYNTHESIS = 10  # minimum cognition entries needed
 
@@ -131,6 +132,39 @@ def _get_domain_insights(domain_keywords: list, cognition_history: list) -> list
     return relevant[-30:]  # Most recent 30 relevant entries
 
 
+def _get_deep_research_insights(domain_keywords: list, limit: int = 15) -> list:
+    """
+    Pull relevant deep research syntheses for a domain. These are multi-source,
+    multi-stage investigations -- much richer than per-cycle chatter -- but
+    synthesis previously never looked at this file at all, so all of that
+    deeper research was invisible to the "what do I actually understand"
+    consolidation step.
+    """
+    if not os.path.exists(DEEP_RESEARCH_FILE):
+        return []
+    relevant = []
+    try:
+        with open(DEEP_RESEARCH_FILE, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        for line in reversed(lines[-300:]):
+            try:
+                entry = json.loads(line.strip())
+            except Exception:
+                continue
+            question = entry.get("question", "")
+            synthesis = entry.get("synthesis", "").strip()
+            if not synthesis:
+                continue
+            haystack = (question + " " + synthesis).lower()
+            if any(kw in haystack for kw in domain_keywords):
+                relevant.append(f"[Deep research: {question[:80]}] {synthesis[:400]}")
+            if len(relevant) >= limit:
+                break
+    except Exception:
+        pass
+    return relevant
+
+
 def synthesize_domain(
     domain_name: str, keywords: list, cognition_history: list, call_llm_fn
 ) -> dict:
@@ -138,7 +172,11 @@ def synthesize_domain(
     Synthesize all cognition in a domain into structured knowledge.
     Returns a domain summary dict.
     """
-    insights = _get_domain_insights(keywords, cognition_history)
+    deep_insights = _get_deep_research_insights(keywords)
+    cycle_insights = _get_domain_insights(keywords, cognition_history)
+    # Deep research first -- it's richer, and the [:20] cap below should
+    # favor it over shallow per-cycle chatter when both are plentiful.
+    insights = deep_insights + cycle_insights
 
     if len(insights) < MIN_ENTRIES_FOR_SYNTHESIS:
         return {
@@ -154,8 +192,8 @@ def synthesize_domain(
 
     prompt = f"""You are synthesizing Nexarion's accumulated knowledge about {domain_name}.
 
-Raw cognition entries (most recent 20):
-{insights_text[:3000]}
+Raw cognition entries, including deep multi-source research where available (most recent/relevant 20):
+{insights_text[:4000]}
 
 Distill this into a structured knowledge summary. Format exactly as:
 

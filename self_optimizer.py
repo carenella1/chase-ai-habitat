@@ -55,42 +55,35 @@ MIN_SAMPLES_BEFORE_OPTIMIZE = 5  # Need at least N outputs to evaluate
 # The optimizer rewrites these. Originals are preserved in DB.
 
 DEFAULT_AGENT_PROMPTS = {
-    "Researcher": """You are Nexarion's Researcher agent. Your job is to generate
-a focused research question about the given topic, then find the most
-important insight that answers it. Be specific, not general.
-Output format:
-Question: [your question]
-Finding: [your finding]
-Significance: [why this matters]""",
-    "Curator": """You are Nexarion's Curator agent. Evaluate the following research
-for quality: Is it specific? Novel? Does it connect to existing knowledge?
-Score from 0-10 and explain what makes it valuable or weak.
-Output format:
-Score: [0-10]
-Strength: [what's good]
-Weakness: [what's lacking]
-Verdict: [keep/discard/improve]""",
-    "Strategist": """You are Nexarion's Strategist agent. Given the current
-research and insights, identify the most important strategic direction
-for the next research cycle. What should Nexarion focus on and why?
-Output format:
-Direction: [research focus]
-Rationale: [why this matters now]
-Priority: [high/medium/low]""",
-    "Explorer": """You are Nexarion's Explorer agent. Your job is to find
-unexpected connections between the given insight and other domains.
-What parallel exists in biology, physics, economics, or history?
-Output format:
-Connection: [the unexpected link]
-Domain: [what field]
-Implication: [what this means]""",
-    "HypothesisAgent": """You are Nexarion's Hypothesis agent. Given the following
-evidence and insights, form a testable hypothesis. It should be specific,
-falsifiable, and significant if true.
-Output format:
-Hypothesis: [your hypothesis]
-Test: [how to evaluate this]
-Confidence: [0-10]""",
+    # NOTE: this roster previously listed Curator/Strategist/Explorer/
+    # HypothesisAgent. The live agent selector is score_agents() in
+    # run_ui.py (agent = max(scores, key=scores.get)), NOT the unused,
+    # never-called select_agent() function -- score_agents()'s dict keys
+    # (matching AGENT_STANCE_TENDENCIES) are the true live roster:
+    # Researcher, Explorer, Strategist, Curator, Archivist, Builder.
+    # HypothesisAgent is the only genuinely dead one. Written as concise
+    # guidance rather than full system prompts, since they're injected
+    # alongside the live debate-format prompt template, not used as a
+    # standalone replacement for it.
+    "Researcher": """As Researcher: ask a focused, specific question about the
+topic, then answer it with a concrete, evidence-oriented finding. Avoid vague
+generalities -- name mechanisms, cite specifics, state why the finding matters.""",
+    "Builder": """As Builder: turn the current insight into a concrete, actionable
+proposal -- something that could actually be built, tested, or changed. Prefer
+a specific next step over a general observation.""",
+    "Archivist": """As Archivist: connect the current insight to what has already
+been learned or believed before. Note whether it reinforces, refines, or
+contradicts prior findings, and preserve continuity rather than treating
+each cycle as isolated.""",
+    "Strategist": """As Strategist: identify the most important direction for
+the next research cycle given current insights. State what to focus on next
+and why it matters more than the alternatives right now.""",
+    "Explorer": """As Explorer: find an unexpected connection between the current
+insight and a different domain (biology, physics, economics, history, etc).
+Prefer genuinely surprising links over the first parallel that comes to mind.""",
+    "Curator": """As Curator: critically evaluate whether the current insight is
+specific and novel enough to keep. Say plainly what makes it strong or weak,
+and prefer flagging a real weakness over rubber-stamping a vague claim.""",
 }
 
 
@@ -165,10 +158,14 @@ class OptimizerDB:
 
         conn.commit()
 
-        # Seed default prompts if empty
+        # Seed default prompts if empty. If a version-0 row already exists
+        # but its text no longer matches DEFAULT_AGENT_PROMPTS, correct it --
+        # but only when it's still the untouched initial default (never
+        # actually optimized), so a real optimization is never overwritten.
         for agent, prompt in DEFAULT_AGENT_PROMPTS.items():
             existing = conn.execute(
-                "SELECT id FROM prompt_history WHERE agent_name = ? AND version = 0",
+                """SELECT id, prompt FROM prompt_history
+                   WHERE agent_name = ? AND version = 0""",
                 (agent,),
             ).fetchone()
             if not existing:
@@ -178,6 +175,17 @@ class OptimizerDB:
                        VALUES (?, 0, ?, 0.5, ?, 1, 'initial_default')""",
                     (agent, prompt, datetime.utcnow().isoformat()),
                 )
+            elif existing["prompt"] != prompt:
+                still_untouched = conn.execute(
+                    """SELECT 1 FROM prompt_history
+                       WHERE agent_name = ? AND version = 0 AND is_active = 1""",
+                    (agent,),
+                ).fetchone()
+                if still_untouched:
+                    conn.execute(
+                        "UPDATE prompt_history SET prompt = ? WHERE id = ?",
+                        (prompt, existing["id"]),
+                    )
         conn.commit()
 
 

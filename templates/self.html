@@ -231,12 +231,18 @@
             </div>
             <div class="sandbox-tabs">
                 <button class="stab active" data-tab="activity">ACTIVITY LOG</button>
+                <button class="stab" data-tab="pending">PENDING APPROVAL</button>
                 <button class="stab" data-tab="agents">BUILT AGENTS</button>
                 <button class="stab" data-tab="run">MANUAL RUN</button>
             </div>
             <div class="sandbox-pane active" id="pane-activity">
                 <div class="sandbox-list" id="activity-list">
                     <div class="empty-state"><div class="empty-icon">◎</div><div>No sandbox activity yet.</div><div class="empty-sub">Nex will populate this as she builds.</div></div>
+                </div>
+            </div>
+            <div class="sandbox-pane" id="pane-pending">
+                <div class="sandbox-list" id="pending-list">
+                    <div class="empty-state"><div class="empty-icon">◎</div><div>Nothing waiting for approval.</div><div class="empty-sub">Only shown at trust level 1 -- code NEX writes waits here until you approve it.</div></div>
                 </div>
             </div>
             <div class="sandbox-pane" id="pane-agents">
@@ -450,6 +456,46 @@ async function loadSandbox() {
     } catch(e) { dot('sandbox-dot', '#ff4444'); }
 }
 
+async function loadPendingApprovals() {
+    try {
+        const data = await fetch('/api/sandbox/pending').then(r => r.json());
+        const pending = data.pending || [];
+        const list = $('pending-list');
+        if (!list) return;
+        if (!pending.length) {
+            list.innerHTML = `<div class="empty-state"><div class="empty-icon">◎</div><div>Nothing waiting for approval.</div><div class="empty-sub">Only shown at trust level 1 -- code NEX writes waits here until you approve it.</div></div>`;
+            return;
+        }
+        list.innerHTML = pending.map(p => `
+            <div class="activity-item">
+                <div class="activity-header">
+                    <span class="activity-type">pending</span>
+                    <span class="activity-time">${new Date(p.submitted_at).toLocaleTimeString()}</span>
+                </div>
+                <div class="activity-desc">${esc(p.description || '')}</div>
+                <div class="activity-output">${esc((p.code || '').substring(0,300))}</div>
+                <div class="agent-card-actions" style="margin-top:8px;">
+                    <button class="nexus-btn btn-approve" data-task="${p.task_id}">✓ APPROVE &amp; RUN</button>
+                    <button class="nexus-btn btn-reject" data-task="${p.task_id}">✗ REJECT</button>
+                </div>
+            </div>`).join('');
+
+        list.querySelectorAll('.btn-approve').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                await fetch(`/api/sandbox/approve/${btn.dataset.task}`, {method: 'POST'});
+                loadPendingApprovals();
+                loadSandbox();
+            });
+        });
+        list.querySelectorAll('.btn-reject').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                await fetch(`/api/sandbox/reject/${btn.dataset.task}`, {method: 'POST'});
+                loadPendingApprovals();
+            });
+        });
+    } catch(e) { console.error('Pending approvals error:', e); }
+}
+
 $('btn-run-code').addEventListener('click', async () => {
     const code = $('sandbox-code').value.trim();
     if (!code) return;
@@ -472,7 +518,14 @@ $('btn-run-code').addEventListener('click', async () => {
 });
 
 $('btn-trust-up').addEventListener('click', () => {
-    alert('To increase trust level, edit nex_sandbox.trust_level in run_ui.py:\n  nex_sandbox.trust_level = 1\nThen restart Nex.');
+    alert(
+        'Trust levels (edit nex_sandbox.trust_level in run_ui.py, then restart):\n\n' +
+        'LEVEL 0 (current default) -- Sandbox only. Code runs immediately, fully isolated.\n\n' +
+        'LEVEL 1 -- Sandbox + Review. Safety-checked code is queued in the ' +
+        '"PENDING APPROVAL" tab instead of running immediately -- you approve or reject each one.\n\n' +
+        'LEVEL 2/3 -- Real-machine execution. Not implemented yet, deliberately -- ' +
+        'this is a bigger decision than sandboxed code and needs its own discussion first.'
+    );
 });
 
 async function loadCycle() {
@@ -935,6 +988,7 @@ async function loadAll() {
     await Promise.all([
         loadLLM(), loadMemory(), loadOptimizer(), loadSandbox(), loadCycle(), loadDocker(),
         loadSelfModel(), loadStream(), loadChain(), loadLoopMonitor(), loadBuilderProposals(),
+        loadPendingApprovals(),
     ]);
 }
 loadAll();
@@ -949,5 +1003,6 @@ setInterval(loadStream, 4000);
 setInterval(loadChain, 8000);
 setInterval(loadLoopMonitor, 10000);
 setInterval(loadBuilderProposals, 20000);
+setInterval(loadPendingApprovals, 10000);
 </script>
 {% endblock %}

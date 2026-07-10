@@ -542,7 +542,51 @@ class SandboxLog:
             trust_level INTEGER DEFAULT 0
         )"""
         )
+        self._conn().execute(
+            """
+        CREATE TABLE IF NOT EXISTS pending_approvals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id TEXT,
+            description TEXT,
+            code TEXT,
+            submitted_at TEXT,
+            status TEXT DEFAULT 'pending'  -- pending / approved / rejected
+        )"""
+        )
         self._conn().commit()
+
+    def queue_for_approval(self, task_id: str, description: str, code: str):
+        """Trust level 1: safety-checked code waits here until a human approves it."""
+        self._conn().execute(
+            """INSERT INTO pending_approvals (task_id, description, code, submitted_at, status)
+               VALUES (?, ?, ?, ?, 'pending')""",
+            (task_id, description, code, datetime.utcnow().isoformat()),
+        )
+        self._conn().commit()
+
+    def get_pending_approvals(self) -> list:
+        rows = (
+            self._conn()
+            .execute(
+                "SELECT * FROM pending_approvals WHERE status = 'pending' ORDER BY id DESC"
+            )
+            .fetchall()
+        )
+        return [dict(r) for r in rows]
+
+    def mark_approval_status(self, task_id: str, status: str):
+        self._conn().execute(
+            "UPDATE pending_approvals SET status = ? WHERE task_id = ?",
+            (status, task_id),
+        )
+        self._conn().commit()
+
+    def get_pending_by_id(self, task_id: str) -> Optional[dict]:
+        row = self._conn().execute(
+            "SELECT * FROM pending_approvals WHERE task_id = ? AND status = 'pending'",
+            (task_id,),
+        ).fetchone()
+        return dict(row) if row else None
 
     def log(self, task_type: str, description: str, code: str, result: dict):
         self._conn().execute(
@@ -593,10 +637,79 @@ class NexSandbox:
         print(f"🔒 SANDBOX: Online (trust level {self.trust_level})")
 
     def run_code(self, code: str, description: str = "code execution") -> dict:
-        """Execute code in the sandbox and log it."""
-        result = self.executor.execute(code)
-        self.log.log("code_execution", description, code, result)
+        """
+        Execute code according to the current trust level:
+          0 — Sandbox only: safety-checked, runs immediately, isolated.
+          1 — Sandbox + Review: safety-checked, then queued for YOUR
+              approval before it runs (still fully sandboxed either way).
+          2/3 — Not implemented. Real-machine execution is a materially
+              bigger decision than anything sandboxed and deserves its own
+              explicit discussion before being built, not a quiet default.
+        """
+        if self.trust_level == 0:
+            result = self.executor.execute(code)
+            self.log.log("code_execution", description, code, result)
+            return result
+
+        if self.trust_level == 1:
+            is_safe, reason = self.executor.checker.check(code)
+            task_id = str(uuid.uuid4())[:8]
+            if not is_safe:
+                result = {
+                    "task_id": task_id,
+                    "status": "blocked",
+                    "reason": reason,
+                    "stdout": "",
+                    "stderr": "",
+                    "duration": 0,
+                }
+                self.log.log("code_execution", description, code, result)
+                return result
+            self.log.queue_for_approval(task_id, description, code)
+            result = {
+                "task_id": task_id,
+                "status": "pending_approval",
+                "stdout": "",
+                "stderr": "",
+                "duration": 0,
+            }
+            self.log.log("code_execution", description, code, result)
+            return result
+
+        return {
+            "task_id": "",
+            "status": "not_implemented",
+            "reason": (
+                f"Trust level {self.trust_level} (real-machine execution) "
+                "hasn't been built. This is a deliberate gap, not a bug -- "
+                "it's a bigger decision than sandboxed code and needs its "
+                "own explicit discussion first."
+            ),
+            "stdout": "",
+            "stderr": "",
+            "duration": 0,
+        }
+
+    def approve_pending(self, task_id: str) -> dict:
+        """Trust level 1: run a previously-queued, human-approved task."""
+        pending = self.log.get_pending_by_id(task_id)
+        if not pending:
+            return {"status": "error", "reason": "No pending task with that id"}
+        result = self.executor.execute(pending["code"], task_id=task_id)
+        self.log.mark_approval_status(task_id, "approved")
+        self.log.log("code_execution", f"[approved] {pending['description']}", pending["code"], result)
         return result
+
+    def reject_pending(self, task_id: str) -> dict:
+        """Trust level 1: discard a queued task without running it."""
+        pending = self.log.get_pending_by_id(task_id)
+        if not pending:
+            return {"status": "error", "reason": "No pending task with that id"}
+        self.log.mark_approval_status(task_id, "rejected")
+        return {"status": "rejected", "task_id": task_id}
+
+    def get_pending_approvals(self) -> list:
+        return self.log.get_pending_approvals()
 
     def create_agent(self, agent_name: str, purpose: str, agent_logic: str) -> dict:
         """Have Nex create a new agent in the sandbox."""

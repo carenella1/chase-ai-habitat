@@ -2,6 +2,19 @@
 nex_docker_api.py
 Flask API server running INSIDE the Docker container.
 Chase's Habitat calls this to give Nex full Linux agency.
+
+This container is deliberately full-agency by design (see the Dockerfile
+identity message: "full access to Python, the filesystem, and the
+internet") -- that is intentional and not something this file overrides.
+What IS hardened here:
+  - A path-traversal bug in /write_file and /read_file: a path like
+    "../../etc/passwd" previously escaped the workspace directory
+    entirely, since the old code only stripped a leading slash.
+  - A guard against a narrow set of catastrophically destructive
+    commands (wiping the filesystem, forkbombs, killing the API's own
+    process) -- a seatbelt against self-inflicted disaster, not a
+    general sandbox. Network access and the Python stdlib/installed
+    packages remain fully available, matching the container's design.
 """
 
 import os
@@ -12,6 +25,7 @@ import uuid
 import subprocess
 import threading
 from datetime import datetime
+from pathlib import Path
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -19,6 +33,49 @@ app = Flask(__name__)
 WORKSPACE = "/nex_workspace"
 LOG_FILE = "/nex_workspace/data/activity.jsonl"
 os.makedirs("/nex_workspace/data", exist_ok=True)
+
+MAX_CODE_SIZE = 200_000  # 200KB -- generous, but not unbounded
+
+# Catastrophic patterns to block outright, regardless of the container's
+# otherwise-full agency. These aren't "dangerous capabilities" (network,
+# subprocess, file access are all intentionally available) -- they're
+# specifically self-destructive or self-sabotaging actions.
+CATASTROPHIC_PATTERNS = [
+    "rm -rf /",
+    "rm -rf /*",
+    "rm -rf ~",
+    "shutil.rmtree('/')",
+    'shutil.rmtree("/")',
+    "shutil.rmtree('/nex_workspace')",
+    'shutil.rmtree("/nex_workspace")',
+    ":(){ :|:& };:",  # classic bash forkbomb
+    "mkfs.",
+    "dd if=/dev/zero of=/dev/",
+    "pkill -9 python",
+    "killall -9 python",
+]
+
+
+def _check_catastrophic(code: str):
+    """Returns (is_safe, reason). Only blocks clearly self-destructive
+    actions -- not a general safety check."""
+    for pattern in CATASTROPHIC_PATTERNS:
+        if pattern in code:
+            return False, f"Blocked catastrophic pattern: '{pattern}'"
+    return True, "ok"
+
+
+def _resolve_within_workspace(path: str):
+    """
+    Resolve a user-supplied path safely within WORKSPACE, rejecting any
+    attempt to escape it via '..' segments or an absolute path pointing
+    elsewhere. Returns the resolved absolute path, or None if unsafe.
+    """
+    candidate = (Path(WORKSPACE) / path.lstrip("/")).resolve()
+    workspace_root = Path(WORKSPACE).resolve()
+    if candidate == workspace_root or workspace_root in candidate.parents:
+        return str(candidate)
+    return None
 
 
 def log_activity(task_type, description, code, result):
@@ -57,13 +114,40 @@ def status():
 
 @app.route("/execute", methods=["POST"])
 def execute():
-    """Execute any Python code with full permissions."""
+    """Execute Python code with full permissions, except for a narrow
+    blocklist of catastrophically self-destructive actions."""
     data = request.get_json()
     code = data.get("code", "")
     description = data.get("description", "execution")
     timeout = data.get("timeout", 60)
 
     task_id = str(uuid.uuid4())[:8]
+
+    if len(code) > MAX_CODE_SIZE:
+        out = {
+            "task_id": task_id,
+            "status": "blocked",
+            "reason": f"Code exceeds {MAX_CODE_SIZE} byte limit",
+            "stdout": "",
+            "stderr": "",
+            "duration": 0,
+        }
+        log_activity("code_execution", description, code[:500], out)
+        return jsonify(out)
+
+    is_safe, reason = _check_catastrophic(code)
+    if not is_safe:
+        out = {
+            "task_id": task_id,
+            "status": "blocked",
+            "reason": reason,
+            "stdout": "",
+            "stderr": "",
+            "duration": 0,
+        }
+        log_activity("code_execution", description, code, out)
+        return jsonify(out)
+
     tmp_file = f"/tmp/nex_{task_id}.py"
 
     with open(tmp_file, "w") as f:
@@ -117,10 +201,15 @@ def execute():
 def write_file():
     """Write a file into Nex's workspace."""
     data = request.get_json()
-    path = data.get("path", "").lstrip("/")
+    path = data.get("path", "")
     content = data.get("content", "")
 
-    full_path = os.path.join(WORKSPACE, path)
+    full_path = _resolve_within_workspace(path)
+    if full_path is None:
+        result = {"status": "blocked", "reason": "Path escapes workspace"}
+        log_activity("file_write", f"Blocked write {path}", content[:200], result)
+        return jsonify(result), 400
+
     os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
     with open(full_path, "w") as f:
@@ -134,8 +223,10 @@ def write_file():
 @app.route("/read_file", methods=["GET"])
 def read_file():
     """Read a file from Nex's workspace."""
-    path = request.args.get("path", "").lstrip("/")
-    full_path = os.path.join(WORKSPACE, path)
+    path = request.args.get("path", "")
+    full_path = _resolve_within_workspace(path)
+    if full_path is None:
+        return jsonify({"error": "Path escapes workspace"}), 400
     if not os.path.exists(full_path):
         return jsonify({"error": "File not found"}), 404
     with open(full_path, "r") as f:
