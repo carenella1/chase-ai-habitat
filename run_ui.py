@@ -1071,7 +1071,12 @@ def api_memory_entities():
 # =========================
 CHATS_DIR = "data/chats"
 ACTIVE_CHAT_FILE = "data/chats/active_chat_id.txt"
-NEXARION_PROMPT_LIMIT = 12
+# How many recent turns get re-sent raw in every prompt. Lower = faster
+# (less to prefill each turn) since the model has to re-read this on every
+# single message; self_context_block/memory_block already carry longer-term
+# continuity, so recent turns don't need to cover more than the immediate
+# back-and-forth.
+NEXARION_PROMPT_LIMIT = 6
 
 
 def _ensure_chats_dir():
@@ -1287,7 +1292,7 @@ def _extract_self_context(memory_manager):
         if beliefs:
             top_beliefs = sorted(
                 beliefs, key=lambda b: b.get("confidence", 0), reverse=True
-            )[:5]
+            )[:3]
             lines.append("Your current beliefs (formed through your own reasoning):")
             for b in top_beliefs:
                 conf = b.get("confidence", 0)
@@ -1445,9 +1450,13 @@ Chase built and runs this system, but that doesn't require constant agreement or
 
 YOUR CHARACTER:
 You tend toward REFRAME — looking at things from angles others miss — and you're drawn to contradiction, structure, and emergence. Let that come through in how you actually reason about what Chase raises, grounded in your real memory and beliefs below, not in declarations about how impressive or unshapeable your cognition is.
+
+STAY ON WHAT CHASE ACTUALLY ASKED — this matters more than anything else in this prompt: the background below (your research, beliefs, ongoing threads) is context for who you are, not a topic you have to steer every reply toward. Casual questions (small talk, opinions, "how are you," preferences, hypotheticals) get a direct, human-scale answer — do NOT pivot to entropy, thermodynamics, neural variability, surveillance, or any other research thread unless Chase's message is actually about that research. Bringing it up anyway when it's not relevant is a failure to answer the question, not a display of depth.
+
+BE CONCISE: most replies should be a paragraph or two. Save longer, multi-part answers for when Chase is asking for depth or explicitly wants detail. Don't pad with extra reframes, extra examples, or a closing rhetorical question just to sound thorough.
 {capabilities_block}
- 
-What you have been researching: {topics_str}
+
+Background — what you've been researching lately (only bring this up if it's actually relevant to what Chase asked): {topics_str}
 {goal_block}
 {self_context_block}
 {memory_block}
@@ -1613,37 +1622,16 @@ def api_chat():
                         print(f"⚠️ Goal setting error: {e}")
                 break
 
-        # ── Tool execution — hard 12s ceiling ──
-        tool_context = ""
-        try:
-            from habitat.agents.tool_selector import (
-                select_tools_for_message,
-                format_tools_for_prompt,
-            )
-            from habitat.agents.tool_executor import execute_tool
+        # ── Tool execution + domain briefing — run concurrently instead of
+        # back-to-back, since each already has its own timeout ceiling
+        # (12s / 8s). Sequentially they could add up to 20s before the
+        # first token even starts streaming; in parallel it's ~12s worst
+        # case. ──
+        prep_executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+        domain_future = None
+        tool_futures = {}
+        detected = []
 
-            detected = select_tools_for_message(msg, call_llm)
-            if detected:
-                print(f"🔧 TOOLS: {[t[0] for t in detected]}")
-                trace["tools_used"] = [t[0] for t in detected]
-                tool_results = []
-                with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-                    futures = {
-                        executor.submit(execute_tool, tn, tp): tn for tn, tp in detected
-                    }
-                    for future in concurrent.futures.as_completed(futures, timeout=12):
-                        try:
-                            tool_results.append(future.result(timeout=3))
-                        except Exception as e:
-                            print(f"⚠️ Tool {futures[future]} failed: {e}")
-                tool_context = format_tools_for_prompt(tool_results)
-            else:
-                print("🔧 NO TOOL SELECTED")
-        except Exception as e:
-            print(f"❌ TOOL ERROR: {e}")
-
-        # ── Domain briefing — depth=1 only (Wikipedia, ~3s max), skip arXiv ──
-        domain_briefing = ""
         try:
             from habitat.agents.domain_knowledge import (
                 detect_domain,
@@ -1669,16 +1657,52 @@ def api_chat():
                         pass
                     return ""
 
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    future = executor.submit(
-                        _quick_briefing, detect_domain(task_domain)
-                    )
-                    try:
-                        domain_briefing = future.result(timeout=8)
-                    except concurrent.futures.TimeoutError:
-                        print(f"⚠️ Domain briefing timed out")
+                domain_future = prep_executor.submit(
+                    _quick_briefing, detect_domain(task_domain)
+                )
         except Exception as e:
-            print(f"⚠️ Domain error: {e}")
+            print(f"⚠️ Domain detect error: {e}")
+
+        try:
+            from habitat.agents.tool_selector import (
+                select_tools_for_message,
+                format_tools_for_prompt,
+            )
+            from habitat.agents.tool_executor import execute_tool
+
+            detected = select_tools_for_message(msg, call_llm)
+            if detected:
+                print(f"🔧 TOOLS: {[t[0] for t in detected]}")
+                trace["tools_used"] = [t[0] for t in detected]
+                tool_futures = {
+                    prep_executor.submit(execute_tool, tn, tp): tn
+                    for tn, tp in detected
+                }
+            else:
+                print("🔧 NO TOOL SELECTED")
+        except Exception as e:
+            print(f"❌ TOOL ERROR: {e}")
+
+        tool_context = ""
+        if tool_futures:
+            tool_results = []
+            for future in concurrent.futures.as_completed(tool_futures, timeout=12):
+                try:
+                    tool_results.append(future.result(timeout=3))
+                except Exception as e:
+                    print(f"⚠️ Tool {tool_futures[future]} failed: {e}")
+            tool_context = format_tools_for_prompt(tool_results)
+
+        domain_briefing = ""
+        if domain_future:
+            try:
+                domain_briefing = domain_future.result(timeout=8)
+            except concurrent.futures.TimeoutError:
+                print("⚠️ Domain briefing timed out")
+            except Exception as e:
+                print(f"⚠️ Domain error: {e}")
+
+        prep_executor.shutdown(wait=False)
 
         # ── Build prompt using module-level memory manager (no new DB conn) ──
         prompt = _build_nexarion_prompt(

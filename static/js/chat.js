@@ -455,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            if (!finalPayload.failed && finalPayload.text) {
+            if (orbMode && !finalPayload.failed && finalPayload.text) {
                 const audio = await speakText(finalPayload.text);
                 if (audio) {
                     lastResponse.audio = audio;
