@@ -43,12 +43,20 @@ webview_window = None
 # =============================================================
 LOG_PATH = os.path.join(PROJECT_ROOT, "habitat_debug.log")
 
+# Single shared handle for the whole run — both this launcher's own log()
+# calls and the Flask child process's stdout/stderr write to it. Two
+# separate handles on the same path (one opened "w" partway through
+# start_flask(), one repeatedly reopened "a" by log()) used to race on
+# Windows and silently drop or overwrite each other's output, which made
+# habitat_debug.log unreliable for diagnosing startup failures.
+_log_file = open(LOG_PATH, "w", encoding="utf-8", buffering=1)
+
 
 def log(msg):
     print(msg)
     try:
-        with open(LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(msg + "\n")
+        _log_file.write(msg + "\n")
+        _log_file.flush()
     except Exception:
         pass
 
@@ -120,13 +128,10 @@ def start_flask():
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONUTF8"] = "1"
 
-    # Clear and open debug log
-    log_file = open(LOG_PATH, "w", encoding="utf-8")
-
     flask_process = subprocess.Popen(
         [python_exe, FLASK_SCRIPT],
-        stdout=log_file,
-        stderr=log_file,
+        stdout=_log_file,
+        stderr=_log_file,
         cwd=PROJECT_ROOT,
         env=env,
         creationflags=subprocess.CREATE_NO_WINDOW,
@@ -194,7 +199,7 @@ def open_window():
 
         webview.start(
             gui="edgechromium",
-            debug=True,
+            debug=False,
             http_server=False,
             private_mode=False,
         )
@@ -248,6 +253,24 @@ def _start_tray():
 
 
 # =============================================================
+# VISIBLE FAILURE ALERT
+# Launched via pythonw.exe (no console), so an unhandled failure used to
+# just exit silently — nothing on screen, nothing to go on except digging
+# through habitat_debug.log. This puts a real Windows dialog in front of
+# you when startup fails, so a failed launch is never indistinguishable
+# from "nothing happened."
+# =============================================================
+def _show_error_box(message):
+    try:
+        import ctypes
+
+        MB_ICONERROR = 0x10
+        ctypes.windll.user32.MessageBoxW(0, message, APP_TITLE, MB_ICONERROR)
+    except Exception as e:
+        log(f"Could not show error dialog: {e}")
+
+
+# =============================================================
 # SHUTDOWN
 # =============================================================
 def shutdown():
@@ -281,6 +304,10 @@ def main():
     ready = wait_for_flask(timeout=90)
     if not ready:
         log("Flask failed to start. Check habitat_debug.log.")
+        _show_error_box(
+            "Nexarion failed to start — the Flask server didn't respond in time.\n\n"
+            f"Check habitat_debug.log in:\n{PROJECT_ROOT}"
+        )
         shutdown()
         return
 
@@ -293,4 +320,14 @@ def main():
 # =============================================================
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, lambda s, f: shutdown())
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+
+        log(f"FATAL: {type(e).__name__}: {e}")
+        log(traceback.format_exc())
+        _show_error_box(
+            f"Nexarion crashed on startup:\n\n{type(e).__name__}: {e}\n\n"
+            f"See habitat_debug.log in:\n{PROJECT_ROOT}"
+        )
