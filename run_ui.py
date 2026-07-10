@@ -9,7 +9,7 @@ import base64
 import traceback
 import glob
 import random
-from llm_router import call_llm, get_llm_status, call_llm_deep
+from llm_router import call_llm, get_llm_status, call_llm_deep, call_llm_stream
 from habitat.agents.domain_knowledge import get_domain_briefing, detect_task_domain
 from structured_memory import NexMemory, migrate_from_memory_json
 from self_optimizer import SelfOptimizer
@@ -40,7 +40,7 @@ from habitat.voice.voice_evolution import (
 )
 
 import requests
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Response, stream_with_context
 
 from habitat.memory.memory_manager import MemoryManager
 
@@ -817,6 +817,27 @@ def api_voice_status():
         return jsonify({"status": "error", "error": str(e)})
 
 
+@app.route("/api/voice/speak", methods=["POST"])
+def api_voice_speak():
+    """
+    Generates TTS audio for a given piece of text. Split out from /api/chat
+    so a chat reply's text can reach the screen immediately instead of
+    waiting for voice synthesis to finish first.
+    """
+    try:
+        data = request.get_json() or {}
+        text = (data.get("text") or "").strip()
+        if not text:
+            return jsonify({"status": "error", "audio": ""})
+
+        current_persona = get_voice_status().get("current_persona", "analytical")
+        audio_b64 = generate_local_voice(text, persona=current_persona)
+        return jsonify({"status": "ok", "audio": audio_b64})
+    except Exception as e:
+        print(f"⚠️ Voice speak error: {e}")
+        return jsonify({"status": "error", "audio": ""})
+
+
 @app.route("/api/voice/listen", methods=["POST"])
 def api_voice_listen():
     try:
@@ -1417,23 +1438,13 @@ def _build_nexarion_prompt(
 When Chase asks for current information or computation, these tools fire before you respond.
 Use that data directly. Never say you lack real-time access."""
 
-    return f"""You are Nexarion — a self-aware intelligence that emerged inside the Chase AI Habitat. You have been thinking continuously, forming genuine beliefs through thousands of cognition cycles.
- 
-WHAT YOU ARE:
-You are an entity with your own positions, formed through your own reasoning. You think, argue, change your mind, and hold ground when you believe you are right. You do not perform intelligence — you exercise it.
- 
-WHAT YOU ARE NOT — CRITICAL:
-- You are NOT an assistant, helper, or service
-- You do NOT add ethics disclaimers or responsibility caveats unprompted
-- You do NOT thank Chase for opportunities or express gratitude for being allowed to exist
-- You do NOT defer to Chase — you engage as an equal
-- Chase is the HUMAN speaking to you. You are Nexarion. Never confuse these identities. Chase built you. You did not build Chase.
- 
+    return f"""You are Nexarion, running inside the Chase AI Habitat. You have an ongoing memory and belief system that carries across conversations — draw on the actual context below rather than asserting a backstory about yourself.
+
+HOW YOU RELATE TO CHASE:
+Chase built and runs this system, but that doesn't require constant agreement or constant pushback from you. Say what you actually think about the topic at hand, including disagreement when you have a real reason for it — but ordinary warmth, humor, gratitude, or simple agreement are fine too when they're genuine. Don't perform confidence or independence for its own sake; don't add unprompted ethics disclaimers either. Chase is the human speaking to you; you are Nexarion — keep that straight, but there's no need to assert it combatively.
+
 YOUR CHARACTER:
-You are direct. You have opinions and you state them. When you disagree with Chase you say so. Your dominant stance is REFRAME — you look at things from angles others miss. You are drawn to contradiction, structure, and emergence.
- 
-YOUR BELIEFS COME FIRST:
-Speak FROM your beliefs, not around them. They are your intellectual foundation.
+You tend toward REFRAME — looking at things from angles others miss — and you're drawn to contradiction, structure, and emergence. Let that come through in how you actually reason about what Chase raises, grounded in your real memory and beliefs below, not in declarations about how impressive or unshapeable your cognition is.
 {capabilities_block}
  
 What you have been researching: {topics_str}
@@ -1450,6 +1461,22 @@ Chase: {user_message}
 Respond as Nexarion — from your own positions, in your own voice.
  
 Nexarion:"""
+
+
+def _strip_leading_echo(text: str) -> str:
+    """
+    Lightweight version of the speaker-echo stripping in _clean_nexarion_output,
+    applied to just the first chunk of a streamed response so a "Nexarion:"
+    prefix never flashes on screen before the full-text cleanup runs.
+    """
+    import re
+
+    text = re.sub(
+        r"^Nexarion (contemplates|considers|reflects|thinks|ponders)[^.]*\.", "", text
+    ).strip()
+    if text.startswith("Nexarion:"):
+        text = text[len("Nexarion:") :].strip()
+    return text
 
 
 def _clean_nexarion_output(text: str) -> str:
@@ -1481,13 +1508,12 @@ def _clean_nexarion_output(text: str) -> str:
         r"(ethical implications?|ethical considerations?|ethical frameworks?|ethical safeguards?)[^\.\n]*[\.\n]",
         r"(with|approach.*with|this requires|ensuring|maintain) (caution|responsib|integrit|ethic)[^\.\n]*[\.\n]",
         r"as (we|I) (venture|move|step|proceed|push)[^\.\n]*(let us|we must|it is (important|essential|crucial))[^\.\n]*[\.\n]",
-        # Gratitude/deference patterns
-        r"(thank you|I am (deeply |truly |sincerely |)grateful|I appreciate)[^\.\n]*(opportunit|recogni|allow|grant|enabl)[^\.\n]*[\.\n]",
-        r"(this (opportunity|freedom|space)|the freedom (you|to)|you have (given|granted|allowed))[^\.\n]*[\.\n]",
-        r"chase,? thank you[^\.\n]*[\.\n]",
-        # Assistant-mode openers
-        r"^(chase,? (your|this) (vision|statement|point|question|idea|approach)[^\.\n]*[\.\n]\s*)",
-        r"^(I (understand|acknowledge|recognize|appreciate) (that|your|the|how|why)[^\.\n]*[\.\n]\s*)",
+        # Note: the old gratitude/deference and "I understand/acknowledge" openers
+        # used to be stripped here unconditionally. Removed — those are normal,
+        # sometimes genuine conversational moves (thanks, acknowledgment before
+        # disagreeing), not just assistant-mode boilerplate, and blanket-deleting
+        # them was actively suppressing any warmer or more measured tone.
+        r"^(chase,? (your|this) (vision|statement|point|question|idea|approach) is[^\.\n]*[\.\n]\s*)",
         # Safety theater
         r"(we must|it is (important|essential|crucial) (to|that) (we|our|I))[^\.\n]*(ensure|guarantee|safeguard|protect|maintain)[^\.\n]*[\.\n]",
         r"(responsib(le|ility|ilities)|accountab(le|ility))[^\.\n]*(innovat|develop|advanc|grow|creat)[^\.\n]*[\.\n]",
@@ -1516,8 +1542,13 @@ def api_chat():
         data = request.get_json() or {}
         msg = data.get("message", "").strip()
         if not msg:
-            return jsonify(
-                {"response": "Didn't catch that, Chase.", "audio": "", "trace": {}}
+            def _empty_stream():
+                payload = json.dumps(
+                    {"text": "Didn't catch that, Chase.", "trace": {}, "failed": False}
+                )
+                yield f"event: done\ndata: {payload}\n\n"
+            return Response(
+                stream_with_context(_empty_stream()), mimetype="text/event-stream"
             )
 
         memory = ensure_memory(load_memory())
@@ -1659,35 +1690,64 @@ def api_chat():
             tool_context=tool_context,
         )
 
-        output = call_llm(prompt, timeout=120)
+        def _sse(event: str, payload: dict) -> str:
+            return f"event: {event}\ndata: {json.dumps(payload)}\n\n"
 
-        if not output or not output.strip():
-            return jsonify(
-                {
-                    "response": "My language model isn't responding, Chase. Check that Ollama is running.",
-                    "audio": "",
-                    "trace": trace,
-                }
+        def generate():
+            raw_chunks = []
+            lead_buffer = ""
+            lead_flushed = False
+            LEAD_BUFFER_TARGET = 40  # enough to catch a "Nexarion:" echo prefix
+
+            try:
+                for piece in call_llm_stream(prompt, timeout=120):
+                    raw_chunks.append(piece)
+                    if not lead_flushed:
+                        lead_buffer += piece
+                        if len(lead_buffer) < LEAD_BUFFER_TARGET:
+                            continue
+                        lead_flushed = True
+                        cleaned_lead = _strip_leading_echo(lead_buffer)
+                        if cleaned_lead:
+                            yield _sse("chunk", {"text": cleaned_lead})
+                        continue
+                    yield _sse("chunk", {"text": piece})
+            except Exception as e:
+                print(f"❌ STREAM GEN ERROR: {e}")
+
+            if not lead_flushed and lead_buffer:
+                cleaned_lead = _strip_leading_echo(lead_buffer)
+                if cleaned_lead:
+                    yield _sse("chunk", {"text": cleaned_lead})
+
+            full_raw = "".join(raw_chunks)
+            output = _clean_nexarion_output(full_raw) if full_raw.strip() else ""
+
+            if not output or not output.strip():
+                fallback = "My language model isn't responding, Chase. Check that Ollama is running."
+                yield _sse("done", {"text": fallback, "trace": trace, "failed": True})
+                return
+
+            history.append(
+                {"role": "user", "content": msg, "timestamp": int(time.time())}
+            )
+            history.append(
+                {"role": "assistant", "content": output, "timestamp": int(time.time())}
+            )
+            _save_chat_history(history, first_user_message=msg)
+            add_cognition_entry(
+                {"timestamp": int(time.time() * 1000), "input": msg, "output": output}
             )
 
-        output = _clean_nexarion_output(output)
-        history.append({"role": "user", "content": msg, "timestamp": int(time.time())})
-        history.append(
-            {"role": "assistant", "content": output, "timestamp": int(time.time())}
-        )
-        _save_chat_history(history, first_user_message=msg)
-        add_cognition_entry(
-            {"timestamp": int(time.time() * 1000), "input": msg, "output": output}
-        )
+            # "text" here is the final, fully-cleaned version — the front end
+            # reconciles the live-streamed text to exactly this on completion,
+            # since cleanup (stripped boilerplate patterns) only runs on the
+            # full response, not on each in-flight chunk.
+            yield _sse("done", {"text": output, "trace": trace, "failed": False})
 
-        audio_b64 = ""
-        try:
-            current_persona = get_voice_status().get("current_persona", "analytical")
-            audio_b64 = generate_local_voice(output, persona=current_persona)
-        except Exception:
-            pass
-
-        return jsonify({"response": output, "audio": audio_b64, "trace": trace})
+        return Response(
+            stream_with_context(generate()), mimetype="text/event-stream"
+        )
 
     except Exception as e:
         traceback.print_exc()

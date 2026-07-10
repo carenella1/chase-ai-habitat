@@ -1,4 +1,4 @@
-import { sendMessage } from "/static/js/adapters/chatAdapter.js";
+import { streamMessage, speakText } from "/static/js/adapters/chatAdapter.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     if (!document.querySelector(".chat-layout")) return;
@@ -168,6 +168,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
         thread.appendChild(wrap);
         if (!skipScroll) thread.scrollTop = thread.scrollHeight;
+    }
+
+    /**
+     * Creates an empty Nexarion bubble that text can be streamed into.
+     * Returns { appendText(chunk), setText(full), finish(trace) }.
+     */
+    function addStreamingMessage() {
+        const wrap = document.createElement("div");
+        wrap.className = "chat-message habitat";
+
+        const meta = document.createElement("div");
+        meta.className = "chat-meta";
+        meta.textContent = "Nexarion";
+
+        const bubble = document.createElement("div");
+        bubble.className = "chat-bubble";
+
+        wrap.appendChild(meta);
+        wrap.appendChild(bubble);
+        thread.appendChild(wrap);
+        thread.scrollTop = thread.scrollHeight;
+
+        return {
+            appendText(chunk) {
+                bubble.textContent += chunk;
+                thread.scrollTop = thread.scrollHeight;
+            },
+            setText(full) {
+                bubble.textContent = full;
+            },
+            finish(trace) {
+                if (trace && Object.keys(trace).length > 0) {
+                    const tracePanel = buildTracePanel(trace);
+                    if (tracePanel) wrap.appendChild(tracePanel);
+                }
+                thread.scrollTop = thread.scrollHeight;
+            }
+        };
     }
 
     function showTyping() {
@@ -372,48 +410,76 @@ document.addEventListener("DOMContentLoaded", () => {
         if (orbMode) setOrbState("thinking");
 
         const typing = showTyping();
+        let stream = null;
+        let gotFirstChunk = false;
+        let finalPayload = null;
 
         try {
-            const res = await sendMessage(text);
-            lastResponse = res;
-            typing.remove();
+            await streamMessage(text, {
+                onChunk: (chunk) => {
+                    if (!gotFirstChunk) {
+                        gotFirstChunk = true;
+                        typing.remove();
+                        stream = addStreamingMessage();
+                        if (orbReply) orbReply.textContent = "";
+                    }
+                    stream.appendText(chunk);
+                    if (orbReply) orbReply.textContent += chunk;
+                },
+                onDone: (payload) => {
+                    finalPayload = payload;
+                    const trace = payload.trace || null;
 
-            if (!res || !res.text) {
+                    if (!stream) {
+                        // No chunks arrived at all — render the final text directly
+                        typing.remove();
+                        addMessage(payload.text || "", "habitat", false, trace);
+                    } else {
+                        // Reconcile to the fully-cleaned canonical text
+                        stream.setText(payload.text || "");
+                        stream.finish(trace);
+                    }
+                    if (orbReply) orbReply.textContent = payload.text || "";
+
+                    lastResponse = { text: payload.text || "", trace };
+                    updateContextFromTrace(trace);
+                    updateLiveContext();
+                    loadConversations();
+                }
+            });
+
+            if (!finalPayload) {
+                typing.remove();
                 addMessage("⚠️ No response from Nexarion. Is the backend running?", "habitat");
                 if (orbMode) setOrbState("idle");
                 return;
             }
 
-            // Add message with trace
-            addMessage(res.text, "habitat", false, res.trace || null);
-
-            // Update live context from trace
-            updateContextFromTrace(res.trace);
-            updateLiveContext();
-
-            if (orbReply) orbReply.textContent = res.text;
-
-            loadConversations();
-
-            if (res.audio) {
-                if (orbMode) setOrbState("speaking");
-                const isWav = res.audio.startsWith("UklG");
-                const mime = isWav ? "audio/wav" : "audio/mpeg";
-                const audio = new Audio(`data:${mime};base64,${res.audio}`);
-                audio.onended = () => {
-                    if (orbMode) {
-                        setOrbState("idle");
-                        setTimeout(startListening, 2000);
-                    }
-                };
-                audio.onerror = () => {
-                    const alt = new Audio(`data:${isWav ? "audio/mpeg" : "audio/wav"};base64,${res.audio}`);
-                    alt.onended = () => {
-                        if (orbMode) { setOrbState("idle"); setTimeout(startListening, 2000); }
+            if (!finalPayload.failed && finalPayload.text) {
+                const audio = await speakText(finalPayload.text);
+                if (audio) {
+                    lastResponse.audio = audio;
+                    if (orbMode) setOrbState("speaking");
+                    const isWav = audio.startsWith("UklG");
+                    const mime = isWav ? "audio/wav" : "audio/mpeg";
+                    const audioEl = new Audio(`data:${mime};base64,${audio}`);
+                    audioEl.onended = () => {
+                        if (orbMode) {
+                            setOrbState("idle");
+                            setTimeout(startListening, 2000);
+                        }
                     };
-                    alt.play().catch(() => { if (orbMode) setOrbState("idle"); });
-                };
-                audio.play().catch(() => { if (orbMode) setOrbState("idle"); });
+                    audioEl.onerror = () => {
+                        const alt = new Audio(`data:${isWav ? "audio/mpeg" : "audio/wav"};base64,${audio}`);
+                        alt.onended = () => {
+                            if (orbMode) { setOrbState("idle"); setTimeout(startListening, 2000); }
+                        };
+                        alt.play().catch(() => { if (orbMode) setOrbState("idle"); });
+                    };
+                    audioEl.play().catch(() => { if (orbMode) setOrbState("idle"); });
+                } else {
+                    if (orbMode) setOrbState("idle");
+                }
             } else {
                 if (orbMode) setOrbState("idle");
             }

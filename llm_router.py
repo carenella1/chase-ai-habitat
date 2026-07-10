@@ -542,6 +542,167 @@ def call_llm(
 
 
 # ─────────────────────────────────────────────
+# STREAMING CHAT CALL — yields text chunks as they're generated
+# ─────────────────────────────────────────────
+
+
+def call_llm_stream(prompt: str, timeout: int = None, system_prompt: str = None):
+    """
+    Same as call_llm, but yields response text incrementally instead of
+    waiting for the full generation. Lets the UI show words as they're
+    produced instead of a long silent wait.
+
+    Safety: if the model emits a <think>...</think> reasoning block (native
+    thinking models), that text is withheld from the stream entirely — we
+    only flush text once we're sure we're outside any open <think> tag, so
+    raw chain-of-thought never leaks into the chat bubble.
+
+    Yields str chunks. Raises nothing on failure — yields nothing and the
+    caller should treat "no chunks yielded" as a failure, same as call_llm
+    returning "".
+    """
+    global _failure_count, _last_failure_time, _last_success_time
+
+    if timeout is None:
+        timeout = CHAT_TIMEOUT
+
+    if not _check_ollama_health():
+        print("⏭️ Skipping LLM stream — Ollama not healthy")
+        return
+
+    if _failure_count >= _BACKOFF_THRESHOLD:
+        elapsed = time.time() - _last_failure_time
+        if elapsed < _BACKOFF_SECONDS:
+            remaining = int(_BACKOFF_SECONDS - elapsed)
+            print(f"⏸️ LLM BACKOFF: {_failure_count} failures, cooling {remaining}s")
+            return
+        else:
+            _failure_count = 0
+            print("🔄 LLM backoff reset")
+
+    model = get_chat_model()
+    num_gpu = _get_gpu_layers(model)
+    use_chat = _should_use_chat_api(model)
+
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
+    try:
+        if use_chat:
+            response = requests.post(
+                f"{OLLAMA_BASE}/api/chat",
+                json={
+                    "model": model,
+                    "messages": messages,
+                    "stream": True,
+                    "options": {
+                        "num_predict": 1024,
+                        "temperature": 0.65,
+                        "top_p": 0.9,
+                        "top_k": 40,
+                        "num_ctx": CHAT_CTX,
+                        "repeat_penalty": 1.15,
+                        "num_gpu": num_gpu,
+                    },
+                },
+                timeout=timeout,
+                stream=True,
+            )
+        else:
+            full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+            response = requests.post(
+                f"{OLLAMA_BASE}/api/generate",
+                json={
+                    "model": model,
+                    "prompt": full_prompt,
+                    "stream": True,
+                    "options": {
+                        "num_predict": 512,
+                        "temperature": 0.65,
+                        "top_p": 0.9,
+                        "top_k": 40,
+                        "num_ctx": CHAT_CTX,
+                        "repeat_penalty": 1.15,
+                        "num_gpu": num_gpu,
+                    },
+                },
+                timeout=timeout,
+                stream=True,
+            )
+
+        raw_accum = ""
+        emitted_len = 0
+        got_any = False
+
+        for line in response.iter_lines():
+            if not line:
+                continue
+            try:
+                data = json.loads(line)
+            except (json.JSONDecodeError, ValueError):
+                continue
+
+            if use_chat:
+                delta = data.get("message", {}).get("content", "") or ""
+            else:
+                delta = data.get("response", "") or ""
+
+            if delta:
+                raw_accum += delta
+                # Only flush text once no <think> block is currently open —
+                # this is what keeps raw reasoning out of the chat bubble.
+                open_think = raw_accum.count("<think>") > raw_accum.count("</think>")
+                if not open_think:
+                    clean, _ = _strip_thinking_tags(raw_accum)
+                    if len(clean) > emitted_len:
+                        new_text = clean[emitted_len:]
+                        emitted_len = len(clean)
+                        got_any = True
+                        yield new_text
+
+            if data.get("done"):
+                break
+
+        if not got_any:
+            _failure_count += 1
+            _last_failure_time = time.time()
+            print(f"⚠️ Empty stream from {model} (failure #{_failure_count})")
+            return
+
+        _failure_count = 0
+        _last_success_time = time.time()
+
+    except requests.exceptions.Timeout:
+        _failure_count += 1
+        _last_failure_time = time.time()
+        print(f"⏱️ STREAM TIMEOUT #{_failure_count} — model={model}, timeout={timeout}s")
+        if _failure_count >= 3:
+            global _chat_model
+            _chat_model = None
+            print(
+                f"🔄 Chat model reset after {_failure_count} failures — will re-detect"
+            )
+        return
+
+    except requests.exceptions.ConnectionError:
+        _failure_count += 1
+        _last_failure_time = time.time()
+        global _ollama_healthy, _last_health_check
+        _ollama_healthy = False
+        _last_health_check = 0.0
+        print(f"🔌 STREAM CONNECTION ERROR #{_failure_count} — is Ollama running?")
+        return
+
+    except Exception as e:
+        _failure_count += 1
+        _last_failure_time = time.time()
+        print(f"❌ LLM STREAM ERROR: {type(e).__name__}: {e}")
+        return
+
+
+# ─────────────────────────────────────────────
 # DEEP COGNITION CALL
 # ─────────────────────────────────────────────
 
