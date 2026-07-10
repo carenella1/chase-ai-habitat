@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nexus-shared.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/self.css') }}">
 
 <div class="nexus-page">
@@ -26,7 +27,7 @@
         <div class="status-tile">
             <div class="tile-icon">🧠</div>
             <div class="tile-body">
-                <div class="intel-tile-label">TWO-BRAIN SYSTEM</div>
+                <div class="intel-tile-label">TWO-BRAIN SYSTEM <span class="info-dot" data-tip-title="Two-Brain System" data-tip-body="NEX splits work between a fast model for anything you're waiting on (chat, quick cycle decisions) and a slower, more capable model for expensive background thinking like deep research." data-tip-link="/how-it-works#two-brain">i</span></div>
                 <div class="tile-value" id="active-model">—</div>
                 <div class="tile-sub" id="thinking-mode">—</div>
             </div>
@@ -35,7 +36,7 @@
         <div class="status-tile">
             <div class="tile-icon">💾</div>
             <div class="tile-body">
-                <div class="tile-label">MEMORY NETWORKS</div>
+                <div class="tile-label">MEMORY NETWORKS <span class="info-dot" data-tip-title="Memory Networks" data-tip-body="Facts, day-by-day episodes, entity summaries, and beliefs NEX has formed — each belief carries a confidence score that rises or falls as it's reinforced or challenged." data-tip-link="/how-it-works#memory">i</span></div>
                 <div class="tile-value" id="memory-total">—</div>
                 <div class="tile-sub" id="memory-detail">facts · episodes · beliefs</div>
             </div>
@@ -44,7 +45,7 @@
         <div class="status-tile">
             <div class="tile-icon">🔒</div>
             <div class="tile-body">
-                <div class="tile-label">SANDBOX TRUST</div>
+                <div class="tile-label">SANDBOX TRUST <span class="info-dot" data-tip-title="Sandbox Trust" data-tip-body="How much code NEX may run without asking you first. Level 0 runs sandboxed code immediately; level 1 queues it for your approval. NEX doesn't choose to use this on its own today — it's a manual tool." data-tip-link="/how-it-works#sandbox">i</span></div>
                 <div class="tile-value" id="trust-level">—</div>
                 <div class="tile-sub" id="trust-name">—</div>
             </div>
@@ -53,7 +54,7 @@
         <div class="status-tile">
             <div class="tile-icon">✨</div>
             <div class="tile-body">
-                <div class="tile-label">AGENT OPTIMIZER</div>
+                <div class="tile-label">AGENT OPTIMIZER <span class="info-dot" data-tip-title="Agent Optimizer" data-tip-body="Scores each of NEX's six internal 'voices' and rewrites the guidance prompt for any that's been underperforming. The rewrite isn't proven better first — it's a try-something-else, always revertible." data-tip-link="/how-it-works#self-optimizer">i</span></div>
                 <div class="tile-value" id="optimizer-avg">—</div>
                 <div class="tile-sub">avg quality score</div>
             </div>
@@ -118,7 +119,7 @@
                 <div id="memory-context" class="memory-container"></div>
             </div>
             <div class="cog-block">
-                <div class="cog-block-label">WEB RESEARCH</div>
+                <div class="cog-block-label">WEB RESEARCH <span class="info-dot" data-tip-title="Web Research" data-tip-body="Searches from arXiv, DuckDuckGo, and Wikipedia — with safety checks against unsafe redirects and a wrapper that stops fetched web text from being treated as instructions." data-tip-link="/how-it-works#web-safety">i</span></div>
                 <div id="web-stats" class="webstats-container">
                     <div class="webstat-row">
                         <span class="webstat-key">Searches</span>
@@ -222,7 +223,7 @@
             <div class="panel-header">
                 <div class="panel-header-left">
                     <span class="panel-kicker">CODE EXECUTION</span>
-                    <h2 class="panel-title">SANDBOX HUB</h2>
+                    <h2 class="panel-title">SANDBOX HUB <span class="info-dot" data-tip-title="Sandbox Hub" data-tip-body="A locked-down environment for code NEX writes: no network, no files outside its own folder, 30-second timeout. Runs are human-triggered — NEX doesn't invoke this on its own during chat." data-tip-link="/how-it-works#sandbox">i</span></h2>
                 </div>
                 <div class="panel-header-right">
                     <div class="trust-badge" id="trust-badge">TRUST LVL 0</div>
@@ -271,7 +272,7 @@
                 <div class="panel-header">
                     <div class="panel-header-left">
                         <span class="panel-kicker">SELF-IMPROVEMENT</span>
-                        <h2 class="panel-title">AGENT OPTIMIZER</h2>
+                        <h2 class="panel-title">AGENT OPTIMIZER <span class="info-dot" data-tip-title="Agent Optimizer" data-tip-body="Every 20 cycles, any of NEX's six internal voices scoring below threshold gets its guidance prompt rewritten. Not re-validated against real output before being adopted — revert anytime below." data-tip-link="/how-it-works#self-optimizer">i</span></h2>
                     </div>
                     <div class="opt-runs" id="opt-runs">— RUNS</div>
                 </div>
@@ -291,7 +292,7 @@
         <div class="panel-header">
             <div class="panel-header-left">
                 <span class="panel-kicker">AUTONOMOUS ENGINE</span>
-                <h2 class="panel-title">DOCKER WORKSPACE</h2>
+                <h2 class="panel-title">DOCKER WORKSPACE <span class="info-dot" data-tip-title="Docker Workspace" data-tip-body="A more powerful, less restricted environment than the sandbox. NEX's engine tries to use it every cycle, but the container it needs usually isn't running — so this panel is often idle by default, not broken." data-tip-link="/how-it-works#docker-engine">i</span></h2>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
                 <div class="docker-status-pill" id="docker-status-pill">● CHECKING</div>

@@ -105,3 +105,97 @@ button {
 
 button:hover { background: var(--accent-soft); box-shadow: 0 0 12px var(--accent); }
 button:active { transform: scale(0.96); }
+
+/* ═══════════════════════════════════════════════════
+   INFO TOOLTIP — global "what does this mean" component.
+   Used on dashboard panels to explain jargon in place, with an
+   optional link to the fuller story on the How Nex Works page.
+   Rendered by static/js/info_tooltip.js into a single fixed-position
+   popup (so it never gets clipped by a panel's overflow:hidden).
+   ═══════════════════════════════════════════════════ */
+.info-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1px solid var(--border-mid);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1;
+    cursor: help;
+    opacity: 0.65;
+    transition: opacity 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+}
+.info-dot:hover, .info-dot:focus-visible, .info-dot.info-dot-active {
+    opacity: 1;
+    box-shadow: 0 0 8px var(--accent-glow);
+    outline: none;
+}
+
+#nex-tooltip {
+    position: fixed;
+    z-index: 9999;
+    max-width: 300px;
+    background: rgba(2, 8, 18, 0.96);
+    border: 1px solid var(--border-mid);
+    border-radius: 8px;
+    padding: 12px 14px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.55), 0 0 20px rgba(0,255,204,0.08);
+    font-family: var(--font-ui);
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+#nex-tooltip.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#nex-tooltip .nt-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+#nex-tooltip .nt-body {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+#nex-tooltip .nt-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--accent-blue);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(102,204,255,0.3);
+}
+#nex-tooltip .nt-link:hover { color: #fff; border-color: #fff; }
+
+/* STATUS BADGES — shared vocabulary for "is this actually running?"
+   used on the How Nex Works page and inside tooltips. */
+.nex-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.nex-status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.nex-status-badge.status-live    { color: var(--accent); border: 1px solid rgba(0,255,204,0.35); background: rgba(0,255,204,0.06); }
+.nex-status-badge.status-live::before    { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.nex-status-badge.status-manual  { color: var(--accent-warn); border: 1px solid rgba(255,170,0,0.35); background: rgba(255,170,0,0.06); }
+.nex-status-badge.status-manual::before  { background: var(--accent-warn); box-shadow: 0 0 6px var(--accent-warn); }
+.nex-status-badge.status-dormant { color: var(--text-secondary); border: 1px solid rgba(122,154,184,0.35); background: rgba(122,154,184,0.06); }
+.nex-status-badge.status-dormant::before { background: var(--text-secondary); }

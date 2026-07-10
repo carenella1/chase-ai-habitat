@@ -686,6 +686,11 @@ def self_page():
     return render_template("self.html", active="self")
 
 
+@app.route("/how-it-works")
+def how_it_works_page():
+    return render_template("how_it_works.html", active="how_it_works")
+
+
 @app.route("/api/cognition/all")
 def api_cognition_all():
     memory = ensure_memory(load_memory())
