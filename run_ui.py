@@ -46,14 +46,11 @@ from habitat.memory.memory_manager import MemoryManager
 
 _api_memory_manager = MemoryManager()
 
-
-def generate_local_voice(text, persona="analytical"):
-    return ""
-
-
-def local_tts_available():
-    return False
-
+from habitat.voice.local_tts import (
+    generate_local_voice,
+    is_available as local_tts_available,
+)
+from habitat.voice.speech_to_text import transcribe_audio_data
 
 from habitat.workspace.global_workspace import workspace, compute_salience
 from habitat.self_model.self_model import (
@@ -252,18 +249,6 @@ app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 MEMORY_FILE = "memory.json"
 IDENTITY_FILE = "identity.txt"
-
-try:
-    from elevenlabs.client import ElevenLabs
-
-    _elevenlabs_client = ElevenLabs(api_key="YOUR_API_KEY_HERE")
-except Exception:
-    _elevenlabs_client = None
-
-
-def generate_voice(text: str) -> str:
-    return ""
-
 
 def load_memory():
     if not os.path.exists(MEMORY_FILE):
@@ -807,23 +792,15 @@ def api_voice_status():
     try:
         from habitat.voice.voice_evolution import get_voice_status
 
-        return jsonify({"status": "ok", **get_voice_status()})
+        return jsonify(
+            {
+                "status": "ok",
+                **get_voice_status(),
+                "tts_available": local_tts_available(),
+            }
+        )
     except Exception as e:
         return jsonify({"status": "error", "error": str(e)})
-
-
-_whisper_model = None
-
-
-def _get_whisper():
-    global _whisper_model
-    if _whisper_model is None:
-        print("🎤 Loading Whisper model...")
-        from faster_whisper import WhisperModel
-
-        _whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
-        print("🎤 Whisper ready")
-    return _whisper_model
 
 
 @app.route("/api/voice/listen", methods=["POST"])
@@ -835,17 +812,15 @@ def api_voice_listen():
         r.energy_threshold = 300
         r.dynamic_energy_threshold = True
         r.pause_threshold = 0.8
-        with sr.Microphone(device_index=3) as source:
+        with sr.Microphone() as source:
             print("🎤 Listening...")
             r.adjust_for_ambient_noise(source, duration=0.5)
             audio = r.listen(source, timeout=10, phrase_time_limit=15)
-        text = r.recognize_google(audio, language="en-US")
+        text = transcribe_audio_data(audio)
         print(f"🎤 Got: {text}")
         return jsonify({"status": "ok", "text": text})
     except sr.WaitTimeoutError:
         return jsonify({"status": "timeout", "text": ""})
-    except sr.UnknownValueError:
-        return jsonify({"status": "unclear", "text": ""})
     except Exception as e:
         print(f"🎤 Error: {e}")
         traceback.print_exc()
@@ -1678,7 +1653,8 @@ def api_chat():
 
         audio_b64 = ""
         try:
-            audio_b64 = generate_voice(output)
+            current_persona = get_voice_status().get("current_persona", "analytical")
+            audio_b64 = generate_local_voice(output, persona=current_persona)
         except Exception:
             pass
 
