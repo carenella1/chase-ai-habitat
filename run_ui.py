@@ -2783,6 +2783,18 @@ Claim:
 
             memory = ensure_memory(load_memory())
             reinforcement = memory.get("reinforcement", {})
+            # This dict had no decay at all until now -- it only ever grew,
+            # for every topic, forever. Combined with score_insight_significance()
+            # giving bonus points to whatever's already reinforced, that made
+            # an early-leading topic mechanically more and more likely to keep
+            # winning, with nothing pulling the other way. Decaying it every
+            # cycle (same 0.85 factor topic_interest already uses below) lets
+            # a topic that stops producing new insight fade back out instead
+            # of permanently outweighing everything else.
+            for k in list(reinforcement.keys()):
+                reinforcement[k] *= 0.85
+                if reinforcement[k] < 0.1:
+                    del reinforcement[k]
             key = normalize_topic(normalize_topic_name(search_term))
             if key and isinstance(key, str):
                 reinforcement[key] = reinforcement.get(key, 0) + importance
@@ -2969,6 +2981,13 @@ def score_insight_significance(insight, source, agent, memory):
     insight_lower = insight.lower()
     topic_hits = sum(1 for t in top_names if t in insight_lower)
     score += min(topic_hits * 0.8, 2.0)
+    # Counterweight: everything else in this function rewards confirming
+    # the topics Nex is already invested in (this bonus, the reinforcement
+    # dict, topic_scores) -- nothing rewarded genuinely stepping outside
+    # that cluster, which is a big part of why deep research kept digging
+    # the same hole deeper instead of broadening what gets investigated.
+    if top_names and topic_hits == 0:
+        score += 1.2
     belief_markers = [
         "must",
         "will",

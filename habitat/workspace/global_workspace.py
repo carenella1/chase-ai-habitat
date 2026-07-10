@@ -12,6 +12,72 @@ import json
 from collections import Counter
 
 # =========================
+# 🧠 THEMATIC TOPIC SIMILARITY
+# =========================
+# The old loop detector only matched identical topic strings, so a thread
+# alternating "entropy" / "thermodynamics" / "neuroplasticity" / "neural
+# variability" never registered as a loop even after hundreds of cycles --
+# those are different words for the same handful of ideas, not different
+# ideas. Reuses the embedding model structured_memory.py already loads
+# (no separate model instance, no new dependency) so the comparison is
+# semantic instead of exact-string. Falls back to exact-match-only if
+# embeddings aren't available, same as structured_memory.py itself does.
+TOPIC_SIMILARITY_THRESHOLD = 0.5  # calibrated against real topic pairs:
+# entropy/thermodynamics ~0.66, neuroplasticity/"neural variability" ~0.61
+# (same cluster) vs entropy/"baking bread" ~0.17, entropy/consciousness
+# ~0.33 (different clusters) -- 0.5 sits cleanly between the two.
+
+
+def _topic_similarity(a: str, b: str) -> float:
+    """Cosine similarity between two topic strings. 1.0 if identical,
+    0.0 if either is empty or embeddings aren't available."""
+    if not a or not b:
+        return 0.0
+    if a == b:
+        return 1.0
+    try:
+        from structured_memory import _embed, EMBEDDING_AVAILABLE
+
+        if not EMBEDDING_AVAILABLE:
+            return 0.0
+        import numpy as np
+
+        vec_a = _embed(a)
+        vec_b = _embed(b)
+        if vec_a is None or vec_b is None:
+            return 0.0
+        return float(
+            np.dot(
+                np.frombuffer(vec_a, dtype="float32"),
+                np.frombuffer(vec_b, dtype="float32"),
+            )
+        )
+    except Exception:
+        return 0.0
+
+
+def _cluster_topics(topics: list) -> list:
+    """
+    Greedy single-pass clustering of topic strings by pairwise thematic
+    similarity -- not a real clustering algorithm, just enough to catch
+    "these are all basically the same handful of ideas" without pulling in
+    a clustering library for a handful of short strings. Returns a list of
+    clusters, each a list of the topic strings placed in it.
+    """
+    clusters = []
+    for t in topics:
+        placed = False
+        for cluster in clusters:
+            if _topic_similarity(t, cluster[0]) >= TOPIC_SIMILARITY_THRESHOLD:
+                cluster.append(t)
+                placed = True
+                break
+        if not placed:
+            clusters.append([t])
+    return clusters
+
+
+# =========================
 # 🧠 SALIENCE SCORING
 # =========================
 
@@ -82,17 +148,34 @@ def analyze_thread(working_memory: list) -> dict:
     dominant_topic = topic_counts.most_common(1)[0][0] if topic_counts else None
     topic_diversity = len(topic_counts)
 
-    # Loop detection: same topic in last 3+ consecutive entries
+    # Loop detection, two checks:
+    # 1. Same topic (or a thematically near-identical one) in the last 3+
+    #    CONSECUTIVE entries -- catches genuine back-to-back repetition.
+    # 2. One thematic cluster dominating MOST of the window even without
+    #    strict consecutive repeats. This matters because the real failure
+    #    mode observed wasn't "entropy" three times in a row -- it was
+    #    "entropy" / "thermodynamics" / "neuroplasticity" / "neural
+    #    variability" endlessly alternating, which never trips a
+    #    consecutive-streak check but is still visibly one obsession, not
+    #    four different topics.
     cycles_on_topic = 0
-    loop_detected = False
     if topics:
         current = topics[-1]
         for t in reversed(topics):
-            if t == current:
+            if t == current or _topic_similarity(t, current) >= TOPIC_SIMILARITY_THRESHOLD:
                 cycles_on_topic += 1
             else:
                 break
-        loop_detected = cycles_on_topic >= 3
+    streak_loop = cycles_on_topic >= 3
+
+    cluster_loop = False
+    dominant_cluster_size = 0
+    if len(topics) >= 5:
+        clusters = _cluster_topics(topics)
+        dominant_cluster_size = max((len(c) for c in clusters), default=0)
+        cluster_loop = dominant_cluster_size >= max(5, len(topics) - 2)
+
+    loop_detected = streak_loop or cluster_loop
 
     # Thread direction
     if len(working_memory) >= 4:
@@ -110,10 +193,17 @@ def analyze_thread(working_memory: list) -> dict:
 
     stance_str = ", ".join(f"{s}x{c}" for s, c in stance_counts.most_common())
 
-    if loop_detected:
+    if streak_loop:
         summary = (
             f"LOOP DETECTED: '{dominant_topic}' dominated {cycles_on_topic} "
             f"consecutive cycles. Shift to a different topic or angle."
+        )
+    elif cluster_loop:
+        summary = (
+            f"LOOP DETECTED: one thematic cluster ('{dominant_topic}' and near-"
+            f"synonyms) has covered {dominant_cluster_size} of the last "
+            f"{len(topics)} topics, even though the exact wording kept changing. "
+            f"Shift to a genuinely different topic or angle."
         )
     elif thread_direction == "diverging":
         summary = (
@@ -137,7 +227,7 @@ def analyze_thread(working_memory: list) -> dict:
         "stance_distribution": dict(stance_counts),
         "loop_detected": loop_detected,
         "thread_direction": thread_direction,
-        "cycles_on_topic": cycles_on_topic,
+        "cycles_on_topic": max(cycles_on_topic, dominant_cluster_size),
         "agents_active": list(set(agents)),
         "summary": summary,
     }

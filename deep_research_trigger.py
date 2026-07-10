@@ -183,45 +183,38 @@ def _parse_uncertainties(critique_text: str) -> list:
     ]
 
 
-def _store_result(report: dict, cycle: int, call_llm_fn=None):
+def _store_result(report: dict, cycle: int, call_llm_fn=None, topic: str = None):
     """
     Store deep research result in three places:
-    1. Full report on disk
-    2. Compressed knowledge card in trainer DB
-    3. High-confidence facts in structured memory
+    1. Compressed knowledge card in trainer DB
+    2. High-confidence facts in structured memory
+    3. Full report on disk -- written LAST, after the knowledge graph
+       extraction below, so the "elapsed" field it logs reflects the true
+       end-to-end time. It used to be written first, which meant the
+       extraction call's time (it runs on the slow deep-brain model, with
+       no timeout tracked) never showed up in any logged duration.
     Also runs LLM-based knowledge graph extraction on the synthesis, since
     deep research completions are infrequent enough to absorb the extra
     LLM call (unlike per-cycle regex extraction, which stays cheap and
     runs everywhere else).
-    """
 
-    # 1. Full report to disk
-    os.makedirs("data", exist_ok=True)
-    try:
-        entry = {
-            "timestamp": int(time.time()),
-            "cycle": cycle,
-            "question": report.get("question", ""),
-            "synthesis": report.get("synthesis", "")[:2000],
-            "critique": report.get("critique", {}).get("critique", "")[:500],
-            "sources": report.get("sources_consulted", 0),
-            "elapsed": report.get("elapsed_seconds", 0),
-            "depth": report.get("depth", "standard"),
-        }
-        with open(RESULTS_FILE, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        print(f"💾 DEEP RESEARCH: Full report saved to disk")
-    except Exception as e:
-        print(f"⚠️ Deep research disk save error: {e}")
+    `topic` should be the same short topic string (e.g. "entropy") used
+    elsewhere in the cognition loop -- NOT derived from the full question
+    text. Cards/beliefs used to be keyed by report["question"][:80], a
+    near-unique string per session, which meant nex_trainer.py's
+    MAX_CARDS_PER_TOPIC pruning (keyed on exact topic match) never fired
+    for deep-research cards -- they just accumulated forever under
+    effectively-unique keys instead of consolidating under the real topic.
+    """
 
     # The critique already assesses its own confidence -- use that instead
     # of a hardcoded number, so weak research actually gets stored as weak.
     critique = report.get("critique", {}).get("critique", "")
     assessed_confidence = _parse_critique_confidence(critique) if critique else 0.7
 
-    # 2. Knowledge card in trainer DB
+    # 1. Knowledge card in trainer DB
     synthesis = report.get("synthesis", "")
-    topic = report.get("question", "unknown")[:80]
+    topic = topic or report.get("question", "unknown")[:80]
     if synthesis and len(synthesis) > 100:
         try:
             import sqlite3
@@ -236,11 +229,31 @@ def _store_result(report: dict, cycle: int, call_llm_fn=None):
                            VALUES (?,?,?,?,?,?)""",
                         (topic, synthesis[:1500], "deep_research", assessed_confidence, now, now),
                     )
+                    # Prune immediately rather than waiting for a future
+                    # consolidation cycle to happen to touch this topic --
+                    # keeps a hot topic from accumulating unbounded cards
+                    # between now and whenever nex_trainer.py next gets to it.
+                    try:
+                        from nex_trainer import MAX_CARDS_PER_TOPIC
+                    except ImportError:
+                        MAX_CARDS_PER_TOPIC = 20
+                    conn.execute(
+                        """
+                        DELETE FROM knowledge_cards
+                        WHERE topic = ? AND id NOT IN (
+                            SELECT id FROM knowledge_cards
+                            WHERE topic = ?
+                            ORDER BY created_at DESC
+                            LIMIT ?
+                        )
+                    """,
+                        (topic, topic, MAX_CARDS_PER_TOPIC),
+                    )
                 print(f"📚 DEEP RESEARCH: Knowledge card stored (confidence={assessed_confidence})")
         except Exception as e:
             print(f"⚠️ Deep research card store error: {e}")
 
-    # 3. Key conclusions into structured memory, at the critique's own
+    # 2. Key conclusions into structured memory, at the critique's own
     #    assessed confidence rather than a flat number
     if critique:
         conclusions = [
@@ -285,10 +298,15 @@ def _store_result(report: dict, cycle: int, call_llm_fn=None):
         except Exception as e:
             print(f"⚠️ Deep research memory store error: {e}")
 
-    # 4. LLM-based knowledge graph extraction on the synthesis -- catches
+    # 3. LLM-based knowledge graph extraction on the synthesis -- catches
     #    relationships the cheap regex pass (used elsewhere, per-cycle)
-    #    misses. Gated to this infrequent, already-expensive event.
+    #    misses. Gated to this infrequent, already-expensive event. Timed
+    #    separately since it runs on the slow deep-brain model and can
+    #    take a while -- folded into elapsed_seconds below so the logged
+    #    duration is honest about where the time actually went.
+    extraction_elapsed = 0.0
     if synthesis and call_llm_fn:
+        extraction_start = time.time()
         try:
             from knowledge_graph import NexKnowledgeGraph
 
@@ -300,6 +318,31 @@ def _store_result(report: dict, cycle: int, call_llm_fn=None):
                 print(f"🕸️ DEEP RESEARCH: {len(triples)} graph relationships extracted")
         except Exception as e:
             print(f"⚠️ Deep research graph extraction error: {e}")
+        extraction_elapsed = round(time.time() - extraction_start, 1)
+
+    # 4. Full report to disk -- written last so "elapsed" reflects the
+    # true total (research stages + storage + graph extraction), not
+    # just the research-stages timer from investigate().
+    report["elapsed_seconds"] = round(
+        report.get("elapsed_seconds", 0) + extraction_elapsed, 1
+    )
+    os.makedirs("data", exist_ok=True)
+    try:
+        entry = {
+            "timestamp": int(time.time()),
+            "cycle": cycle,
+            "question": report.get("question", ""),
+            "synthesis": report.get("synthesis", "")[:2000],
+            "critique": report.get("critique", {}).get("critique", "")[:500],
+            "sources": report.get("sources_consulted", 0),
+            "elapsed": report.get("elapsed_seconds", 0),
+            "depth": report.get("depth", "standard"),
+        }
+        with open(RESULTS_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        print(f"💾 DEEP RESEARCH: Full report saved to disk")
+    except Exception as e:
+        print(f"⚠️ Deep research disk save error: {e}")
 
 
 # ─────────────────────────────────────────────
@@ -400,7 +443,7 @@ class DeepResearchTrigger:
             # Use the deep brain for graph extraction: the chat brain is a
             # hybrid-reasoning model that can burn its whole token budget
             # "thinking" on a short extraction prompt and never emit output.
-            _store_result(report, cycle, call_llm_fn=self._call_llm_deep)
+            _store_result(report, cycle, call_llm_fn=self._call_llm_deep, topic=topic)
             self._sessions += 1
 
             elapsed = report.get("elapsed_seconds", 0)
