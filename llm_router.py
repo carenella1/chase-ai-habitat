@@ -77,8 +77,20 @@ OLLAMA_BASE = "http://localhost:11434"
 
 # CHAT BRAIN — fast, used for live conversation with Chase
 # First installed model in this list wins
+#
+# v4 (2026-07): swapped gpt-oss:20b into chat and qwen3:30b-a3b into deep.
+# qwen3:30b-a3b is a 30B-total MoE — only 3B active per token, but ALL 30B
+# params still have to be resident somewhere, and at Q4_K_M that's 17.3GB —
+# too big for this 16GB card, so it was spilling onto CPU (26/48 GPU layers)
+# and paying a real prefill/decode penalty on every chat message. gpt-oss:20b
+# is dense-enough-and-quantized-well-enough (MXFP4) to fit 100% on GPU at
+# ~13GB, and independently benchmarks ahead of qwen3:30b-a3b's tier on
+# reasoning (52.1% Artificial Analysis Intelligence Index, "perfect logic
+# test scores") — so it's not just faster, it's not a downgrade either.
+# qwen3:30b-a3b's partial-offload slowness is much more tolerable for DEEP
+# calls, which run in the background with nobody watching a spinner.
 CHAT_MODEL_PRIORITY = [
-    "qwen3:30b-a3b",  # NEW: MoE, verified ~40 tok/s at 26 GPU layers
+    "gpt-oss:20b",  # fits 100% GPU (~13GB), fast, benchmarks well on reasoning
     "qwen3:14b",  # proven fallback, fits fully on GPU
     "qwen3:8b",  # smaller fallback if 14b not installed
     "deepseek-r1:14b",  # last resort
@@ -87,8 +99,9 @@ CHAT_MODEL_PRIORITY = [
 # DEEP BRAIN — powerful, used for background cognition only
 # Most powerful first
 DEEP_MODEL_PRIORITY = [
-    "gpt-oss:20b",  # NEW: OpenAI open-weight, verified 100% GPU, fast
-    "qwen3:30b-a3b",  # can double as deep brain if gpt-oss unavailable
+    "qwen3:30b-a3b",  # 30B MoE, partial GPU offload (26/48 layers) is fine
+    #                    here — deep calls aren't latency-sensitive
+    "gpt-oss:20b",  # falls back to the chat brain if qwen3:30b-a3b unavailable
     "qwen3:32b",  # old fallback — not installed right now, kept for
     #                graceful degradation if it's ever reinstalled
     "deepseek-r1:32b",  # same — not installed, kept as a fallback
