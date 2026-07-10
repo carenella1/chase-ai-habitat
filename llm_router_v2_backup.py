@@ -1,41 +1,16 @@
 """
-llm_router.py  —  Two-Brain Architecture (v3 — 2026 Model Refresh)
+llm_router.py  —  Two-Brain Architecture (v2 — GPU-Optimized)
 
-WHAT CHANGED FROM v2:
-  - New deep brain: gpt-oss:20b (OpenAI open-weight, MXFP4). Verified live
-    on this machine: 100% GPU-resident, ~13-14GB VRAM even at 32k context,
-    fast, and its native reasoning trace works with the "thinking" handling
-    below.
-  - New chat brain: qwen3:30b-a3b (Qwen3 MoE, 30.5B total / 3B active).
-    Verified live: safe at 26 GPU layers (of 48) even at full 16k context —
-    11.4GB VRAM, ~40 tokens/sec. NOTE: this model does NOT fit fully in
-    16GB VRAM despite being MoE — num_gpu:-1 pushes it to ~15.8GB at 16k
-    context, which is too tight in practice. 26 layers is the tested,
-    safe value.
-  - A newer "qwen3.6" model was evaluated and rejected: it's a real,
-    installable Ollama model (36B MoE, ~23GB), but attempting to run it —
-    even with partial GPU offload — caused this machine to hang/thrash
-    twice. It was removed. Lesson baked into this file: never trust VRAM
-    math alone for a new model; verify with a real load before configuring
-    num_gpu for it.
-  - Larger context windows (16384 chat, 32768 deep) — both new models
-    handle it comfortably and Nex's prompts are big
-  - Shorter deep timeout (420s, was 600s) — the new deep brain is faster
-  - _get_gpu_layers now does exact-match-first, then longest-prefix-match
-    on the FULL model string (not just the base name before ":"). The old
-    logic compared bare prefixes and could make an unrelated model whose
-    name happens to start with the same letters accidentally match another
-    model's GPU_LAYERS rule. See _selftest_gpu_layers() below.
-  - Reads Ollama's native message.thinking field (newer Ollama versions)
-    in addition to <think> tag stripping, so reasoning logging works on
-    both old and new Ollama versions
-  - Removed gemma4:27b/26b, llama3, llama3.1, qwen3:32b, and
-    deepseek-r1:32b from disk (freed ~65GB) since gpt-oss:20b and
-    qwen3:30b-a3b supersede them. qwen3:32b/deepseek-r1:32b are kept as
-    *config* fallback entries (in GPU_LAYERS/DEEP_MODEL_PRIORITY) in case
-    they're ever reinstalled, even though the files are gone right now.
-  - Everything else from v2 (GPU offloading, health checks, backoff,
-    warm-up, status reporting) is unchanged
+WHAT CHANGED FROM v1:
+  - Full GPU offloading for RTX 4070 Ti Super (16GB VRAM)
+  - Ollama health check before every call — no wasted attempts
+  - Larger context windows (8192 chat, 16384 deep) — Nex's prompts are big
+  - Smarter backoff: resets properly, doesn't lock out on startup failures
+  - Model warm-up on startup so first chat response isn't slow
+  - Qwen3:32b added as the new deep brain option (better than DeepSeek R1)
+  - Streaming support for chat (faster perceived response time)
+  - Proper system prompt support for models that use it (Gemma4, Qwen3)
+  - Detailed status reporting so the UI shows exactly what's happening
 
 HARDWARE THIS IS TUNED FOR:
   CPU:  AMD Ryzen 7 7800X3D (8 cores, 3D V-Cache)
@@ -44,23 +19,20 @@ HARDWARE THIS IS TUNED FOR:
   SSD:  Samsung 990 PRO 2TB (fast model loading)
 
 MODEL STRATEGY:
-  CHAT BRAIN  → qwen3:30b-a3b (MoE, 26 GPU layers) or dense qwen3:14b
+  CHAT BRAIN  → Gemma4:27b or Qwen3:14b
                 Fast responses, native system prompts
                 Target: 5-15 seconds per response
 
-  DEEP BRAIN  → gpt-oss:20b (fully GPU-resident) or qwen3:30b-a3b
-                Powerful background cognition, faster than the old 32b
-                models it replaces
+  DEEP BRAIN  → Qwen3:32b or DeepSeek-R1:32b
+                Powerful overnight cognition
+                Target: 60-180 seconds, quality over speed
+                Runs fully in GPU when possible
 
-GPU VRAM BUDGET (16GB), all verified by live testing on this machine:
-  gpt-oss:20b     (MXFP4)   → 100% GPU, ~13-14GB even at 32k context
-  qwen3:30b-a3b   (MoE Q4)  → 26/48 layers on GPU, ~11.4GB at 16k context
-  Qwen3:14b       (Q4_K_M)  → ~8.5GB, fits fully, offload all
-  Qwen3:32b       (Q4_K_M)  → ~18GB, needs ~40/64 layers on GPU (not
-                               currently installed, kept as a fallback)
-  DeepSeek R1:32b (Q4)      → ~18GB, same offload strategy (not currently
-                               installed, kept as a fallback)
-  DeepSeek R1:14b (Q4)      → ~8.5GB, fits fully
+GPU VRAM BUDGET (16GB):
+  Qwen3:14b  (Q4_K_M) ≈ 8.5GB  → fits comfortably, leaves room
+  Qwen3:32b  (Q4_K_M) ≈ 18GB   → needs offload: ~14 layers to CPU
+  DeepSeek R1:32b Q4  ≈ 18GB   → same offload strategy
+  Gemma4:27b (Q4)     ≈ 15GB   → fits with tight margin
 """
 
 import requests
@@ -78,27 +50,25 @@ OLLAMA_BASE = "http://localhost:11434"
 # CHAT BRAIN — fast, used for live conversation with Chase
 # First installed model in this list wins
 CHAT_MODEL_PRIORITY = [
-    "qwen3:30b-a3b",  # NEW: MoE, verified ~40 tok/s at 26 GPU layers
-    "qwen3:14b",  # proven fallback, fits fully on GPU
-    "qwen3:8b",  # smaller fallback if 14b not installed
-    "deepseek-r1:14b",  # last resort
+    "qwen3:14b",
+    "qwen3:8b",
+    "gemma4:27b",
+    "gemma4:26b",
+    "llama3.1:latest",
+    "deepseek-r1:14b",
 ]
 
 # DEEP BRAIN — powerful, used for background cognition only
 # Most powerful first
 DEEP_MODEL_PRIORITY = [
-    "gpt-oss:20b",  # NEW: OpenAI open-weight, verified 100% GPU, fast
-    "qwen3:30b-a3b",  # can double as deep brain if gpt-oss unavailable
-    "qwen3:32b",  # old fallback — not installed right now, kept for
-    #                graceful degradation if it's ever reinstalled
-    "deepseek-r1:32b",  # same — not installed, kept as a fallback
-    "qwen3:14b",  # if nothing bigger is available
-    "deepseek-r1:14b",  # last resort
+    "qwen3:32b",  # NEW: Better reasoning than DeepSeek R1, hybrid think mode
+    "deepseek-r1:32b",  # Strong fallback
+    "qwen3:14b",  # If 32b not available
+    "deepseek-r1:14b",  # Last resort
 ]
 
-# Models that output <think>...</think> reasoning blocks (or a native
-# reasoning field — see the "thinking" handling in call_llm/call_llm_deep)
-# We strip/collect these from chat responses but log them for the UI
+# Models that output <think>...</think> reasoning blocks
+# We strip these from chat responses but log them for the UI
 THINKING_MODELS = {
     "deepseek-r1:32b",
     "deepseek-r1:14b",
@@ -108,53 +78,43 @@ THINKING_MODELS = {
     "qwen3:14b",
     "qwen3:8b",
     "qwen3:4b",
-    "qwen3:30b-a3b",
-    "gpt-oss",
 }
 
 # Models that use the /api/chat endpoint (system prompt support)
 # vs /api/generate (raw prompt only)
 CHAT_API_MODELS = {
     "gemma4",
-    "qwen3",  # covers qwen3:14b, qwen3:32b, qwen3:30b-a3b, etc. (substring match)
+    "qwen3",
     "llama3",
     "llama3.1",
     "llama3.2",
     "mistral",
     "phi3",
     "phi4",
-    "gpt-oss",
 }
 
 # GPU layer config for RTX 4070 Ti SUPER (16GB VRAM)
 # -1 means offload ALL layers to GPU (best for models that fit)
 # Positive number = how many layers go to GPU, rest stay on CPU
-# Every value below was checked with a real load on this machine (via
-# /api/chat + `ollama ps` + nvidia-smi), not estimated from model size.
-# Order matters for readability, but _get_gpu_layers() below matches on
-# exact-name-first then longest-prefix, so lookup no longer depends on it.
 GPU_LAYERS = {
-    "gpt-oss:20b": -1,  # verified: 100% GPU, ~13-14GB even at 32k context
-    "qwen3:30b-a3b": 26,  # verified: ~11.4GB at 16k context, ~40 tok/s.
-    #                        NOTE: -1 (full GPU) does NOT fit — that was
-    #                        tested too and leaves under 1GB headroom.
+    "gemma4:27b": -1,  # ~15GB — fits, offload all
+    "gemma4:26b": -1,
     "qwen3:14b": -1,  # ~8.5GB — fits easily, offload all
     "qwen3:8b": -1,  # ~5GB — fits easily
     "qwen3:32b": 40,  # ~18GB total, ~14GB on GPU (40 layers), rest CPU
-    #                    (not installed right now — kept as a fallback)
     "deepseek-r1:32b": 38,  # Similar size — 38 layers on GPU
-    #                          (not installed right now — kept as a fallback)
     "deepseek-r1:14b": -1,  # ~8.5GB — fits
+    "llama3.1:8b": -1,
 }
 
 # Timeouts — tuned for your hardware
 CHAT_TIMEOUT = 90  # 90s max for chat — if it takes longer, something is wrong
-DEEP_TIMEOUT = 420  # 7 minutes — the new deep brain (gpt-oss/qwen3.6) is much faster
+DEEP_TIMEOUT = 600  # 10 minutes for deep cognition (32b thinking takes time)
 HEALTH_TIMEOUT = 5  # Health check timeout
 
 # Context windows — bigger = more memory, but Nex's prompts need it
-CHAT_CTX = 16384  # Chat context: 16k tokens (enough for memory + history)
-DEEP_CTX = 32768  # Deep context: 32k tokens (enough for full research)
+CHAT_CTX = 8192  # Chat context: 8k tokens (enough for memory + history)
+DEEP_CTX = 16384  # Deep context: 16k tokens (enough for full research)
 
 # Backoff settings — more forgiving than before
 _BACKOFF_THRESHOLD = 5  # Fail 5 times before backing off (was 8 but reset wrong)
@@ -329,45 +289,13 @@ def _get_gpu_layers(model: str) -> int:
     Returns the num_gpu value for a model.
     -1 = offload everything to GPU (model fits in VRAM)
     N  = offload N layers (model is too big for VRAM, split CPU/GPU)
-
-    Matching rules:
-      1. An exact match on the full model string always wins.
-      2. Otherwise, the LONGEST GPU_LAYERS key that the model name starts
-         with wins. This matters because "qwen3.6:..." models contain
-         "qwen3" as a substring/prefix-of-prefix of "qwen3:32b" — comparing
-         against the base name alone (the old behavior) let a qwen3.6 model
-         accidentally match the qwen3:32b rule and get throttled to 40
-         layers. Comparing against the full key (with tag) fixes that.
     """
-    if model in GPU_LAYERS:
-        return GPU_LAYERS[model]
-
-    best_key = None
-    for key in GPU_LAYERS:
-        if model.startswith(key) and (best_key is None or len(key) > len(best_key)):
-            best_key = key
-
-    if best_key is not None:
-        return GPU_LAYERS[best_key]
-
+    base = model.split(":")[0].lower()
+    for key, layers in GPU_LAYERS.items():
+        if model == key or model.startswith(key.split(":")[0]):
+            return layers
     # Unknown model — try full GPU offload, fall back gracefully
     return -1
-
-
-def _selftest_gpu_layers():
-    """Sanity-check the qwen3 vs qwen3.6 substring trap doesn't regress."""
-    assert _get_gpu_layers("qwen3.6:latest") == -1, (
-        "qwen3.6 models must not fall through to the qwen3:32b rule"
-    )
-    assert _get_gpu_layers("qwen3:32b") == 40, (
-        "qwen3:32b should still offload exactly 40 layers"
-    )
-
-
-try:
-    _selftest_gpu_layers()
-except AssertionError as e:
-    print(f"⚠️ GPU_LAYERS self-test failed: {e}")
 
 
 def _should_use_chat_api(model: str) -> bool:
@@ -436,7 +364,6 @@ def call_llm(
     is_thinking = any(tm in model for tm in THINKING_MODELS)
 
     try:
-        native_thinking = ""
         if use_chat:
             messages = []
             if system_prompt:
@@ -461,11 +388,7 @@ def call_llm(
                 },
                 timeout=timeout,
             )
-            message = response.json().get("message", {})
-            raw = message.get("content", "")
-            # Newer Ollama versions return reasoning in a native field
-            # instead of (or in addition to) inline <think> tags
-            native_thinking = message.get("thinking", "") or ""
+            raw = response.json().get("message", {}).get("content", "")
 
         else:
             # Raw generate API (DeepSeek R1 etc)
@@ -500,11 +423,9 @@ def call_llm(
         _failure_count = 0
         _last_success_time = time.time()
 
-        # Strip thinking tags if needed, and merge in native reasoning
-        if is_thinking or native_thinking:
+        # Strip thinking tags if needed
+        if is_thinking:
             clean, thinking = _strip_thinking_tags(raw)
-            if native_thinking:
-                thinking = thinking + [native_thinking]
             if log_thinking and thinking:
                 return clean, thinking
             return clean if clean else raw
@@ -589,7 +510,6 @@ def call_llm_deep(
     print(f"🧠 DEEP CALL: model={model}, gpu_layers={num_gpu}, timeout={timeout}s")
 
     try:
-        native_thinking = ""
         if use_chat:
             messages = []
             if system_prompt:
@@ -614,11 +534,7 @@ def call_llm_deep(
                 },
                 timeout=timeout,
             )
-            message = response.json().get("message", {})
-            raw = message.get("content", "")
-            # Newer Ollama versions return reasoning in a native field
-            # instead of (or in addition to) inline <think> tags
-            native_thinking = message.get("thinking", "") or ""
+            raw = response.json().get("message", {}).get("content", "")
 
         else:
             full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
@@ -649,10 +565,8 @@ def call_llm_deep(
 
         _deep_failure_count = 0
 
-        if is_thinking or native_thinking:
+        if is_thinking:
             clean, thinking = _strip_thinking_tags(raw)
-            if native_thinking:
-                thinking = thinking + [native_thinking]
             return {
                 "response": clean if clean else raw,
                 "thinking": thinking,
@@ -762,10 +676,10 @@ def get_model_recommendations() -> dict:
     recs = {}
 
     wanted = {
-        "gpt-oss:20b": "Best deep brain — OpenAI open-weight, fits fully in 16GB VRAM",
-        "qwen3:30b-a3b": "Best chat brain — MoE, strong reasoning, ~40 tok/s here",
-        "qwen3:14b": "Lightweight chat brain fallback — fast, fits fully on GPU",
-        "deepseek-r1:14b": "Reasoning fallback — proven, fits fully on GPU",
+        "qwen3:14b": "Best chat brain — fast, smart, free",
+        "qwen3:32b": "Best deep brain — better reasoning than DeepSeek",
+        "gemma4:27b": "Alternative chat brain — Google's best open model",
+        "deepseek-r1:32b": "Deep brain fallback — proven reasoning model",
     }
 
     for model, desc in wanted.items():
