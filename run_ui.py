@@ -534,8 +534,8 @@ def extract_belief_statement(insight):
     return None
 
 
-def find_matching_belief(memory_manager, statement):
-    beliefs = memory_manager.get_all_beliefs(limit=20)
+def find_matching_belief(statement):
+    beliefs = nex_memory.beliefs.get_active_beliefs(limit=20)
     for b in beliefs:
         if (
             statement.lower() in b["statement"].lower()
@@ -975,7 +975,7 @@ def api_docker_read():
 @app.route("/api/beliefs")
 def api_beliefs():
     try:
-        beliefs = _api_memory_manager.get_all_beliefs(limit=100)
+        beliefs = nex_memory.beliefs.get_active_beliefs(limit=100)
         normalized = []
         for b in beliefs:
             normalized.append(
@@ -1258,7 +1258,7 @@ def _extract_recent_journal(limit=3):
 def _extract_self_context(memory_manager):
     lines = []
     try:
-        beliefs = memory_manager.get_all_beliefs(limit=50)
+        beliefs = nex_memory.beliefs.get_active_beliefs(limit=50)
         if beliefs:
             top_beliefs = sorted(
                 beliefs, key=lambda b: b.get("confidence", 0), reverse=True
@@ -1529,7 +1529,7 @@ def api_chat():
                     for l in memory_context_raw.strip().split("\n")
                     if l.strip()
                 ][:6]
-            top_beliefs = _api_memory_manager.get_all_beliefs(limit=50)
+            top_beliefs = nex_memory.beliefs.get_active_beliefs(limit=50)
             top_beliefs = sorted(
                 top_beliefs, key=lambda b: b.get("confidence", 0), reverse=True
             )[:5]
@@ -1695,7 +1695,7 @@ def api_chat_context():
     try:
         memory = ensure_memory(load_memory())
         top_topics = get_top_topics(memory, limit=1)
-        belief_count = len(_api_memory_manager.get_all_beliefs(limit=200))
+        belief_count = len(nex_memory.beliefs.get_active_beliefs(limit=200))
         return jsonify(
             {
                 "status": "ok",
@@ -1964,7 +1964,7 @@ def run():
             if current_cycle % 7 == 0:
                 try:
                     unresolved = check_and_register_contradictions(
-                        memory_manager, current_cycle
+                        nex_memory.beliefs, current_cycle
                     )
                     if unresolved:
                         print(f"⚔️ {len(unresolved)} contradiction(s) detected")
@@ -1993,7 +1993,7 @@ def run():
                             resolution_text=res_output,
                             verdict=verdict,
                             cycle=current_cycle,
-                            memory_manager=memory_manager,
+                            memory_manager=nex_memory.beliefs,
                         )
                         add_cognition_entry(
                             {
@@ -2595,37 +2595,30 @@ Claim:
 
             belief_statement = extract_belief_statement(insight)
             if belief_statement:
-                existing_belief = find_matching_belief(memory_manager, belief_statement)
+                existing_belief = find_matching_belief(belief_statement)
                 if not existing_belief:
-                    memory_manager.create_belief(
+                    nex_memory.beliefs.form_belief(
                         statement=belief_statement, agent=agent, confidence=0.6
                     )
                     print(f"🧠 NEW BELIEF: {belief_statement}")
                 else:
-                    belief_id = existing_belief["belief_id"]
+                    belief_id = existing_belief["id"]
                     if stance == "SUPPORT":
-                        memory_manager.update_belief_confidence(
+                        nex_memory.beliefs.adjust_confidence(
                             belief_id, +0.05, reason="support"
                         )
-                        memory_manager.add_evidence(
-                            belief_id, insight[:200], "supporting"
-                        )
+                        nex_memory.beliefs.add_evidence(belief_id, insight[:200])
                     elif stance == "CHALLENGE":
-                        memory_manager.update_belief_confidence(
-                            belief_id, -0.08, reason="challenge"
-                        )
-                        memory_manager.add_evidence(
-                            belief_id, insight[:200], "contradicting"
+                        nex_memory.beliefs.challenge_belief(
+                            belief_id, insight[:200], delta=-0.08
                         )
                     elif stance == "EXPAND":
-                        memory_manager.update_belief_confidence(
+                        nex_memory.beliefs.adjust_confidence(
                             belief_id, +0.03, reason="expansion"
                         )
-                        memory_manager.add_evidence(
-                            belief_id, insight[:200], "supporting"
-                        )
+                        nex_memory.beliefs.add_evidence(belief_id, insight[:200])
                     elif stance == "REFRAME":
-                        memory_manager.update_belief_confidence(
+                        nex_memory.beliefs.adjust_confidence(
                             belief_id, -0.02, reason="reframe"
                         )
 
@@ -2634,7 +2627,7 @@ Claim:
                     self_observe(
                         cognition_history=memory.get("cognition_history", []),
                         workspace_status=workspace.get_status(),
-                        memory_manager=memory_manager,
+                        memory_manager=nex_memory.beliefs,
                         cycle=current_cycle,
                     )
                     chosen_name = attempt_naming(call_llm, current_cycle)

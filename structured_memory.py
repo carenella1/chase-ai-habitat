@@ -549,7 +549,7 @@ class BeliefStore:
         )
         conn.commit()
 
-    def challenge_belief(self, belief_id: int, counter_evidence: str):
+    def challenge_belief(self, belief_id: int, counter_evidence: str, delta: float = -0.1):
         """Reduce confidence in a belief when contradictory evidence appears."""
         conn = self.db._conn()
         row = conn.execute(
@@ -563,7 +563,26 @@ class BeliefStore:
                 (json.dumps(contras), belief_id),
             )
             conn.commit()
-        self._update_confidence(belief_id, -0.1, "challenged_by_evidence")
+        self._update_confidence(belief_id, delta, "challenged_by_evidence")
+
+    def add_evidence(self, belief_id: int, evidence_text: str):
+        """Append supporting evidence to a belief without changing its confidence."""
+        conn = self.db._conn()
+        row = conn.execute(
+            "SELECT evidence FROM beliefs WHERE id = ?", (belief_id,)
+        ).fetchone()
+        if not row:
+            return
+        ev = json.loads(row["evidence"] or "[]")
+        ev.append(evidence_text)
+        conn.execute(
+            "UPDATE beliefs SET evidence = ? WHERE id = ?", (json.dumps(ev), belief_id)
+        )
+        conn.commit()
+
+    def adjust_confidence(self, belief_id: int, delta: float, reason: str = "interaction"):
+        """Public entry point for nudging a belief's confidence up or down."""
+        self._update_confidence(belief_id, delta, reason)
 
     def get_active_beliefs(self, limit: int = 20) -> list:
         conn = self.db._conn()

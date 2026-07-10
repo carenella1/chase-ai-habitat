@@ -125,7 +125,10 @@ def scan_for_contradictions(memory_manager) -> list:
     Only returns pairs where both beliefs meet confidence thresholds.
     """
     try:
-        beliefs = memory_manager.get_all_beliefs(limit=100)
+        beliefs = memory_manager.get_active_beliefs(limit=100)
+        for b in beliefs:
+            # keep the historical "belief_id" key that contradictions.json uses
+            b.setdefault("belief_id", b.get("id"))
     except Exception:
         return []
 
@@ -282,27 +285,27 @@ def record_resolution(contradiction: dict, resolution_text: str,
     # Update belief confidences based on verdict
     try:
         if verdict == "A_WINS":
-            memory_manager.update_belief_confidence(
+            memory_manager.adjust_confidence(
                 a["belief_id"], +0.1, reason="contradiction_won"
             )
-            memory_manager.update_belief_confidence(
+            memory_manager.adjust_confidence(
                 b["belief_id"], -0.15, reason="contradiction_lost"
             )
             print(f"⚔️ VERDICT: A wins — confidence adjusted")
         elif verdict == "B_WINS":
-            memory_manager.update_belief_confidence(
+            memory_manager.adjust_confidence(
                 b["belief_id"], +0.1, reason="contradiction_won"
             )
-            memory_manager.update_belief_confidence(
+            memory_manager.adjust_confidence(
                 a["belief_id"], -0.15, reason="contradiction_lost"
             )
             print(f"⚔️ VERDICT: B wins — confidence adjusted")
         elif verdict == "RECONCILED":
             # Both get slight confidence boost for surviving scrutiny
-            memory_manager.update_belief_confidence(
+            memory_manager.adjust_confidence(
                 a["belief_id"], +0.05, reason="reconciled"
             )
-            memory_manager.update_belief_confidence(
+            memory_manager.adjust_confidence(
                 b["belief_id"], +0.05, reason="reconciled"
             )
             print(f"⚔️ VERDICT: Reconciled — both beliefs strengthened")

@@ -127,7 +127,7 @@ def observe(cognition_history: list, workspace_status: dict,
     # How many beliefs? What's the confidence trend?
     # =========================
     try:
-        beliefs = memory_manager.get_all_beliefs(limit=50)
+        beliefs = memory_manager.get_active_beliefs(limit=50)
         total_beliefs = len(beliefs)
         if beliefs:
             avg_confidence = round(
