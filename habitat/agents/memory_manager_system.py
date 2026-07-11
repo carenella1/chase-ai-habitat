@@ -54,6 +54,11 @@ JOURNAL_ROTATION_THRESHOLD = 800
 # How many journal entries to keep after rotation
 JOURNAL_KEEP_AFTER_ROTATION = 200
 
+# Deep research results log — same rotation pattern as the journal
+DEEP_RESEARCH_FILE = "data/deep_research_results.jsonl"
+DEEP_RESEARCH_ROTATION_THRESHOLD = 500
+DEEP_RESEARCH_KEEP_AFTER_ROTATION = 100
+
 # Max high_value_insights in memory.json
 HIGH_VALUE_CAP = 50
 
@@ -135,6 +140,42 @@ def rotate_journal(current_cycle: int) -> bool:
 
     except Exception as e:
         print(f"⚠️ Journal rotation error: {e}")
+        return False
+
+
+def rotate_deep_research_results() -> bool:
+    """
+    Same rotation pattern as rotate_journal(), applied to
+    data/deep_research_results.jsonl, which deep_research_trigger.py
+    appends full research reports to with no cap of its own.
+    Returns True if rotation happened.
+    """
+    if not os.path.exists(DEEP_RESEARCH_FILE):
+        return False
+
+    try:
+        with open(DEEP_RESEARCH_FILE, "r", encoding="utf-8") as f:
+            lines = [l for l in f.readlines() if l.strip()]
+
+        if len(lines) < DEEP_RESEARCH_ROTATION_THRESHOLD:
+            return False
+
+        archive_name = f"data/deep_research_archive_{time.strftime('%Y-%m')}.jsonl"
+        lines_to_archive = lines[:-DEEP_RESEARCH_KEEP_AFTER_ROTATION]
+        lines_to_keep = lines[-DEEP_RESEARCH_KEEP_AFTER_ROTATION:]
+
+        os.makedirs("data", exist_ok=True)
+        with open(archive_name, "a", encoding="utf-8") as f:
+            f.writelines(lines_to_archive)
+
+        with open(DEEP_RESEARCH_FILE, "w", encoding="utf-8") as f:
+            f.writelines(lines_to_keep)
+
+        print(f"📚 DEEP RESEARCH LOG ROTATED: {len(lines_to_archive)} entries → {archive_name}")
+        return True
+
+    except Exception as e:
+        print(f"⚠️ Deep research rotation error: {e}")
         return False
 
 
@@ -273,6 +314,9 @@ def run_full_maintenance(memory: dict, current_cycle: int) -> dict:
 
         # Journal rotation (checks its own threshold internally)
         rotate_journal(current_cycle)
+
+        # Deep research results rotation (checks its own threshold internally)
+        rotate_deep_research_results()
 
         # Goal progress pruning
         prune_goal_progress()

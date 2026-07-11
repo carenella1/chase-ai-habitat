@@ -4,6 +4,7 @@ from datetime import datetime
 
 DB_PATH = "data/memory.db"
 MAX_MEMORY_ENTRIES = 50000
+PRUNE_BATCH = 1000  # once the cap is hit, free this many slots at once
 
 
 class MemoryManager:
@@ -77,8 +78,7 @@ class MemoryManager:
         count = cursor.fetchone()["c"]
 
         if count >= MAX_MEMORY_ENTRIES:
-            print("Memory limit reached. Skipping new memory.")
-            return False
+            self._prune_oldest(cursor, min(PRUNE_BATCH, count))
 
         cursor.execute(
             """
@@ -94,6 +94,35 @@ class MemoryManager:
         print(f"Memory stored in tier: {tier} | importance: {importance}")
 
         return True
+
+    def _prune_oldest(self, cursor, n):
+        """Delete the oldest, lowest-importance memories to make room
+        instead of refusing new ones once the cap is hit. Prefers
+        pruning non-high_value tiers first; only reaches into
+        high_value memories if nothing else is left to prune."""
+        cursor.execute(
+            """
+        DELETE FROM memories WHERE id IN (
+            SELECT id FROM memories
+            WHERE tier != 'high_value'
+            ORDER BY importance ASC, id ASC
+            LIMIT ?
+        )
+        """,
+            (n,),
+        )
+        remaining = n - cursor.rowcount
+        if remaining > 0:
+            cursor.execute(
+                """
+            DELETE FROM memories WHERE id IN (
+                SELECT id FROM memories
+                ORDER BY importance ASC, id ASC
+                LIMIT ?
+            )
+            """,
+                (remaining,),
+            )
 
     def get_recent_memories(self, limit=25):
         cursor = self.conn.cursor()

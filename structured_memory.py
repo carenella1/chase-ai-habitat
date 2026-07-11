@@ -51,6 +51,19 @@ from typing import Optional
 STRUCTURED_MEMORY_DB = "data/structured_memory.db"
 EMBEDDING_AVAILABLE = False  # Set True if sentence-transformers installed
 
+# Retention caps. world_facts and beliefs are deduplicated by content_hash
+# and represent genuinely distinct learned content, so their caps are just
+# a distant safety net. episodic_memory is a pure activity log with no
+# dedup, so it's capped closer to what's actually useful. beliefs
+# themselves are deliberately never deleted, even when their status
+# becomes 'discarded' — see BeliefStore's docstring: preserving that
+# history ("Nex remembers he used to think that") is the point, so only
+# belief_history (the audit trail of confidence *changes*, not the
+# beliefs) gets pruned, per belief, to stop it growing forever.
+MAX_WORLD_FACTS = 50000
+MAX_EPISODIC_MEMORIES = 50000
+MAX_HISTORY_ENTRIES_PER_BELIEF = 50
+
 # Try to load embeddings for semantic search
 try:
     from sentence_transformers import SentenceTransformer
@@ -315,6 +328,14 @@ class WorldFactStore:
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (content, source, confidence, now, topic, chash, emb, source_url or None),
         )
+        conn.execute(
+            """DELETE FROM world_facts WHERE id IN (
+                   SELECT id FROM world_facts
+                   ORDER BY confidence ASC, id ASC
+                   LIMIT MAX(0, (SELECT COUNT(*) FROM world_facts) - ?)
+               )""",
+            (MAX_WORLD_FACTS,),
+        )
         conn.commit()
         return cursor.lastrowid
 
@@ -428,6 +449,14 @@ class EpisodicMemoryStore:
                (event, agent, cycle, timestamp, importance, topic, embedding)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (event, agent, cycle, now, importance, topic, emb),
+        )
+        conn.execute(
+            """DELETE FROM episodic_memory WHERE id IN (
+                   SELECT id FROM episodic_memory
+                   ORDER BY importance ASC, id ASC
+                   LIMIT MAX(0, (SELECT COUNT(*) FROM episodic_memory) - ?)
+               )""",
+            (MAX_EPISODIC_MEMORIES,),
         )
         conn.commit()
         return cursor.lastrowid
@@ -608,6 +637,16 @@ class BeliefStore:
                (belief_id, old_confidence, new_confidence, change_reason, changed_at)
                VALUES (?, ?, ?, ?, ?)""",
             (belief_id, old_conf, new_conf, reason, now),
+        )
+        # Prune old history for this belief, not the belief itself — beliefs
+        # (and their current status) are kept forever by design; only the
+        # play-by-play trail of past confidence changes gets capped.
+        conn.execute(
+            """DELETE FROM belief_history WHERE belief_id = ? AND id NOT IN (
+                   SELECT id FROM belief_history WHERE belief_id = ?
+                   ORDER BY id DESC LIMIT ?
+               )""",
+            (belief_id, belief_id, MAX_HISTORY_ENTRIES_PER_BELIEF),
         )
         conn.commit()
 

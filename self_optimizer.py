@@ -46,6 +46,7 @@ AGENT_PROMPTS_FILE = "data/agent_prompts.json"
 OPTIMIZATION_INTERVAL_CYCLES = 20  # Run optimizer every N cognition cycles
 MIN_TRUST_THRESHOLD = 0.65  # Only apply changes above this confidence
 MIN_SAMPLES_BEFORE_OPTIMIZE = 5  # Need at least N outputs to evaluate
+MAX_SCORE_ROWS_PER_AGENT = 2000  # only the most recent N are ever read (last_n<=10)
 
 
 # ─────────────────────────────────────────────
@@ -592,6 +593,16 @@ class SelfOptimizer:
                 datetime.utcnow().isoformat(),
                 prompt_version,
             ),
+        )
+        # Only the most recent ~10 rows per agent are ever read (see
+        # get_agent_avg_score/get_recent_outputs), so older rows are pure
+        # unbounded telemetry with no functional use — cap per agent.
+        conn.execute(
+            """DELETE FROM agent_scores WHERE agent_name = ? AND id NOT IN (
+                   SELECT id FROM agent_scores WHERE agent_name = ?
+                   ORDER BY id DESC LIMIT ?
+               )""",
+            (agent_name, agent_name, MAX_SCORE_ROWS_PER_AGENT),
         )
         conn.commit()
 

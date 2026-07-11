@@ -16,6 +16,7 @@ from datetime import datetime
 DOCKER_URL = "http://localhost:7700"
 DOCKER_TIMEOUT = 90
 DB_PATH = "data/docker_tasks.db"
+MAX_DOCKER_TASKS = 20000
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCKER_DESKTOP_EXE = r"C:\Program Files\Docker\Docker\Docker Desktop.exe"
 
@@ -97,6 +98,13 @@ class DockerTaskLog:
                 significance,
                 datetime.utcnow().isoformat(),
             ),
+        )
+        self._conn().execute(
+            """DELETE FROM docker_tasks WHERE id IN (
+                   SELECT id FROM docker_tasks ORDER BY id ASC
+                   LIMIT MAX(0, (SELECT COUNT(*) FROM docker_tasks) - ?)
+               )""",
+            (MAX_DOCKER_TASKS,),
         )
         self._conn().commit()
 
