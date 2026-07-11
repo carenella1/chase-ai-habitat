@@ -226,6 +226,42 @@ def _content_hash(text: str) -> str:
     return hashlib.md5(text.strip().lower().encode()).hexdigest()
 
 
+# How many candidate rows a search pulls from SQL before ranking. Bounded
+# rather than unlimited so a much larger corpus down the line can't make a
+# single search pull the entire table — but wide enough to cover today's
+# actual table sizes (low thousands per table) so the recency/confidence
+# ordering used to fetch this pool doesn't itself exclude relevant older
+# rows before semantic scoring ever sees them.
+SEMANTIC_SEARCH_POOL = 5000
+
+
+def _assign_semantic_scores(rows: list, query: str) -> bool:
+    """
+    Score every row's similarity to `query` in one vectorized numpy batch
+    instead of a per-row Python loop calling _cosine_sim. Sets each row's
+    "_score" key in place. Returns False (leaving rows unscored) if semantic
+    scoring isn't available, so the caller can fall back to keyword matching.
+    """
+    if not (EMBEDDING_AVAILABLE and np is not None) or not rows:
+        return False
+    q_emb = _embed(query)
+    if q_emb is None:
+        return False
+    q_vec = np.frombuffer(q_emb, dtype="float32")
+    idx_with_emb = [i for i, r in enumerate(rows) if r.get("embedding")]
+    if idx_with_emb:
+        mat = np.stack(
+            [np.frombuffer(rows[i]["embedding"], dtype="float32") for i in idx_with_emb]
+        )
+        sims = mat @ q_vec  # embeddings are pre-normalized -> this is cosine similarity
+        for pos, i in enumerate(idx_with_emb):
+            rows[i]["_score"] = float(sims[pos])
+    for r in rows:
+        if "_score" not in r:
+            r["_score"] = 0.0
+    return True
+
+
 # ─────────────────────────────────────────────
 # WORLD FACTS
 # ─────────────────────────────────────────────
@@ -299,6 +335,30 @@ class WorldFactStore:
         conn.commit()
         return new_id
 
+    def facts_since(self, since_iso: str, limit: int = 30) -> list:
+        """Facts learned after `since_iso` (an isoformat() string) — used by
+        the digest feature to report what's new since the last briefing."""
+        conn = self.db._conn()
+        rows = conn.execute(
+            """SELECT * FROM world_facts
+               WHERE valid_from > ? AND valid_until IS NULL
+               ORDER BY valid_from DESC LIMIT ?""",
+            (since_iso, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_recent(self, limit: int = 30) -> list:
+        """Most recently learned current facts, newest first — mirrors
+        EpisodicMemoryStore.get_recent for consistent access patterns."""
+        conn = self.db._conn()
+        rows = conn.execute(
+            """SELECT * FROM world_facts
+               WHERE valid_until IS NULL
+               ORDER BY valid_from DESC LIMIT ?""",
+            (limit,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
     def search(self, query: str, limit: int = 5, current_only: bool = True) -> list:
         """Search facts by semantic similarity or keyword."""
         conn = self.db._conn()
@@ -307,35 +367,22 @@ class WorldFactStore:
             rows = conn.execute(
                 """SELECT * FROM world_facts WHERE valid_until IS NULL
                    ORDER BY confidence DESC, valid_from DESC LIMIT ?""",
-                (limit * 3,),
+                (SEMANTIC_SEARCH_POOL,),
             ).fetchall()
         else:
             rows = conn.execute(
                 "SELECT * FROM world_facts ORDER BY valid_from DESC LIMIT ?",
-                (limit * 3,),
+                (SEMANTIC_SEARCH_POOL,),
             ).fetchall()
 
         rows = [dict(r) for r in rows]
 
-        if EMBEDDING_AVAILABLE and rows:
-            q_emb = _embed(query)
-            if q_emb:
-                for r in rows:
-                    if r.get("embedding"):
-                        r["_score"] = _cosine_sim(q_emb, r["embedding"])
-                    else:
-                        r["_score"] = 0.0
-                rows.sort(key=lambda x: x["_score"], reverse=True)
-            else:
-                # Keyword fallback
-                q_lower = query.lower()
-                for r in rows:
-                    r["_score"] = 1.0 if q_lower in r["content"].lower() else 0.0
-        else:
+        if not _assign_semantic_scores(rows, query):
             q_lower = query.lower()
             for r in rows:
                 r["_score"] = 1.0 if q_lower in r["content"].lower() else 0.0
 
+        rows.sort(key=lambda x: x["_score"], reverse=True)
         return rows[:limit]
 
 
@@ -387,20 +434,16 @@ class EpisodicMemoryStore:
         conn = self.db._conn()
         rows = conn.execute(
             "SELECT * FROM episodic_memory ORDER BY timestamp DESC LIMIT ?",
-            (limit * 3,),
+            (SEMANTIC_SEARCH_POOL,),
         ).fetchall()
         rows = [dict(r) for r in rows]
 
-        if EMBEDDING_AVAILABLE and rows:
-            q_emb = _embed(query)
-            if q_emb:
-                for r in rows:
-                    if r.get("embedding"):
-                        r["_score"] = _cosine_sim(q_emb, r["embedding"])
-                    else:
-                        r["_score"] = 0.0
-                rows.sort(key=lambda x: x["_score"], reverse=True)
+        if not _assign_semantic_scores(rows, query):
+            q_lower = query.lower()
+            for r in rows:
+                r["_score"] = 1.0 if q_lower in r["event"].lower() else 0.0
 
+        rows.sort(key=lambda x: x["_score"], reverse=True)
         return rows[:limit]
 
 
@@ -600,6 +643,17 @@ class BeliefStore:
         ).fetchall()
         return [dict(r) for r in rows]
 
+    def get_high_confidence(self, min_confidence: float = 0.65, limit: int = 20) -> list:
+        """Active beliefs at or above a confidence threshold, most confident first."""
+        conn = self.db._conn()
+        rows = conn.execute(
+            """SELECT * FROM beliefs
+               WHERE confidence >= ? AND status NOT IN ('discarded')
+               ORDER BY confidence DESC, last_updated DESC LIMIT ?""",
+            (min_confidence, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
     def get_belief_history(self, belief_id: int) -> list:
         conn = self.db._conn()
         rows = conn.execute(
@@ -609,29 +663,33 @@ class BeliefStore:
         ).fetchall()
         return [dict(r) for r in rows]
 
+    def beliefs_since(self, since_iso: str, limit: int = 30) -> list:
+        """Beliefs formed after `since_iso` (an isoformat() string) — used by
+        the digest feature to report what's new since the last briefing."""
+        conn = self.db._conn()
+        rows = conn.execute(
+            """SELECT * FROM beliefs
+               WHERE formed_at > ? AND status NOT IN ('discarded')
+               ORDER BY formed_at DESC LIMIT ?""",
+            (since_iso, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
     def search_beliefs(self, query: str, limit: int = 5) -> list:
         conn = self.db._conn()
         rows = conn.execute(
             """SELECT * FROM beliefs WHERE status NOT IN ('discarded')
                ORDER BY confidence DESC LIMIT ?""",
-            (limit * 3,),
+            (SEMANTIC_SEARCH_POOL,),
         ).fetchall()
         rows = [dict(r) for r in rows]
 
-        if EMBEDDING_AVAILABLE and rows:
-            q_emb = _embed(query)
-            if q_emb:
-                for r in rows:
-                    if r.get("embedding"):
-                        r["_score"] = _cosine_sim(q_emb, r["embedding"])
-                    else:
-                        r["_score"] = 0.0
-                rows.sort(key=lambda x: x["_score"], reverse=True)
-            else:
-                q_lower = query.lower()
-                for r in rows:
-                    r["_score"] = 1.0 if q_lower in r["statement"].lower() else 0.0
+        if not _assign_semantic_scores(rows, query):
+            q_lower = query.lower()
+            for r in rows:
+                r["_score"] = 1.0 if q_lower in r["statement"].lower() else 0.0
 
+        rows.sort(key=lambda x: x["_score"], reverse=True)
         return rows[:limit]
 
 

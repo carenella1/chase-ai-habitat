@@ -213,11 +213,11 @@ def run_consolidation(cycle: int, call_llm_fn) -> int:
 
     try:
         # Pull recent insights from structured memory
-        from structured_memory import StructuredMemoryDB
+        from structured_memory import NexMemory
 
-        mem_db = StructuredMemoryDB()
-        recent_insights = mem_db.get_recent_facts(limit=30)
-        recent_beliefs = mem_db.get_high_confidence_beliefs(
+        nex_memory = NexMemory()
+        recent_insights = nex_memory.facts.get_recent(limit=30)
+        recent_beliefs = nex_memory.beliefs.get_high_confidence(
             min_confidence=0.65, limit=20
         )
     except Exception as e:
