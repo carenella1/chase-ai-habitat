@@ -318,5 +318,28 @@ Your name:"""
 
 
 def get_full_model() -> dict:
-    """Returns the complete self-model for the UI endpoint."""
-    return load_self_model()
+    """Returns the complete self-model for the UI endpoint. Adds a few
+    flattened aliases the Self page reads directly (avg_confidence,
+    thread_direction, last_observation, observation_history,
+    naming_history, high_confidence_beliefs) — these live nested or
+    under different names in the stored model itself, which the UI
+    was never updated to match."""
+    model = load_self_model()
+    belief_summary = model.get("belief_summary", {})
+    tendencies = model.get("cognitive_tendencies", {})
+
+    model["avg_confidence"] = belief_summary.get("avg_confidence")
+    model["high_confidence_beliefs"] = belief_summary.get("high_confidence", [])
+    model["thread_direction"] = tendencies.get("thread_direction")
+    model["last_observation"] = model.get("current_summary", "")
+    model["observation_history"] = model.get("self_observations", [])
+    model["naming_history"] = (
+        [{
+            "name": model["chosen_name"],
+            "cycle": model.get("naming_cycle"),
+            "rationale": model.get("naming_rationale", ""),
+        }]
+        if model.get("chosen_name")
+        else []
+    )
+    return model
