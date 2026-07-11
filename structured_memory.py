@@ -762,8 +762,11 @@ class NexMemory:
         context = memory.recall("what do I know about agents?", limit=5)
     """
 
-    def __init__(self):
-        self.db = StructuredMemoryDB()
+    def __init__(self, db_path: str = None):
+        # db_path lets callers (e.g. the eval harness) point at an isolated
+        # database -- pass ":memory:" for a throwaway SQLite instance that
+        # never touches the real data/structured_memory.db.
+        self.db = StructuredMemoryDB(db_path) if db_path else StructuredMemoryDB()
         self.facts = WorldFactStore(self.db)
         self.episodes = EpisodicMemoryStore(self.db)
         self.entities = EntitySummaryStore(self.db)

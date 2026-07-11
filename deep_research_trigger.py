@@ -254,7 +254,11 @@ def _store_result(report: dict, cycle: int, call_llm_fn=None, topic: str = None)
             print(f"⚠️ Deep research card store error: {e}")
 
     # 2. Key conclusions into structured memory, at the critique's own
-    #    assessed confidence rather than a flat number
+    #    assessed confidence rather than a flat number -- but only after an
+    #    independent verifier call checks each conclusion against the raw
+    #    evidence gathered during investigation (report["findings"]), since
+    #    the critique's self-assessed confidence comes from the same
+    #    pipeline that wrote the synthesis, not an independent check.
     if critique:
         conclusions = [
             line.strip()
@@ -264,21 +268,53 @@ def _store_result(report: dict, cycle: int, call_llm_fn=None, topic: str = None)
         uncertainties = _parse_uncertainties(critique)
         try:
             from structured_memory import NexMemory
+            import nex_verifier
+
+            evidence_text = "\n\n".join(
+                f.get("tool_data", "") for f in report.get("findings", [])
+            )[:2000]
 
             mem = NexMemory()
+            stored = 0
             for conclusion in conclusions[:3]:
                 clean = conclusion.lstrip("✓ ").strip()
                 if len(clean) > 20:
-                    mem.learn(
+                    v = nex_verifier.verify_claim(
                         clean,
+                        evidence_text,
+                        call_llm_fn,
+                        claim_kind="research_conclusion",
+                    ) if call_llm_fn else {
+                        "supported": True,
+                        "confidence": assessed_confidence,
+                        "reasoning": "no call_llm_fn provided -- verifier skipped",
+                        "parsed": True,
+                    }
+                    final_conf = nex_verifier.gate_confidence(
+                        assessed_confidence,
+                        v,
+                        claim=clean,
+                        evidence=evidence_text,
+                        claim_kind="research_conclusion",
                         source="deep_research",
-                        topic=topic,
-                        confidence=assessed_confidence,
                     )
+                    if final_conf is not None:
+                        mem.learn(
+                            clean,
+                            source="deep_research",
+                            topic=topic,
+                            confidence=final_conf,
+                        )
+                        stored += 1
+                    else:
+                        print(
+                            f"🛡️ VERIFIER: rejected deep-research conclusion — "
+                            f"{v['reasoning'][:80]}"
+                        )
             if conclusions:
                 print(
-                    f"🧠 DEEP RESEARCH: {len(conclusions[:3])} conclusions → structured memory "
-                    f"(confidence={assessed_confidence})"
+                    f"🧠 DEEP RESEARCH: {stored}/{len(conclusions[:3])} conclusions → "
+                    f"structured memory (verified, critique confidence={assessed_confidence})"
                 )
             # Uncertainties become low-confidence open questions -- not
             # settled facts, but not discarded either. A future curiosity

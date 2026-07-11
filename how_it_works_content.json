@@ -163,5 +163,35 @@
       "Feeds into both chat replies and background cognition"
     ],
     "live_status_check": null
+  },
+  {
+    "id": "eval-harness",
+    "kicker": "MEASURING PROGRESS",
+    "title": "Evaluation Harness",
+    "status": "live",
+    "lead": "A fixed suite of 24 tasks \u2014 8 memory-recall checks, 8 tool-selection checks, and 8 reasoning word problems \u2014 that NEX can run on demand to produce a single comparable score, tagged with the exact code version it ran against. Every task has one deterministic right answer checked by plain code, not another model's opinion, so the score is fully auditable.",
+    "why_hook": "Before this, every upgrade was judged by eyeballing behavior.",
+    "why_body": "There was no way to answer \"did that change actually help\" other than watching NEX for a while and guessing. Now every run produces a before/after number tied to a git commit, on the Report Card page. This is a separate signal from the self-optimizer's live per-cycle agent scoring below \u2014 that one grades real-time debate output against a rolling baseline; this one grades the whole system against a fixed yardstick that never moves.",
+    "facts": [
+      "24 tasks: 8 memory recall \u00b7 8 tool selection \u00b7 8 reasoning word problems",
+      "Memory and tool tasks run instantly (no model call); reasoning tasks use the local model, ~1-2 minutes total",
+      "Every run is tagged with its git commit \u2014 see Report Card for the full history"
+    ],
+    "live_status_check": null
+  },
+  {
+    "id": "verifier-gate",
+    "kicker": "MEMORY HYGIENE",
+    "title": "Verification Gate",
+    "status": "live",
+    "lead": "Before a web-research snippet or a deep-research conclusion is written into NEX's memory, an independent LLM call checks it first \u2014 a second, separately-prompted model call whose only job is skepticism, not the model that produced the claim grading its own homework. Claims it rejects are never written; accepted claims are stored at the verifier's own confidence, not whatever number was originally proposed.",
+    "why_hook": "Unverified claims compound \u2014 this stops that before it starts.",
+    "why_body": "Nothing checked a claim before it hit the database before this: web research was written to memory at a flat confidence regardless of source quality, and deep-research conclusions were stored at whatever confidence the same synthesis pipeline assigned itself. A single bad or garbled claim sitting in memory becomes something future reasoning gets built on top of. The two paths are checked differently on purpose \u2014 routine web research gets a coherence/plausibility check (is this real content or scraper noise), while deep-research conclusions get checked against the actual evidence gathered during investigation (does the evidence really support this, or does it overreach).",
+    "facts": [
+      "Runs on both the per-cycle web-research path and the deep-research conclusion path",
+      "Rejected claims are never written \u2014 accepted ones are capped at the verifier's own confidence",
+      "Every check, accepted or rejected, is logged \u2014 see the Verification Log on the Report Card page"
+    ],
+    "live_status_check": null
   }
 ]

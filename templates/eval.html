@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nexus-shared.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/eval.css') }}">
+
+<div class="nexus-page">
+
+    <!-- HEADER -->
+    <div class="nexus-header">
+        <div class="nexus-title-block">
+            <div class="nexus-eyebrow">NEXARION QUALITY LAYER</div>
+            <h1 class="nexus-title">R<span class="title-accent">E</span>PORT CARD</h1>
+            <div class="nexus-tagline">Evaluation Scorecard · Memory Verification Log</div>
+        </div>
+    </div>
+
+    <!-- STATUS STRIP -->
+    <div class="nexus-status-strip">
+        <div class="status-tile">
+            <div class="tile-icon">📊</div>
+            <div class="tile-body">
+                <div class="tile-label">LATEST SCORE <span class="info-dot" data-tip-title="Evaluation Harness" data-tip-body="A fixed suite of 24 tasks across memory recall, tool selection, and reasoning — each with a single deterministic right answer, no LLM judge grading it. Run it any time to get a comparable before/after number instead of eyeballing behavior." data-tip-link="/how-it-works#eval-harness">i</span></div>
+                <div class="tile-value" id="eval-overall">—</div>
+                <div class="tile-sub" id="eval-meta">no runs yet</div>
+            </div>
+            <div class="tile-dot" id="eval-dot"></div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">💾</div>
+            <div class="tile-body">
+                <div class="tile-label">MEMORY TASKS</div>
+                <div class="tile-value" id="eval-memory">—</div>
+                <div class="tile-sub">recall · beliefs · entities</div>
+            </div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">🔧</div>
+            <div class="tile-body">
+                <div class="tile-label">TOOL TASKS</div>
+                <div class="tile-value" id="eval-tools">—</div>
+                <div class="tile-sub">tool-selection accuracy</div>
+            </div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">🧩</div>
+            <div class="tile-body">
+                <div class="tile-label">REASONING TASKS</div>
+                <div class="tile-value" id="eval-reasoning">—</div>
+                <div class="tile-sub">local model, word problems</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================
+         EVALUATION SCORECARD
+    ============================= -->
+    <div class="self-section-label">EVALUATION SCORECARD</div>
+
+    <div class="nexus-panel panel-eval-run" style="margin-bottom:20px;">
+        <div class="panel-header">
+            <div class="panel-header-left">
+                <span class="panel-kicker">FIXED 24-TASK SUITE</span>
+                <h2 class="panel-title">Run An Evaluation</h2>
+            </div>
+            <button class="nexus-btn btn-run" id="btn-run-eval">▶ RUN EVALUATION</button>
+        </div>
+        <div class="run-label">Memory + tool tasks finish instantly; reasoning tasks use the local model and take roughly 1-2 minutes.</div>
+        <div class="run-status" id="eval-run-status" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="nexus-panel panel-eval-history">
+        <div class="panel-header">
+            <div class="panel-header-left">
+                <span class="panel-kicker">BEFORE / AFTER</span>
+                <h2 class="panel-title">Run History</h2>
+            </div>
+        </div>
+        <div id="eval-history-list">
+            <div class="empty-state"><div class="empty-icon">◎</div><div>No evaluation runs yet.</div><div class="empty-sub">Click "Run Evaluation" above to get your first baseline score.</div></div>
+        </div>
+    </div>
+
+    <!-- ============================
+         MEMORY VERIFICATION LOG
+    ============================= -->
+    <div class="self-section-label">MEMORY VERIFICATION LOG</div>
+
+    <div class="nexus-status-strip verifier-strip">
+        <div class="status-tile">
+            <div class="tile-icon">🛡️</div>
+            <div class="tile-body">
+                <div class="tile-label">CHECKED <span class="info-dot" data-tip-title="Verification Gate" data-tip-body="Before a web-research snippet or a deep-research conclusion is written to memory, an independent LLM call checks it first — a fresh model call whose only job is skepticism, not the same pipeline grading its own work. Claims it rejects are never written." data-tip-link="/how-it-works#verifier-gate">i</span></div>
+                <div class="tile-value" id="verifier-total">—</div>
+            </div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">✅</div>
+            <div class="tile-body">
+                <div class="tile-label">ACCEPTED</div>
+                <div class="tile-value" id="verifier-accepted">—</div>
+            </div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">🚫</div>
+            <div class="tile-body">
+                <div class="tile-label">REJECTED</div>
+                <div class="tile-value" id="verifier-rejected">—</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nexus-panel panel-verifier-log" style="margin-top:20px;">
+        <div class="panel-header">
+            <div class="panel-header-left">
+                <span class="panel-kicker">RECENT DECISIONS</span>
+                <h2 class="panel-title">Verification Log</h2>
+            </div>
+        </div>
+        <div id="verifier-log-list">
+            <div class="empty-state"><div class="empty-icon">◎</div><div>No verification checks logged yet.</div><div class="empty-sub">This fills in automatically as NEX's cognition loop runs web research and deep research.</div></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const set = (id, val) => { const el = $(id); if (el) el.textContent = val; };
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const scoreColor = s => s >= 0.8 ? '#00ffc8' : s >= 0.6 ? '#ffaa33' : '#ff6666';
+const pct = s => `${Math.round((s||0) * 100)}%`;
+
+// =========================
+// EVALUATION SCORECARD
+// =========================
+function renderLatest(run) {
+    if (!run || run.overall_score === undefined) return;
+    set('eval-overall', pct(run.overall_score));
+    $('eval-overall').style.color = scoreColor(run.overall_score);
+    set('eval-meta', `${run.task_results.filter(t => t.passed).length}/${run.task_results.length} tasks · commit ${run.git_commit} · ${new Date(run.run_at + 'Z').toLocaleString()}`);
+    const dot = $('eval-dot');
+    if (dot) { const c = scoreColor(run.overall_score); dot.style.background = c; dot.style.boxShadow = `0 0 8px ${c}`; }
+
+    const cats = run.category_scores || {};
+    if (cats.memory !== undefined) { set('eval-memory', pct(cats.memory)); $('eval-memory').style.color = scoreColor(cats.memory); }
+    if (cats.tools !== undefined) { set('eval-tools', pct(cats.tools)); $('eval-tools').style.color = scoreColor(cats.tools); }
+    if (cats.reasoning !== undefined) { set('eval-reasoning', pct(cats.reasoning)); $('eval-reasoning').style.color = scoreColor(cats.reasoning); }
+}
+
+function renderHistory(runs) {
+    const list = $('eval-history-list');
+    if (!list) return;
+    if (!runs || !runs.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div><div>No evaluation runs yet.</div><div class="empty-sub">Click "Run Evaluation" above to get your first baseline score.</div></div>';
+        return;
+    }
+    list.innerHTML = runs.map((run, i) => {
+        const older = runs[i + 1];
+        let deltaHtml = '';
+        if (older) {
+            const delta = run.overall_score - older.overall_score;
+            const deltaPct = Math.round(delta * 100);
+            if (deltaPct !== 0) {
+                const up = deltaPct > 0;
+                const c = up ? '#00ffc8' : '#ff6666';
+                deltaHtml = `<span class="eval-delta" style="color:${c};background:${c}18;">${up ? '▲' : '▼'} ${Math.abs(deltaPct)}pt</span>`;
+            } else {
+                deltaHtml = `<span class="eval-delta" style="color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.05);">— flat</span>`;
+            }
+        }
+        const failed = (run.task_results || []).filter(t => !t.passed);
+        const c = scoreColor(run.overall_score);
+        return `
+        <div class="activity-item">
+            <div class="activity-header">
+                <span class="activity-type">${run.label ? esc(run.label) : 'eval run'}</span>
+                <span class="activity-status" style="color:${c}">${pct(run.overall_score)}${deltaHtml}</span>
+                <span class="activity-time">${new Date(run.run_at + 'Z').toLocaleString()}</span>
+            </div>
+            <div class="activity-desc">
+                <span class="eval-commit">commit ${esc(run.git_commit)}</span> ·
+                memory ${pct(run.category_scores.memory)} ·
+                tools ${pct(run.category_scores.tools)} ·
+                reasoning ${pct(run.category_scores.reasoning)} ·
+                ${run.elapsed_seconds}s
+            </div>
+            ${failed.length ? `<div class="eval-task-fail-list">${failed.map(t => `<div class="eval-task-fail">✗ ${esc(t.id)}</div>`).join('')}</div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+async function loadEval() {
+    try {
+        const [latest, history] = await Promise.all([
+            fetch('/api/eval/latest').then(r => r.json()),
+            fetch('/api/eval/history').then(r => r.json()),
+        ]);
+        renderLatest(latest);
+        renderHistory(history.runs || []);
+    } catch (e) { console.error('Eval load error:', e); }
+}
+
+let evalPolling = null;
+async function runEval() {
+    const btn = $('btn-run-eval');
+    const status = $('eval-run-status');
+    btn.disabled = true;
+    btn.textContent = '● RUNNING…';
+    const res = await fetch('/api/eval/run', { method: 'POST' }).then(r => r.json()).catch(() => ({}));
+    if (res.started === false) {
+        status.textContent = res.reason || 'a run is already active';
+        status.style.color = '#ffaa33';
+    }
+    if (evalPolling) clearInterval(evalPolling);
+    evalPolling = setInterval(async () => {
+        try {
+            const s = await fetch('/api/eval/status').then(r => r.json());
+            status.textContent = s.message || (s.active ? 'running…' : '');
+            status.style.color = s.active ? '#ffaa33' : '#00ffc8';
+            if (!s.active) {
+                clearInterval(evalPolling);
+                evalPolling = null;
+                btn.disabled = false;
+                btn.textContent = '▶ RUN EVALUATION';
+                loadEval();
+            }
+        } catch (e) {}
+    }, 3000);
+}
+$('btn-run-eval').addEventListener('click', runEval);
+
+// =========================
+// MEMORY VERIFICATION LOG
+// =========================
+function renderVerifier(stats) {
+    set('verifier-total', stats.total_checked ?? '0');
+    set('verifier-accepted', stats.accepted ?? '0');
+    set('verifier-rejected', stats.rejected ?? '0');
+    if ($('verifier-accepted')) $('verifier-accepted').style.color = '#00ffc8';
+    if ($('verifier-rejected')) $('verifier-rejected').style.color = (stats.rejected || 0) > 0 ? '#ff6666' : 'inherit';
+
+    const list = $('verifier-log-list');
+    if (!list) return;
+    const recent = stats.recent || [];
+    if (!recent.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div><div>No verification checks logged yet.</div><div class="empty-sub">This fills in automatically as NEX\'s cognition loop runs web research and deep research.</div></div>';
+        return;
+    }
+    list.innerHTML = recent.map(r => {
+        const accepted = r.verdict === 'accepted';
+        const c = accepted ? '#00ffc8' : '#ff6666';
+        return `
+        <div class="activity-item">
+            <div class="activity-header">
+                <span class="activity-type">${esc(r.claim_kind || '')}${r.source ? ' · ' + esc(r.source) : ''}</span>
+                <span class="activity-status" style="color:${c}">● ${accepted ? 'ACCEPTED' : 'REJECTED'}${r.final_confidence != null ? ' ' + pct(r.final_confidence) : ''}</span>
+                <span class="activity-time">${new Date(r.checked_at + 'Z').toLocaleString()}</span>
+            </div>
+            <div class="activity-desc">${esc((r.claim || '').substring(0, 160))}</div>
+            <div class="activity-output">${esc(r.reasoning || '')}</div>
+        </div>`;
+    }).join('');
+}
+
+async function loadVerifier() {
+    try {
+        const stats = await fetch('/api/verifier/stats').then(r => r.json());
+        renderVerifier(stats);
+    } catch (e) { console.error('Verifier load error:', e); }
+}
+
+// =========================
+// BOOT
+// =========================
+loadEval();
+loadVerifier();
+setInterval(loadEval, 20000);
+setInterval(loadVerifier, 15000);
+</script>
+{% endblock %}

@@ -21,6 +21,8 @@ from nex_trainer import nex_trainer
 from llm_router import warmup_models
 import nex_digest
 import nex_architecture_review
+import nex_eval
+import nex_verifier
 
 
 nex_docker = NexDockerAgent()
@@ -2686,18 +2688,53 @@ Claim:
             add_cognition_entry(new_entry)
             print("📡 FEED ENTRY STORED")
 
+            # Verifier gate — an independent LLM call checking whether
+            # `research` (the raw web snippet) is coherent, meaningful
+            # content worth remembering, before anything downstream writes
+            # it anywhere. Run once here and reused by both Phase 2 and
+            # Phase 5 below so a rejected snippet can't sneak into memory
+            # through one path while being correctly blocked on the other.
+            # A verifier *exception* fails open (keeps prior behavior,
+            # confidence 0.7) rather than silently dropping all research
+            # forever over a verifier bug; a verifier *rejection* (the LLM
+            # actually judged it unsupported) fails closed — that's the
+            # point of the gate.
+            research_confidence = None
+            if research:
+                try:
+                    verify_result = nex_verifier.verify_claim(
+                        research[:400], research, call_llm, claim_kind="web_fact"
+                    )
+                    research_confidence = nex_verifier.gate_confidence(
+                        0.7,
+                        verify_result,
+                        claim=research[:400],
+                        evidence=research,
+                        claim_kind="web_fact",
+                        source=source,
+                    )
+                    if research_confidence is None:
+                        print(
+                            f"🛡️ VERIFIER: rejected web research — "
+                            f"{verify_result['reasoning'][:80]}"
+                        )
+                except Exception as e:
+                    print(f"⚠️ Verifier error (failing open at default confidence): {e}")
+                    research_confidence = 0.7
+
             # Phase 2 — Record to structured memory
             try:
                 if insight:
                     nex_memory.remember(
                         insight[:300], agent=agent, importance=0.7, cycle=current_cycle
                     )
-                if research:
+                if research and research_confidence is not None:
                     nex_memory.learn(
                         research[:400],
                         source=source,
                         topic=search_term,
                         source_url=source_url,
+                        confidence=research_confidence,
                     )
                     try:
                         knowledge_graph.extractor.extract_from_text(
@@ -2711,7 +2748,7 @@ Claim:
 
             # Phase 5 — Knowledge graph extraction
             try:
-                if research:
+                if research and research_confidence is not None:
                     edges_added = knowledge_graph.learn_from_text(
                         research, source=agent
                     )
@@ -3353,6 +3390,39 @@ def api_digest_entries():
 @app.route("/api/digest/status", methods=["GET"])
 def api_digest_status():
     return jsonify(nex_digest.get_status())
+
+
+@app.route("/eval")
+def eval_page():
+    return render_template("eval.html", active="eval")
+
+
+@app.route("/api/eval/run", methods=["POST"])
+def api_eval_run():
+    started = nex_eval.start_eval_run_async(call_llm)
+    if not started:
+        return jsonify({"started": False, "reason": "a run is already active"}), 409
+    return jsonify({"started": True})
+
+
+@app.route("/api/eval/status", methods=["GET"])
+def api_eval_status():
+    return jsonify(nex_eval.get_eval_status())
+
+
+@app.route("/api/eval/history", methods=["GET"])
+def api_eval_history():
+    return jsonify({"runs": nex_eval.get_eval_history(limit=20)})
+
+
+@app.route("/api/eval/latest", methods=["GET"])
+def api_eval_latest():
+    return jsonify(nex_eval.get_latest_eval())
+
+
+@app.route("/api/verifier/stats", methods=["GET"])
+def api_verifier_stats():
+    return jsonify(nex_verifier.get_verifier_stats(recent_limit=30))
 
 
 @app.route("/api/architecture-review/pending", methods=["GET"])

@@ -1,0 +1,36 @@
+/* ═══════════════════════════════════════════════════
+   EVAL.CSS — additions on top of the nexus design system.
+   Requires nexus-shared.css to be loaded first.
+   Report Card page: Evaluation Scorecard + Memory Verification Log.
+   ═══════════════════════════════════════════════════ */
+
+.eval-delta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    margin-left: 8px;
+    letter-spacing: 0.5px;
+}
+
+.eval-commit {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+}
+
+.eval-task-fail-list {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.eval-task-fail {
+    font-size: 11px;
+    color: var(--accent-danger);
+    opacity: 0.8;
+}
+
+.verifier-strip {
+    grid-template-columns: repeat(3, 1fr);
+}
