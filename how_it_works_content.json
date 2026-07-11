@@ -140,11 +140,12 @@
     "title": "The Docker Workspace",
     "status": "live",
     "lead": "A more powerful execution environment than the sandbox \u2014 a full Linux container with real internet access \u2014 that NEX's autonomous engine tries to use every single cycle to build or compute something real.",
-    "why_hook": "Now auto-started, and its files actually persist.",
-    "why_body": "The launcher now tries to start this container automatically (tolerating Docker being absent entirely, same as it already tolerates Ollama being slow to start) instead of requiring it to be started by hand. Its workspace is also now attached to a real persistent volume, so files NEX builds survive a container restart instead of vanishing.",
+    "why_hook": "Click to start it — not automatic on launch, and its files actually persist.",
+    "why_body": "Starting this used to require opening a terminal by hand. A \"Start Workspace\" button on the Self page now does it for you — launches Docker Desktop if it isn't already open, then starts NEX's container once the engine is up — and the panel shows live ONLINE / STARTING / OFFLINE status while that happens. It's deliberately not automatic on every app launch: Docker Desktop is a heavy background app (it boots its own VM), and not every session needs the sandbox. Its workspace is also attached to a real persistent volume, so files NEX builds survive a container restart instead of vanishing.",
     "facts": [
       "Full internet + subprocess access inside the container \u2014 no import whitelist like the sandbox",
-      "Launcher auto-start is best-effort: the app works fine if Docker isn't installed"
+      "\"Start Workspace\" button on the Self page launches Docker Desktop + the container on demand",
+      "Can take up to a couple minutes the first time, since Docker Desktop boots a VM"
     ],
     "live_status_check": "docker"
   },

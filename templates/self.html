@@ -292,11 +292,12 @@
         <div class="panel-header">
             <div class="panel-header-left">
                 <span class="panel-kicker">AUTONOMOUS ENGINE</span>
-                <h2 class="panel-title">DOCKER WORKSPACE <span class="info-dot" data-tip-title="Docker Workspace" data-tip-body="A more powerful, less restricted environment than the sandbox. NEX's engine tries to use it every cycle, but the container it needs usually isn't running — so this panel is often idle by default, not broken." data-tip-link="/how-it-works#docker-engine">i</span></h2>
+                <h2 class="panel-title">DOCKER WORKSPACE <span class="info-dot" data-tip-title="Docker Workspace" data-tip-body="A more powerful, less restricted environment than the sandbox. NEX's engine tries to use it every cycle, but it's off by default — click Start Workspace to launch Docker Desktop and the container. Not automatic on app startup, since Docker Desktop is heavy and not everyone needs it every session." data-tip-link="/how-it-works#docker-engine">i</span></h2>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
                 <div class="docker-status-pill" id="docker-status-pill">● CHECKING</div>
                 <div class="graph-stat-pill" id="docker-file-count">— files</div>
+                <button class="nexus-btn btn-sm" id="btn-docker-start" style="display:none;">▶ START WORKSPACE</button>
             </div>
         </div>
 
@@ -546,10 +547,20 @@ async function loadDocker() {
         ]);
         const pill = $('docker-status-pill');
         if (pill) {
-            pill.textContent = status.online ? '● ONLINE' : '● OFFLINE';
-            pill.className = 'docker-status-pill ' + (status.online ? 'online' : 'offline');
+            const cls = status.online ? 'online' : (status.starting ? 'starting' : 'offline');
+            const label = status.online ? 'ONLINE' : (status.starting ? 'STARTING…' : 'OFFLINE');
+            pill.textContent = '● ' + label;
+            pill.className = 'docker-status-pill ' + cls;
         }
         set('docker-file-count', `${status.file_count || 0} files`);
+
+        const startBtn = $('btn-docker-start');
+        if (startBtn) {
+            startBtn.style.display = status.online ? 'none' : 'inline-block';
+            startBtn.disabled = !!status.starting;
+            startBtn.textContent = status.starting ? '● STARTING…' : '▶ START WORKSPACE';
+            startBtn.title = status.start_error || 'Launches Docker Desktop and Nex\'s container';
+        }
 
         const feed = $('docker-activity-feed');
         if (feed) {
@@ -594,6 +605,16 @@ async function viewDockerFile(path) {
         out.innerHTML = `<pre style="color:#00ffcc;font-family:monospace;font-size:11px;white-space:pre-wrap;">${esc(r.content||'')}</pre>`;
     }
 }
+
+$('btn-docker-start').addEventListener('click', async () => {
+    const btn = $('btn-docker-start');
+    btn.disabled = true;
+    btn.textContent = '● STARTING…';
+    try {
+        await fetch('/api/docker/start', { method: 'POST' }).then(r => r.json());
+    } catch (e) { console.error('Docker start error:', e); }
+    loadDocker();
+});
 
 $('btn-docker-run').addEventListener('click', async () => {
     const code = $('docker-code-input').value.trim();

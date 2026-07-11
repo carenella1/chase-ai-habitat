@@ -984,6 +984,11 @@ def api_docker_status():
     return jsonify(nex_docker.get_status())
 
 
+@app.route("/api/docker/start", methods=["POST"])
+def api_docker_start():
+    return jsonify(nex_docker.start_workspace())
+
+
 @app.route("/api/docker/execute", methods=["POST"])
 def api_docker_execute():
     data = request.get_json()

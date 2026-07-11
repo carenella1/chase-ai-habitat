@@ -28,7 +28,6 @@ FLASK_SCRIPT = os.path.join(PROJECT_ROOT, "run_ui.py")
 ICON_PATH = os.path.join(PROJECT_ROOT, "static", "icon.png")
 OLLAMA_EXE = r"C:\Users\User\AppData\Local\Programs\Ollama\ollama.exe"
 PYTHON_EXE = os.path.join(PROJECT_ROOT, "habitat-env", "Scripts", "python.exe")
-NEX_DOCKER_STATUS_URL = "http://localhost:7700/status"
 
 STARTUP_TIMEOUT = 45
 
@@ -95,58 +94,6 @@ def ensure_ollama_running():
         log("Ollama did not respond in time — continuing anyway.")
     except Exception as e:
         log(f"Could not start Ollama: {e}")
-    return False
-
-
-# =============================================================
-# STEP 0b: AUTO-START NEX'S DOCKER WORKSPACE (best-effort, optional)
-# =============================================================
-# NEX's autonomous engine tries to use this container every cognition
-# cycle, but nothing has ever started it automatically — Chase has been
-# starting it by hand. This mirrors ensure_ollama_running()'s tolerant
-# pattern exactly: skip if already up, try to start it if not, give up
-# quietly on any failure (Docker Desktop not installed, daemon not
-# running, `docker` not on PATH, a slow first-time image build...).
-# Never blocks Flask startup and never shows the error dialog — that's
-# reserved for the app itself actually failing to start.
-def ensure_docker_running():
-    log("Checking if Nex's Docker workspace is running...")
-    try:
-        requests.get(NEX_DOCKER_STATUS_URL, timeout=2)
-        log("Docker workspace already running.")
-        return True
-    except Exception:
-        pass
-
-    log("Starting Nex's Docker workspace...")
-    try:
-        subprocess.Popen(
-            ["docker", "compose", "up", "-d"],
-            cwd=PROJECT_ROOT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-    except FileNotFoundError:
-        log("Docker not found on PATH — skipping (NEX works fine without it).")
-        return False
-    except Exception as e:
-        log(f"Could not start Docker workspace: {e}")
-        return False
-
-    for _ in range(20):
-        time.sleep(0.5)
-        try:
-            requests.get(NEX_DOCKER_STATUS_URL, timeout=2)
-            log("Docker workspace is ready.")
-            return True
-        except Exception:
-            pass
-    log(
-        "Docker workspace did not respond in time — continuing anyway "
-        "(it may still be building in the background; a slow first build "
-        "can take a few minutes and will be ready on next launch)."
-    )
     return False
 
 
@@ -351,19 +298,6 @@ def main():
     log("=" * 50)
 
     ensure_ollama_running()
-
-    def _docker_background():
-        try:
-            ensure_docker_running()
-        except Exception as e:
-            log(f"Docker step failed unexpectedly, continuing without it: {e}")
-
-    # Best-effort and optional — run off the startup critical path so a
-    # missing/slow Docker Desktop never adds a fixed delay (or worse, a
-    # stall) to opening the app. It'll come online in the background
-    # whenever it's ready; NEX works fine without it in the meantime.
-    threading.Thread(target=_docker_background, daemon=True).start()
-
     kill_existing_flask()
     start_flask()
 

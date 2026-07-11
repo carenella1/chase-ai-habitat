@@ -10,11 +10,30 @@ import time
 import threading
 import sqlite3
 import os
+import subprocess
 from datetime import datetime
 
 DOCKER_URL = "http://localhost:7700"
 DOCKER_TIMEOUT = 90
 DB_PATH = "data/docker_tasks.db"
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+DOCKER_DESKTOP_EXE = r"C:\Program Files\Docker\Docker\Docker Desktop.exe"
+
+
+def _docker_daemon_up():
+    """`docker compose up` needs the Docker Desktop engine already
+    running — it can't start the engine itself. Check that separately so
+    we know whether to launch Docker Desktop first."""
+    try:
+        result = subprocess.run(
+            ["docker", "info"],
+            capture_output=True,
+            timeout=5,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
 
 # ─────────────────────────────────────────────
 # TASK DATABASE — everything Nex does is logged
@@ -119,6 +138,8 @@ class NexDockerAgent:
     def __init__(self):
         self.task_log = DockerTaskLog()
         self._online = False
+        self._starting = False
+        self._start_error = None
         self._check_connection()
         print(
             f"🐳 DOCKER AGENT: {'Online' if self._online else 'Offline — start container first'}"
@@ -137,16 +158,95 @@ class NexDockerAgent:
 
     def get_status(self):
         if not self.is_online():
-            return {"online": False, "error": "Container not running"}
+            return {
+                "online": False,
+                "error": "Container not running",
+                "starting": self._starting,
+                "start_error": self._start_error,
+            }
         try:
             r = requests.get(f"{DOCKER_URL}/status", timeout=10)
             data = r.json()
             data["online"] = True
+            data["starting"] = False
             stats = self.task_log.get_stats()
             data.update(stats)
             return data
         except Exception as e:
-            return {"online": False, "error": str(e)}
+            return {
+                "online": False,
+                "error": str(e),
+                "starting": self._starting,
+                "start_error": self._start_error,
+            }
+
+    def start_workspace(self):
+        """Kick off Docker Desktop + Nex's container on demand (button-
+        triggered from the UI), instead of the habitat launcher trying —
+        and often failing — to boot Docker Desktop automatically on every
+        app start. Runs in a background thread so the request returns
+        immediately; poll get_status() for progress."""
+        if self.is_online():
+            return {"status": "online", "message": "Already running"}
+        if self._starting:
+            return {"status": "starting", "message": "Already starting"}
+
+        self._starting = True
+        self._start_error = None
+        threading.Thread(target=self._start_workspace_worker, daemon=True).start()
+        return {"status": "starting", "message": "Starting Docker workspace..."}
+
+    def _start_workspace_worker(self):
+        try:
+            if not _docker_daemon_up():
+                if not os.path.exists(DOCKER_DESKTOP_EXE):
+                    self._start_error = "Docker Desktop isn't installed at the expected location."
+                    return
+                try:
+                    subprocess.Popen(
+                        [DOCKER_DESKTOP_EXE],
+                        creationflags=subprocess.CREATE_NO_WINDOW,
+                    )
+                except Exception as e:
+                    self._start_error = f"Could not launch Docker Desktop: {e}"
+                    return
+
+                # Docker Desktop boots a VM under the hood — can take a
+                # couple minutes. This is user-initiated, so it's fine to
+                # wait; the UI polls get_status() to show progress.
+                for _ in range(150):
+                    time.sleep(1)
+                    if _docker_daemon_up():
+                        break
+                else:
+                    self._start_error = (
+                        "Docker Desktop didn't finish starting within 2.5 minutes "
+                        "(it may have hit an error — check the Docker Desktop window)."
+                    )
+                    return
+
+            try:
+                subprocess.Popen(
+                    ["docker", "compose", "up", "-d"],
+                    cwd=PROJECT_ROOT,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+            except Exception as e:
+                self._start_error = f"Could not start Nex's container: {e}"
+                return
+
+            for _ in range(30):
+                time.sleep(1)
+                if self.is_online():
+                    return
+            self._start_error = (
+                "Container didn't respond in time — it may still be building "
+                "a fresh image in the background; check back shortly."
+            )
+        finally:
+            self._starting = False
 
     def execute(
         self, code, description="autonomous task", cycle=0, agent="", significance=0
