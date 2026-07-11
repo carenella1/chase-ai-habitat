@@ -351,10 +351,19 @@ def main():
     log("=" * 50)
 
     ensure_ollama_running()
-    try:
-        ensure_docker_running()
-    except Exception as e:
-        log(f"Docker step failed unexpectedly, continuing without it: {e}")
+
+    def _docker_background():
+        try:
+            ensure_docker_running()
+        except Exception as e:
+            log(f"Docker step failed unexpectedly, continuing without it: {e}")
+
+    # Best-effort and optional — run off the startup critical path so a
+    # missing/slow Docker Desktop never adds a fixed delay (or worse, a
+    # stall) to opening the app. It'll come online in the background
+    # whenever it's ready; NEX works fine without it in the meantime.
+    threading.Thread(target=_docker_background, daemon=True).start()
+
     kill_existing_flask()
     start_flask()
 

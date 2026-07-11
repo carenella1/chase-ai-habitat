@@ -56,7 +56,19 @@ try:
     from sentence_transformers import SentenceTransformer
     import numpy as np
 
-    _embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+    # The model is already cached locally after first run, but
+    # sentence-transformers still phones home to huggingface.co on every
+    # load to check for updates before trusting the local copy. On a slow
+    # or flaky connection (e.g. right after boot, before Wi-Fi settles)
+    # that check can stall for a long time and delay — or block —
+    # Nex's entire startup. Try offline first (instant, uses the local
+    # cache); only fall back to an online load if nothing is cached yet
+    # (first-ever run on a fresh machine).
+    try:
+        _embed_model = SentenceTransformer("all-MiniLM-L6-v2", local_files_only=True)
+    except Exception:
+        _embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+
     EMBEDDING_AVAILABLE = True
     print("🧠 MEMORY: Semantic embeddings enabled")
 except ImportError:
