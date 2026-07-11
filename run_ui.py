@@ -20,6 +20,7 @@ from nex_docker_agent import NexDockerAgent, NexAutonomousEngine
 from nex_trainer import nex_trainer
 from llm_router import warmup_models
 import nex_digest
+import nex_architecture_review
 
 
 nex_docker = NexDockerAgent()
@@ -690,7 +691,13 @@ def self_page():
 
 @app.route("/how-it-works")
 def how_it_works_page():
-    return render_template("how_it_works.html", active="how_it_works")
+    cards = []
+    try:
+        with open("how_it_works_content.json", "r", encoding="utf-8") as f:
+            cards = json.load(f)
+    except Exception as e:
+        print(f"⚠️ HOW-IT-WORKS: could not load content — {e}")
+    return render_template("how_it_works.html", active="how_it_works", cards=cards)
 
 
 @app.route("/api/cognition/all")
@@ -2082,6 +2089,18 @@ def run():
             except Exception as e:
                 print(f"⚠️ Digest trigger error: {e}")
 
+            # Architecture self-review — weekly, wall-clock gated (see
+            # nex_digest above for why wall-clock rather than cycle-count).
+            # Runs in its own background thread; a single run can take
+            # several minutes (deep model + git history), which is fine
+            # since nothing is waiting on it.
+            try:
+                if nex_architecture_review.is_due():
+                    nex_architecture_review.run_review_async(call_llm_deep)
+                    print("📐 ARCH REVIEW: Triggered in background")
+            except Exception as e:
+                print(f"⚠️ Architecture review trigger error: {e}")
+
             if current_cycle % 7 == 0:
                 try:
                     unresolved = check_and_register_contradictions(
@@ -3327,6 +3346,34 @@ def api_digest_entries():
 @app.route("/api/digest/status", methods=["GET"])
 def api_digest_status():
     return jsonify(nex_digest.get_status())
+
+
+@app.route("/api/architecture-review/pending", methods=["GET"])
+def api_architecture_review_pending():
+    return jsonify({"proposals": nex_architecture_review.get_pending_proposals()})
+
+
+@app.route("/api/architecture-review/status", methods=["GET"])
+def api_architecture_review_status():
+    return jsonify(nex_architecture_review.get_status())
+
+
+@app.route("/api/architecture-review/run-now", methods=["POST"])
+def api_architecture_review_run_now():
+    nex_architecture_review.run_review_async(call_llm_deep)
+    return jsonify({"status": "started"})
+
+
+@app.route("/api/architecture-review/approve/<int:proposal_id>", methods=["POST"])
+def api_architecture_review_approve(proposal_id):
+    success = nex_architecture_review.approve_proposal(proposal_id)
+    return jsonify({"success": success})
+
+
+@app.route("/api/architecture-review/reject/<int:proposal_id>", methods=["POST"])
+def api_architecture_review_reject(proposal_id):
+    success = nex_architecture_review.reject_proposal(proposal_id)
+    return jsonify({"success": success})
 
 
 @app.route("/api/curriculum/status", methods=["GET"])

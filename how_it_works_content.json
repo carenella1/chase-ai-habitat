@@ -1,0 +1,166 @@
+[
+  {
+    "id": "two-brain",
+    "kicker": "THE THINKING LOOP",
+    "title": "The Two-Brain Loop",
+    "status": "live",
+    "lead": "NEX is always thinking, not just while you're chatting. A background loop runs every ~30 seconds around the clock, independent of this window \u2014 deciding what to research, arguing a position internally, updating memory. Talking to NEX in chat is a second, faster path into the same mind.",
+    "why_hook": "Why two models?",
+    "why_body": "A fast model handles anything you're waiting on \u2014 your chat replies, and the quick decisions inside each background cycle. A slower, more capable model is reserved for expensive background work \u2014 deep research, resolving contradictions, extracting relationships between ideas \u2014 nobody's watching a spinner for that, so it can afford to take its time.",
+    "facts": [
+      "Chat model: fast, fits fully on the GPU",
+      "Deep model: larger, partly offloaded to CPU, ~5x the time budget",
+      "Background cycle: every ~30s or more"
+    ],
+    "live_status_check": null
+  },
+  {
+    "id": "memory",
+    "kicker": "MEMORY & BELIEFS",
+    "title": "What NEX Remembers",
+    "status": "live",
+    "lead": "Everything NEX has learned lives in four buckets: facts picked up from research, a day-by-day log of what it did, evolving summaries of things it keeps encountering, and beliefs \u2014 its own conclusions, each carrying a confidence score.",
+    "why_hook": "Beliefs compete, they aren't just stored.",
+    "why_body": "A belief grows more confident every time something reinforces it, and weaker every time something challenges it \u2014 weak enough and it's marked discarded. The full history is kept regardless, so you (and NEX) can see how its mind changed and why.",
+    "facts": [
+      "4 stores: world facts \u00b7 episodes \u00b7 entity summaries \u00b7 beliefs",
+      "Confidence: +0.05 reinforced, -0.08 to -0.1 challenged",
+      "Search: meaning-based, with keyword fallback"
+    ],
+    "live_status_check": null
+  },
+  {
+    "id": "knowledge-graph",
+    "kicker": "CONNECTED KNOWLEDGE",
+    "title": "The Knowledge Graph",
+    "status": "live",
+    "lead": "Separate from memory, this is a web of connections between concepts \u2014 \"X enables Y,\" \"Y is a version of Z\" \u2014 built out of every research result and insight NEX produces.",
+    "why_hook": "This is what makes it more than a chat log.",
+    "why_body": "It lets NEX answer \"how are these two things related?\" even when they were never discussed in the same conversation, by chaining links formed at completely different times. Plain chat history can only tell you when two topics came up together; the graph can tell you why they're connected.",
+    "facts": [
+      "15 relationship types (enables, contradicts, supports, is_a...)",
+      "Built every cycle cheaply, refined after deep research",
+      "Multi-hop search up to 4 links deep"
+    ],
+    "live_status_check": null
+  },
+  {
+    "id": "research-loop",
+    "kicker": "CURIOSITY, NOT JUST REACTION",
+    "title": "Autonomous Research",
+    "status": "live",
+    "lead": "NEX doesn't wait to be asked. Every cycle it picks something to think about \u2014 from a fixed rotation of broad knowledge domains, a long-term goal you've set, or, lacking either, a goal it sets for itself by noticing its own gaps and unfinished threads.",
+    "why_hook": "This is the \"keeps exploring on its own\" half of the system.",
+    "why_body": "When something looks significant enough, it triggers a full deep-research pass: breaks the question into sub-questions, searches multiple real sources, writes a synthesis, then critiques its own conclusions before storing them.",
+    "facts": [
+      "Curriculum: 15 domains, 20 cycles each",
+      "Persistent goals: set by you, run for hours",
+      "Deep research: significance-gated, one topic on a 500-cycle cooldown"
+    ],
+    "live_status_check": null
+  },
+  {
+    "id": "digest",
+    "kicker": "MAKING THE INVISIBLE VISIBLE",
+    "title": "The Daily Digest",
+    "status": "live",
+    "lead": "Roughly once a day, NEX writes itself a short briefing \u2014 what beliefs it formed, which contradictions it resolved, what deep research it completed, and what it noticed about its own thinking \u2014 since the last one.",
+    "why_hook": "The point of this page is explaining what's real; the point of the digest is making that visible without you having to go dig for it.",
+    "why_body": "Everything else on this page describes a mechanism \u2014 the digest is the one place that just tells you what happened, in plain language, on its own schedule.",
+    "facts": [
+      "Cadence: wall-clock, ~once a day (not cycle-gated)",
+      "Sources: new beliefs/facts, resolved contradictions, deep research, self-observations",
+      "See it on the Digest page in the nav"
+    ],
+    "live_status_check": null
+  },
+  {
+    "id": "self-optimizer",
+    "kicker": "SELF-IMPROVEMENT",
+    "title": "The Agent Optimizer",
+    "status": "live",
+    "lead": "Every cycle, NEX picks one of six internal \"voices\" \u2014 Researcher, Strategist, Explorer, Builder, Archivist, Curator \u2014 to argue a position, and scores its own output for specificity and novelty. Every 20 cycles, any voice that's been scoring poorly gets its guidance prompt rewritten.",
+    "why_hook": "Rewrites are now put on trial, not trusted on sight.",
+    "why_body": "A rewritten prompt goes live immediately but flagged as a candidate \u2014 it's watched against real scored output, and only kept if it actually measures better than what it replaced. If it doesn't, it's automatically reverted, no click required. Every version is still kept, so anything can also be reverted by hand from the Self page. This never touches NEX's core identity, only these six supporting-role prompts.",
+    "facts": [
+      "6 personas \u2014 roles chosen fresh each cycle, not fixed characters",
+      "Rewrite trigger: score below 0.65 after 5+ samples",
+      "Auto-resolved: committed or reverted once 5+ real samples judge it"
+    ],
+    "live_status_check": null
+  },
+  {
+    "id": "voice",
+    "kicker": "PERSONALITY",
+    "title": "Personality & Voice",
+    "status": "live",
+    "lead": "NEX's tone \u2014 analytical, challenger, explorer, or philosopher \u2014 isn't a setting you pick. It's inferred every 15 cycles from how NEX has actually been arguing lately, and that same reading now drives its literal spoken voice too.",
+    "why_hook": "Personality as a readout of behavior, not a costume.",
+    "why_body": "If NEX has been mostly challenging ideas lately, \"challenger\" wins and its voice shifts to match, with every drift logged so the change is visible over time instead of silent.",
+    "facts": [
+      "4 persona buckets, scored with decay so recent behavior dominates",
+      "Real local voice (Kokoro TTS) and listening (Whisper)",
+      "Only speaks in Orb mode \u2014 typed chat stays silent"
+    ],
+    "live_status_check": null
+  },
+  {
+    "id": "sandbox",
+    "kicker": "CODE EXECUTION",
+    "title": "The Sandbox",
+    "status": "live",
+    "lead": "NEX can write and run real Python inside a locked-down sandbox \u2014 either because you clicked \"run\" yourself from the Self page, or because NEX decided on its own, during background cognition, to computationally check a claim it was reasoning about. It never does this during chat \u2014 the autonomous path only exists in the background loop.",
+    "why_hook": "Deliberately conservative, in both directions.",
+    "why_body": "The sandbox blocks network access, file access outside its own folder, and anything beyond a safe list of standard-library modules \u2014 checked both before the code runs and by stripping the environment it runs in. A 30-second timeout caps everything. Autonomous use is capped too: gated to significant moments, at most once every 5 cycles, so it can't fire constantly.",
+    "facts": [
+      "Level 1: queues code for your approval instead of running it immediately",
+      "Autonomous runs are tagged \"[autonomous]\" in the Sandbox Hub activity log",
+      "Levels 2/3 (real-machine execution): intentionally not built yet"
+    ],
+    "live_status_check": "sandbox_trust"
+  },
+  {
+    "id": "web-safety",
+    "kicker": "RESEARCH SOURCES",
+    "title": "Web Access & Safety",
+    "status": "live",
+    "lead": "When NEX researches, it searches multiple real sources (arXiv, DuckDuckGo, Wikipedia, ranked by domain quality), reads the actual page content, and can follow one link deeper if it looks relevant \u2014 not just skim a single summary.",
+    "why_hook": "Letting an AI fetch arbitrary web pages carries real risk.",
+    "why_body": "A page could try to redirect it somewhere unsafe, or hide instructions in its text hoping the AI \"obeys\" them. Both are guarded against: every fetch is checked \u2014 and re-checked on every redirect \u2014 against unsafe internal addresses, and all fetched text is wrapped in a clear \"this is data, not instructions\" marker before NEX ever reads it.",
+    "facts": [
+      "Redirect safety re-checked on every hop, up to 5",
+      "Prompt-injection wrapper applied everywhere web text reaches the LLM",
+      "Capped at one extra hop per search"
+    ],
+    "live_status_check": null
+  },
+  {
+    "id": "docker-engine",
+    "kicker": "AUTONOMOUS ENGINE",
+    "title": "The Docker Workspace",
+    "status": "live",
+    "lead": "A more powerful execution environment than the sandbox \u2014 a full Linux container with real internet access \u2014 that NEX's autonomous engine tries to use every single cycle to build or compute something real.",
+    "why_hook": "Now auto-started, and its files actually persist.",
+    "why_body": "The launcher now tries to start this container automatically (tolerating Docker being absent entirely, same as it already tolerates Ollama being slow to start) instead of requiring it to be started by hand. Its workspace is also now attached to a real persistent volume, so files NEX builds survive a container restart instead of vanishing.",
+    "facts": [
+      "Full internet + subprocess access inside the container \u2014 no import whitelist like the sandbox",
+      "Launcher auto-start is best-effort: the app works fine if Docker isn't installed"
+    ],
+    "live_status_check": "docker"
+  },
+  {
+    "id": "nex-trainer",
+    "kicker": "COMPOUNDING KNOWLEDGE",
+    "title": "Knowledge Reinforcement",
+    "status": "live",
+    "lead": "A system that gives NEX a growing local study corpus \u2014 consolidating recent facts and beliefs into compact knowledge cards, resolving contradictions, synthesizing cross-topic essays, and extracting reusable \"thinking skills\" \u2014 so its accessible knowledge grows over time without retraining the model itself.",
+    "why_hook": "This used to be dormant \u2014 now it runs every cycle.",
+    "why_body": "For a while this was fully built but never actually called from anywhere. It's wired into the background loop now: each cycle-gated loop fires on its own schedule, and the resulting knowledge cards feed back into what NEX already knows \u2014 both the chat prompt and the background debate step now pull from them.",
+    "facts": [
+      "4 automatic loops: consolidation (every 10 cycles) \u00b7 contradiction resolution (20) \u00b7 synthesis (50) \u00b7 skill extraction (100)",
+      "A 5th loop, overnight deep study, is manual/scheduled-only",
+      "Feeds into both chat replies and background cognition"
+    ],
+    "live_status_check": null
+  }
+]

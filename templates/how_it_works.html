@@ -32,304 +32,46 @@
         <span class="hiw-legend-note" style="margin:0;">built, but not currently wired in or running</span>
     </div>
 
+    <!-- PENDING UPDATE PROPOSALS -->
+    <div class="hiw-proposals" id="hiw-proposals-section" style="display:none;">
+        <div class="hiw-proposals-header">
+            <span class="panel-kicker">NEX REVIEWED ITS OWN CODE</span>
+            <h2 class="panel-title" style="margin:0;">Pending Update Proposals</h2>
+            <button class="nexus-btn btn-sm" id="hiw-review-now">REVIEW NOW</button>
+        </div>
+        <div id="hiw-proposals-list"></div>
+    </div>
+    <div class="hiw-review-status" id="hiw-review-status-line"></div>
+
     <div class="hiw-stack">
 
-        <!-- 1. TWO-BRAIN LOOP -->
-        <div class="nexus-panel hiw-card" id="two-brain">
+        {% for card in cards %}
+        <div class="nexus-panel hiw-card" id="{{ card.id }}">
             <div class="panel-header">
                 <div class="panel-header-left">
-                    <span class="panel-kicker">THE THINKING LOOP</span>
-                    <h2 class="panel-title">The Two-Brain Loop</h2>
+                    <span class="panel-kicker">{{ card.kicker }}</span>
+                    <h2 class="panel-title">{{ card.title }}</h2>
                 </div>
-                <span class="nex-status-badge status-live">Live</span>
-            </div>
-            <p class="hiw-lead">
-                NEX is always thinking, not just while you're chatting. A background loop runs every ~30 seconds
-                around the clock, independent of this window — deciding what to research, arguing a position
-                internally, updating memory. Talking to NEX in chat is a second, faster path into the same mind.
-            </p>
-            <p class="hiw-why">
-                <strong>Why two models?</strong> A fast model handles anything you're waiting on — your chat replies,
-                and the quick decisions inside each background cycle. A slower, more capable model is reserved for
-                expensive background work — deep research, resolving contradictions, extracting relationships between
-                ideas — nobody's watching a spinner for that, so it can afford to take its time.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>Chat model:</b> fast, fits fully on the GPU</span>
-                <span class="hiw-fact"><b>Deep model:</b> larger, partly offloaded to CPU, ~5x the time budget</span>
-                <span class="hiw-fact"><b>Background cycle:</b> every ~30s or more</span>
-            </div>
-        </div>
-
-        <!-- 2. MEMORY & BELIEFS -->
-        <div class="nexus-panel hiw-card" id="memory">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">MEMORY &amp; BELIEFS</span>
-                    <h2 class="panel-title">What NEX Remembers</h2>
-                </div>
-                <span class="nex-status-badge status-live">Live</span>
-            </div>
-            <p class="hiw-lead">
-                Everything NEX has learned lives in four buckets: facts picked up from research, a day-by-day log
-                of what it did, evolving summaries of things it keeps encountering, and beliefs — its own
-                conclusions, each carrying a confidence score.
-            </p>
-            <p class="hiw-why">
-                <strong>Beliefs compete, they aren't just stored.</strong> A belief grows more confident every time
-                something reinforces it, and weaker every time something challenges it — weak enough and it's marked
-                discarded. The full history is kept regardless, so you (and NEX) can see how its mind changed and why.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>4 stores:</b> world facts · episodes · entity summaries · beliefs</span>
-                <span class="hiw-fact"><b>Confidence:</b> +0.05 reinforced, -0.08 to -0.1 challenged</span>
-                <span class="hiw-fact"><b>Search:</b> meaning-based, with keyword fallback</span>
-            </div>
-        </div>
-
-        <!-- 3. KNOWLEDGE GRAPH -->
-        <div class="nexus-panel hiw-card" id="knowledge-graph">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">CONNECTED KNOWLEDGE</span>
-                    <h2 class="panel-title">The Knowledge Graph</h2>
-                </div>
-                <span class="nex-status-badge status-live">Live</span>
-            </div>
-            <p class="hiw-lead">
-                Separate from memory, this is a web of connections between concepts — "X enables Y," "Y is a version
-                of Z" — built out of every research result and insight NEX produces.
-            </p>
-            <p class="hiw-why">
-                <strong>This is what makes it more than a chat log.</strong> It lets NEX answer "how are these two
-                things related?" even when they were never discussed in the same conversation, by chaining links
-                formed at completely different times. Plain chat history can only tell you <em>when</em> two topics
-                came up together; the graph can tell you <em>why</em> they're connected.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>15 relationship types</b> (enables, contradicts, supports, is_a...)</span>
-                <span class="hiw-fact"><b>Built every cycle</b> cheaply, refined after deep research</span>
-                <span class="hiw-fact"><b>Multi-hop search</b> up to 4 links deep</span>
-            </div>
-        </div>
-
-        <!-- 4. RESEARCH LOOP -->
-        <div class="nexus-panel hiw-card" id="research-loop">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">CURIOSITY, NOT JUST REACTION</span>
-                    <h2 class="panel-title">Autonomous Research</h2>
-                </div>
-                <span class="nex-status-badge status-live">Live</span>
-            </div>
-            <p class="hiw-lead">
-                NEX doesn't wait to be asked. Every cycle it picks something to think about — from a fixed rotation
-                of broad knowledge domains, a long-term goal you've set, or, lacking either, a goal it sets for
-                itself by noticing its own gaps and unfinished threads.
-            </p>
-            <p class="hiw-why">
-                <strong>This is the "keeps exploring on its own" half of the system.</strong> When something looks
-                significant enough, it triggers a full deep-research pass: breaks the question into sub-questions,
-                searches multiple real sources, writes a synthesis, then critiques its own conclusions before
-                storing them.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>Curriculum:</b> 15 domains, 20 cycles each</span>
-                <span class="hiw-fact"><b>Persistent goals:</b> set by you, run for hours</span>
-                <span class="hiw-fact"><b>Deep research:</b> significance-gated, one topic on a 500-cycle cooldown</span>
-            </div>
-        </div>
-
-        <!-- 4b. DAILY DIGEST -->
-        <div class="nexus-panel hiw-card" id="digest">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">MAKING THE INVISIBLE VISIBLE</span>
-                    <h2 class="panel-title">The Daily Digest</h2>
-                </div>
-                <span class="nex-status-badge status-live">Live</span>
-            </div>
-            <p class="hiw-lead">
-                Roughly once a day, NEX writes itself a short briefing — what beliefs it formed, which
-                contradictions it resolved, what deep research it completed, and what it noticed about its own
-                thinking — since the last one.
-            </p>
-            <p class="hiw-why">
-                <strong>The point of this page is explaining what's real; the point of the digest is making that
-                visible without you having to go dig for it.</strong> Everything else on this page describes a
-                mechanism — the digest is the one place that just tells you what happened, in plain language, on its
-                own schedule.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>Cadence:</b> wall-clock, ~once a day (not cycle-gated)</span>
-                <span class="hiw-fact"><b>Sources:</b> new beliefs/facts, resolved contradictions, deep research, self-observations</span>
-                <span class="hiw-fact">See it on the <a href="/digest" style="color:var(--accent-blue)">Digest page</a></span>
-            </div>
-        </div>
-
-        <!-- 5. SELF-OPTIMIZER -->
-        <div class="nexus-panel hiw-card" id="self-optimizer">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">SELF-IMPROVEMENT</span>
-                    <h2 class="panel-title">The Agent Optimizer</h2>
-                </div>
-                <span class="nex-status-badge status-live">Live</span>
-            </div>
-            <p class="hiw-lead">
-                Every cycle, NEX picks one of six internal "voices" — Researcher, Strategist, Explorer, Builder,
-                Archivist, Curator — to argue a position, and scores its own output for specificity and novelty.
-                Every 20 cycles, any voice that's been scoring poorly gets its guidance prompt rewritten.
-            </p>
-            <p class="hiw-why">
-                <strong>Rewrites are now put on trial, not trusted on sight.</strong> A rewritten prompt goes live
-                immediately but flagged as a candidate — it's watched against real scored output, and only kept if it
-                actually measures better than what it replaced. If it doesn't, it's automatically reverted, no click
-                required. Every version is still kept, so anything can also be reverted by hand from the Self page.
-                This never touches NEX's core identity, only these six supporting-role prompts.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>6 personas</b> — roles chosen fresh each cycle, not fixed characters</span>
-                <span class="hiw-fact"><b>Rewrite trigger:</b> score below 0.65 after 5+ samples</span>
-                <span class="hiw-fact"><b>Auto-resolved:</b> committed or reverted once 5+ real samples judge it</span>
-            </div>
-        </div>
-
-        <!-- 6. VOICE -->
-        <div class="nexus-panel hiw-card" id="voice">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">PERSONALITY</span>
-                    <h2 class="panel-title">Personality &amp; Voice</h2>
-                </div>
-                <span class="nex-status-badge status-live">Live</span>
-            </div>
-            <p class="hiw-lead">
-                NEX's tone — analytical, challenger, explorer, or philosopher — isn't a setting you pick. It's
-                inferred every 15 cycles from how NEX has actually been arguing lately, and that same reading now
-                drives its literal spoken voice too.
-            </p>
-            <p class="hiw-why">
-                <strong>Personality as a readout of behavior, not a costume.</strong> If NEX has been mostly
-                challenging ideas lately, "challenger" wins and its voice shifts to match, with every drift logged
-                so the change is visible over time instead of silent.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>4 persona buckets</b>, scored with decay so recent behavior dominates</span>
-                <span class="hiw-fact"><b>Real local voice</b> (Kokoro TTS) and listening (Whisper)</span>
-                <span class="hiw-fact"><b>Only speaks in Orb mode</b> — typed chat stays silent</span>
-            </div>
-        </div>
-
-        <!-- 7. SANDBOX -->
-        <div class="nexus-panel hiw-card" id="sandbox">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">CODE EXECUTION</span>
-                    <h2 class="panel-title">The Sandbox</h2>
-                </div>
-                <span class="nex-status-badge status-live">Live</span>
-            </div>
-            <p class="hiw-lead">
-                NEX can write and run real Python inside a locked-down sandbox — either because you clicked "run"
-                yourself from the Self page, or because NEX decided on its own, during background cognition, to
-                computationally check a claim it was reasoning about. It never does this during chat — the
-                autonomous path only exists in the background loop.
-            </p>
-            <p class="hiw-why">
-                <strong>Deliberately conservative, in both directions.</strong> The sandbox blocks network access,
-                file access outside its own folder, and anything beyond a safe list of standard-library modules —
-                checked both before the code runs and by stripping the environment it runs in. A 30-second timeout
-                caps everything. Autonomous use is capped too: gated to significant moments, at most once every 5
-                cycles, so it can't fire constantly.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>Current trust level:</b> <span id="hiw-trust-level">—</span></span>
-                <span class="hiw-fact"><b>Level 1:</b> queues code for your approval instead of running it immediately</span>
-                <span class="hiw-fact"><b>Autonomous runs</b> are tagged "[autonomous]" in the Sandbox Hub activity log</span>
-                <span class="hiw-fact"><b>Levels 2/3</b> (real-machine execution): intentionally not built yet</span>
-            </div>
-        </div>
-
-        <!-- 8. WEB SAFETY -->
-        <div class="nexus-panel hiw-card" id="web-safety">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">RESEARCH SOURCES</span>
-                    <h2 class="panel-title">Web Access &amp; Safety</h2>
-                </div>
-                <span class="nex-status-badge status-live">Live</span>
-            </div>
-            <p class="hiw-lead">
-                When NEX researches, it searches multiple real sources (arXiv, DuckDuckGo, Wikipedia, ranked by
-                domain quality), reads the actual page content, and can follow one link deeper if it looks relevant
-                — not just skim a single summary.
-            </p>
-            <p class="hiw-why">
-                <strong>Letting an AI fetch arbitrary web pages carries real risk.</strong> A page could try to
-                redirect it somewhere unsafe, or hide instructions in its text hoping the AI "obeys" them. Both are
-                guarded against: every fetch is checked — and re-checked on every redirect — against unsafe internal
-                addresses, and all fetched text is wrapped in a clear "this is data, not instructions" marker before
-                NEX ever reads it.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>Redirect safety</b> re-checked on every hop, up to 5</span>
-                <span class="hiw-fact"><b>Prompt-injection wrapper</b> applied everywhere web text reaches the LLM</span>
-                <span class="hiw-fact"><b>Capped</b> at one extra hop per search</span>
-            </div>
-        </div>
-
-        <!-- 9. DOCKER ENGINE (dormant, live-checked) -->
-        <div class="nexus-panel hiw-card" id="docker-engine">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">BUILT, NOT YET RUNNING</span>
-                    <h2 class="panel-title">The Docker Workspace</h2>
-                </div>
+                {% if card.live_status_check == 'docker' %}
                 <span class="nex-status-badge status-dormant" id="hiw-docker-badge">Checking…</span>
+                {% else %}
+                <span class="nex-status-badge status-{{ card.status }}">{{ card.status|capitalize }}</span>
+                {% endif %}
             </div>
-            <p class="hiw-lead">
-                A more powerful execution environment than the sandbox — a full Linux container with real internet
-                access — that NEX's autonomous engine tries to use every single cycle to build or compute something
-                real.
-            </p>
-            <p class="hiw-why">
-                <strong>Right now, this is very likely doing nothing.</strong> The container it needs to talk to
-                isn't started automatically by the launcher, so unless it's been started manually and separately,
-                NEX's attempts to use it silently fail every cycle. The Docker panel on the Self page will show
-                OFFLINE until that changes — this page checks the same status live, below.
-            </p>
+            <p class="hiw-lead">{{ card.lead }}</p>
+            <p class="hiw-why"><strong>{{ card.why_hook }}</strong> {{ card.why_body }}</p>
             <div class="hiw-facts">
+                {% if card.live_status_check == 'docker' %}
                 <span class="hiw-fact"><b>Live check:</b> <span id="hiw-docker-detail">contacting localhost:7700…</span></span>
-                <span class="hiw-fact"><b>Full internet + subprocess access</b> inside the container — no import whitelist like the sandbox</span>
+                {% elif card.live_status_check == 'sandbox_trust' %}
+                <span class="hiw-fact"><b>Current trust level:</b> <span id="hiw-trust-level">—</span></span>
+                {% endif %}
+                {% for fact in card.facts %}
+                <span class="hiw-fact">{{ fact }}</span>
+                {% endfor %}
             </div>
         </div>
-
-        <!-- 10. NEX TRAINER (dormant) -->
-        <div class="nexus-panel hiw-card" id="nex-trainer">
-            <div class="panel-header">
-                <div class="panel-header-left">
-                    <span class="panel-kicker">BUILT, NOT YET RUNNING</span>
-                    <h2 class="panel-title">Knowledge Reinforcement</h2>
-                </div>
-                <span class="nex-status-badge status-dormant">Dormant</span>
-            </div>
-            <p class="hiw-lead">
-                A fully built system meant to give NEX a growing local study corpus — consolidating facts into
-                knowledge cards, resolving contradictions, synthesizing cross-topic essays, extracting reusable
-                "thinking skills" — so its accessible knowledge grows over time without retraining the model itself.
-            </p>
-            <p class="hiw-why">
-                <strong>None of these five learning loops currently run.</strong> The code exists and the databases
-                it would write to are created, but nothing in the app calls it yet. This is a clearly-scoped
-                opportunity: wiring it into the background loop is a natural next step if you want NEX's usable
-                knowledge to compound faster than it does today.
-            </p>
-            <div class="hiw-facts">
-                <span class="hiw-fact"><b>5 loops:</b> consolidation · contradictions · synthesis · skill extraction · overnight study</span>
-                <span class="hiw-fact"><b>Status:</b> instantiated on startup, never invoked</span>
-            </div>
-        </div>
+        {% endfor %}
 
         <!-- CLOSING -->
         <div class="nexus-panel hiw-card hiw-closing">
@@ -351,9 +93,9 @@
                 not a limitation still waiting to be lifted.
             </p>
             <p>
-                Not everything shown above is finished — the Docker workspace and knowledge-reinforcement systems
-                are real code waiting to be switched on. Marking that honestly here, rather than letting the
-                dashboards imply everything is equally active, is the point of this page.
+                This page is kept honest on purpose: NEX periodically reviews its own recent code changes and
+                proposes updates to the cards above when something's gone stale, but nothing here changes without
+                you approving it first — see "Pending Update Proposals" above when there's something to review.
             </p>
         </div>
 
@@ -364,6 +106,8 @@
 {% block scripts %}
 <script>
 (function () {
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
     fetch('/api/sandbox/status').then(r => r.json()).then(d => {
         const el = document.getElementById('hiw-trust-level');
         if (el) el.textContent = `${d.trust_level} — ${d.trust_level_name || ''}`;
@@ -383,6 +127,88 @@
         const detail = document.getElementById('hiw-docker-detail');
         if (detail) detail.textContent = 'could not reach status endpoint';
     });
+
+    // =========================
+    // ARCHITECTURE REVIEW — pending proposals
+    // =========================
+    function fieldLabel(key) {
+        return key.replace(/_/g, ' ');
+    }
+
+    function renderProposals(proposals) {
+        const section = document.getElementById('hiw-proposals-section');
+        const list = document.getElementById('hiw-proposals-list');
+        if (!proposals || !proposals.length) {
+            section.style.display = 'none';
+            return;
+        }
+        section.style.display = 'block';
+        list.innerHTML = proposals.map(p => {
+            const fields = Object.entries(p.proposed_fields || {}).map(([k, v]) => `
+                <div class="hiw-proposal-field">
+                    <div class="hiw-proposal-field-name">${esc(fieldLabel(k))}</div>
+                    <div class="hiw-proposal-field-value">${esc(typeof v === 'string' ? v : JSON.stringify(v))}</div>
+                </div>`).join('');
+            return `
+            <div class="activity-item hiw-proposal-item">
+                <div class="activity-header">
+                    <span class="activity-type">${esc(p.action)}</span>
+                    <span class="activity-desc" style="margin-left:6px;">${esc(p.card_id)}</span>
+                    <span class="activity-time">${esc(p.commit_range || '')}</span>
+                </div>
+                <div class="activity-desc" style="margin:6px 0;">${esc(p.reasoning || '')}</div>
+                ${fields}
+                <div class="agent-card-actions" style="margin-top:10px;">
+                    <button class="nexus-btn btn-approve" data-id="${p.id}" data-action="approve">✓ APPROVE</button>
+                    <button class="nexus-btn btn-reject" data-id="${p.id}" data-action="reject">✗ REJECT</button>
+                </div>
+            </div>`;
+        }).join('');
+
+        list.querySelectorAll('button[data-action]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                const action = btn.dataset.action;
+                btn.disabled = true;
+                await fetch(`/api/architecture-review/${action}/${id}`, { method: 'POST' });
+                loadProposals();
+            });
+        });
+    }
+
+    function loadProposals() {
+        fetch('/api/architecture-review/pending').then(r => r.json())
+            .then(d => renderProposals(d.proposals || []))
+            .catch(() => {});
+    }
+
+    function loadReviewStatus() {
+        fetch('/api/architecture-review/status').then(r => r.json()).then(d => {
+            const line = document.getElementById('hiw-review-status-line');
+            if (!line) return;
+            const when = d.last_reviewed_at ? new Date(d.last_reviewed_at * 1000).toLocaleString() : 'never';
+            line.textContent = `Last self-review: ${when}`;
+        }).catch(() => {});
+    }
+
+    const reviewBtn = document.getElementById('hiw-review-now');
+    if (reviewBtn) {
+        reviewBtn.addEventListener('click', async () => {
+            reviewBtn.disabled = true;
+            reviewBtn.textContent = 'REVIEWING…';
+            await fetch('/api/architecture-review/run-now', { method: 'POST' });
+            setTimeout(() => {
+                reviewBtn.disabled = false;
+                reviewBtn.textContent = 'REVIEW NOW';
+                loadProposals();
+                loadReviewStatus();
+            }, 4000);
+        });
+    }
+
+    loadProposals();
+    loadReviewStatus();
+    setInterval(loadProposals, 30000);
 })();
 </script>
 {% endblock %}

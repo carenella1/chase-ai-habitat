@@ -57,6 +57,8 @@ starting Flask directly, unless you specifically need to isolate the UI.
   environment giving NEX broader agency, separate from the sandbox.
 - `nex_trainer.py` — retrieval-augmented knowledge reinforcement (builds a local
   knowledge corpus injected into prompts; not weight-level training).
+- `nex_digest.py` — writes a daily briefing (`/digest`) of what changed in NEX's
+  memory/beliefs/research since the last one.
 
 ## Package structure
 
@@ -82,6 +84,14 @@ starting Flask directly, unless you specifically need to isolate the UI.
   what happened.
 - **Explain before big moves.** For anything beyond a trivial fix, describe your plan and
   wait for approval.
+- **Keep the How Nex Works page honest.** If a change alters what a card on `/how-it-works`
+  describes — a subsystem going from dormant to live, a behavior change, or a genuinely new
+  subsystem worth explaining — update `how_it_works_content.json` (or review/approve the
+  auto-generated proposal for it) as part of that same change, not as a follow-up. That
+  page's whole premise is not letting the dashboards imply something is active when it
+  isn't; don't let the explainer page itself fall into that trap. (This already happened
+  once: the Knowledge Reinforcement card said "none of these loops run" for a full session
+  after `nex_trainer` was wired in and verified working.)
 
 ## Safety and guardrails
 
