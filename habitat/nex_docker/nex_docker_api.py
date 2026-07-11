@@ -22,6 +22,7 @@ import sys
 import json
 import time
 import uuid
+import base64
 import subprocess
 import threading
 from datetime import datetime
@@ -29,6 +30,16 @@ from pathlib import Path
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+
+IMAGE_MIME_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".bmp": "image/bmp",
+    ".svg": "image/svg+xml",
+}
 
 WORKSPACE = "/nex_workspace"
 LOG_FILE = "/nex_workspace/data/activity.jsonl"
@@ -222,16 +233,37 @@ def write_file():
 
 @app.route("/read_file", methods=["GET"])
 def read_file():
-    """Read a file from Nex's workspace."""
+    """Read a file from Nex's workspace. Images come back base64-encoded
+    (SVG excluded — it's text and reads fine as content); everything else
+    is read as text, same as before."""
     path = request.args.get("path", "")
     full_path = _resolve_within_workspace(path)
     if full_path is None:
         return jsonify({"error": "Path escapes workspace"}), 400
     if not os.path.exists(full_path):
         return jsonify({"error": "File not found"}), 404
+
+    ext = os.path.splitext(full_path)[1].lower()
+    mime_type = IMAGE_MIME_TYPES.get(ext)
+
+    if mime_type and ext != ".svg":
+        with open(full_path, "rb") as f:
+            raw = f.read()
+        return jsonify(
+            {
+                "path": path,
+                "is_binary": True,
+                "mime_type": mime_type,
+                "content_base64": base64.b64encode(raw).decode("ascii"),
+                "size": len(raw),
+            }
+        )
+
     with open(full_path, "r") as f:
         content = f.read()
-    return jsonify({"path": path, "content": content, "size": len(content)})
+    return jsonify(
+        {"path": path, "is_binary": False, "content": content, "size": len(content)}
+    )
 
 
 @app.route("/files", methods=["GET"])

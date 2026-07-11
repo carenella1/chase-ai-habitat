@@ -1007,8 +1007,10 @@ def api_docker_activity():
 @app.route("/api/docker/read")
 def api_docker_read():
     path = request.args.get("path", "")
-    content = nex_docker.read_file(path)
-    return jsonify({"path": path, "content": content})
+    result = nex_docker.read_file(path)
+    if result is None:
+        return jsonify({"path": path, "content": ""})
+    return jsonify(result)
 
 
 @app.route("/api/beliefs")

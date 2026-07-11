@@ -586,8 +586,11 @@ async function loadDocker() {
 async function viewDockerFile(path) {
     const r = await fetch(`/api/docker/read?path=${encodeURIComponent(path)}`).then(r=>r.json());
     const out = $('docker-run-output');
-    if (out) {
-        out.style.display = 'block';
+    if (!out) return;
+    out.style.display = 'block';
+    if (r.is_binary && r.mime_type && r.content_base64) {
+        out.innerHTML = `<div style="padding:8px;"><img src="data:${r.mime_type};base64,${r.content_base64}" style="max-width:100%;border:1px solid rgba(0,255,200,0.3);border-radius:4px;" alt="${esc(path)}"><div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:4px;">${esc(path)} (${(r.size/1024).toFixed(1)}KB)</div></div>`;
+    } else {
         out.innerHTML = `<pre style="color:#00ffcc;font-family:monospace;font-size:11px;white-space:pre-wrap;">${esc(r.content||'')}</pre>`;
     }
 }

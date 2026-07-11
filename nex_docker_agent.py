@@ -218,14 +218,15 @@ class NexDockerAgent:
         return self.task_log.get_recent(limit)
 
     def read_file(self, path):
-        """Read a file from Nex's workspace."""
+        """Read a file from Nex's workspace. Returns the full response dict
+        (content or content_base64 + mime_type for images), or None on failure."""
         if not self.is_online():
             return None
         try:
             r = requests.get(
                 f"{DOCKER_URL}/read_file", params={"path": path}, timeout=10
             )
-            return r.json().get("content")
+            return r.json()
         except Exception:
             return None
 
