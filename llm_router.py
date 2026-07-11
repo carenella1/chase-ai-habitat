@@ -611,7 +611,7 @@ def call_llm_stream(prompt: str, timeout: int = None, system_prompt: str = None)
                     "messages": messages,
                     "stream": True,
                     "options": {
-                        "num_predict": 500,
+                        "num_predict": 1536,
                         "temperature": 0.65,
                         "top_p": 0.9,
                         "top_k": 40,
@@ -632,7 +632,7 @@ def call_llm_stream(prompt: str, timeout: int = None, system_prompt: str = None)
                     "prompt": full_prompt,
                     "stream": True,
                     "options": {
-                        "num_predict": 500,
+                        "num_predict": 1536,
                         "temperature": 0.65,
                         "top_p": 0.9,
                         "top_k": 40,
