@@ -1,0 +1,18 @@
+services:
+  nex-docker:
+    build:
+      context: ./habitat/nex_docker
+    ports:
+      - "7700:7700"
+    volumes:
+      # Attaches to the same named volume the container has already been
+      # using since April (confirmed via `docker inspect nex`) — not a new
+      # empty volume. This is what makes files NEX builds survive a
+      # container restart; using a fresh volume name here would silently
+      # orphan everything already in nex_data.
+      - nex_data:/nex_workspace
+    restart: unless-stopped
+
+volumes:
+  nex_data:
+    external: true

@@ -14,17 +14,19 @@ from habitat.agents.domain_knowledge import get_domain_briefing, detect_task_dom
 from structured_memory import NexMemory, migrate_from_memory_json
 from self_optimizer import SelfOptimizer
 from deep_research_trigger import DeepResearchTrigger
-from nex_sandbox import NexSandbox
+from nex_sandbox import NexSandbox, NexSandboxAutonomy
 from knowledge_graph import NexKnowledgeGraph
 from nex_docker_agent import NexDockerAgent, NexAutonomousEngine
 from nex_trainer import nex_trainer
 from llm_router import warmup_models
+import nex_digest
 
 
 nex_docker = NexDockerAgent()
 nex_autonomous = NexAutonomousEngine(nex_docker, call_llm)
 knowledge_graph = NexKnowledgeGraph()
 nex_sandbox = NexSandbox()
+nex_sandbox_autonomy = NexSandboxAutonomy(call_llm, nex_sandbox)
 self_optimizer = SelfOptimizer(call_llm)
 deep_research_trigger = DeepResearchTrigger(call_llm, call_llm_deep)
 nex_memory = NexMemory()
@@ -1409,6 +1411,15 @@ def _build_nexarion_prompt(
         else "the nature of intelligence and emergence"
     )
 
+    # Accumulated knowledge cards relevant to what you've been researching
+    knowledge_block = ""
+    try:
+        relevant_knowledge = nex_trainer.get_relevant_knowledge(topics_str)
+        if relevant_knowledge:
+            knowledge_block = f"\nThings you've studied and consolidated:\n{relevant_knowledge}\n"
+    except Exception:
+        pass
+
     # Active goal
     active_goal = memory.get("active_goal", "")
     goal_block = (
@@ -1466,6 +1477,7 @@ Background — what you've been researching lately (only bring this up if it's a
 {self_context_block}
 {memory_block}
 {journal_block}
+{knowledge_block}
 {domain_block}
 {tool_block}
 Conversation so far:
@@ -2055,6 +2067,21 @@ def run():
                 ).start()
                 print("✨ SELF-OPTIMIZER: Triggered in background")
 
+            # Daily digest — wall-clock gated (not cycle-count, since cycle
+            # time drifts with LLM load). is_due() is a cheap timestamp
+            # check; generation itself (LLM call + file reads) runs in its
+            # own background thread so it never blocks cognition.
+            try:
+                if nex_digest.is_due():
+                    threading.Thread(
+                        target=nex_digest.generate_digest,
+                        args=(call_llm, nex_memory),
+                        daemon=True,
+                    ).start()
+                    print("📰 DIGEST: Triggered in background")
+            except Exception as e:
+                print(f"⚠️ Digest trigger error: {e}")
+
             if current_cycle % 7 == 0:
                 try:
                     unresolved = check_and_register_contradictions(
@@ -2346,6 +2373,10 @@ def run():
                 optimizer_guidance = self_optimizer.get_prompt_for_agent(agent)
             except Exception:
                 optimizer_guidance = ""
+            try:
+                relevant_knowledge = nex_trainer.get_relevant_knowledge(topic_context)
+            except Exception:
+                relevant_knowledge = ""
             claim_seed = random.choice(
                 [
                     "The evidence suggests",
@@ -2382,6 +2413,7 @@ Insight:
 Context: {context_line}
 {f"Self-knowledge: {self_context}" if self_context else ""}
 {f"Agent guidance (self-improved over time): {optimizer_guidance}" if optimizer_guidance else ""}
+{f"Relevant knowledge: {relevant_knowledge}" if relevant_knowledge else ""}
 Task: {task_instruction}
 
 --- Debate Response ---
@@ -2674,6 +2706,14 @@ Claim:
             except Exception as e:
                 print(f"❌ PHASE 3 ERROR: {e}")
 
+            # Phase 3b — Knowledge reinforcement (consolidation, contradiction
+            # resolution, synthesis, skill extraction). Self-gates internally
+            # on cycle count and runs in its own background thread.
+            try:
+                nex_trainer.on_cycle(current_cycle, call_llm, call_llm_deep)
+            except Exception as e:
+                print(f"❌ TRAINER WIRING ERROR: {e}")
+
             broadcast_record = workspace.broadcast(
                 insight=insight,
                 agent=agent,
@@ -2888,6 +2928,19 @@ Claim:
                 )
             except Exception as e:
                 print(f"❌ DOCKER ENGINE ERROR: {e}")
+
+            # Phase 6b — Autonomous sandbox verification (background loop
+            # only, never chat-selectable — see nex_sandbox.NexSandboxAutonomy)
+            try:
+                nex_sandbox_autonomy.maybe_verify(
+                    insight=insight,
+                    agent=agent,
+                    cycle=current_cycle,
+                    significance=sig_score,
+                    topic=search_term or topic_context,
+                )
+            except Exception as e:
+                print(f"❌ SANDBOX AUTONOMY ERROR: {e}")
 
             # --- AUTONOMOUS DEEP RESEARCH TRIGGER ---
             try:
@@ -3258,6 +3311,22 @@ def api_journal_entries():
             pass
     entries = list(reversed(entries[-50:]))
     return jsonify({"entries": entries})
+
+
+@app.route("/digest")
+def digest_page():
+    entries = nex_digest.get_entries(limit=50)
+    return render_template("digest.html", entries=entries, active="digest")
+
+
+@app.route("/api/digest/entries", methods=["GET"])
+def api_digest_entries():
+    return jsonify({"entries": nex_digest.get_entries(limit=50)})
+
+
+@app.route("/api/digest/status", methods=["GET"])
+def api_digest_status():
+    return jsonify(nex_digest.get_status())
 
 
 @app.route("/api/curriculum/status", methods=["GET"])

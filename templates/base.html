@@ -16,6 +16,7 @@
             <a href="/memory" class="{% if active == 'memory' %}active{% endif %}">Memory &amp; Beliefs</a>
             <a href="/self" class="{% if active == 'self' %}active{% endif %}">Self</a>
             <a href="/journal" class="{% if active == 'journal' %}active{% endif %}">Journal</a>
+            <a href="/digest" class="{% if active == 'digest' %}active{% endif %}">Digest <span class="nav-dot" id="digest-nav-dot" style="display:none;"></span></a>
             <a href="/how-it-works" class="{% if active == 'how_it_works' %}active{% endif %}">How Nex Works</a>
         </nav>
     </div>
@@ -27,6 +28,7 @@
 </div>
 <script src="/static/js/background_particles.js"></script>
 <script src="/static/js/info_tooltip.js"></script>
+<script src="/static/js/digest_indicator.js"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

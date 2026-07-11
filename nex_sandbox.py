@@ -281,7 +281,7 @@ class SandboxExecutor:
 
         # Write code to temp file in sandbox
         temp_file = f"{SANDBOX_ROOT}/temp/exec_{task_id}.py"
-        with open(temp_file, "w") as f:
+        with open(temp_file, "w", encoding="utf-8") as f:
             # Inject sandbox preamble that restricts the environment
             sandbox_path = os.path.abspath(SANDBOX_ROOT).replace("\\", "/")
             preamble = f"""
@@ -331,6 +331,13 @@ def sandbox_print(*args, **kwargs):
             "PYTHONPATH": "",
             "HOME": os.path.abspath(SANDBOX_ROOT),
             "PYTHONHASHSEED": "0",
+            # Without this, the sandboxed subprocess's own stdout defaults to
+            # the Windows console codepage (cp1252), so any code that prints
+            # non-ASCII text -- routine for LLM-generated code, which often
+            # uses "smart" punctuation like en-dashes -- crashes inside the
+            # subprocess with UnicodeEncodeError before it can even finish.
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONUTF8": "1",
             # Explicitly block network-related env vars
         }
 
@@ -340,6 +347,8 @@ def sandbox_print(*args, **kwargs):
                 [sys.executable, os.path.abspath(temp_file)],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=SANDBOX_TIMEOUT,
                 cwd=os.path.abspath(SANDBOX_ROOT),
                 env=restricted_env,
@@ -469,7 +478,7 @@ if __name__ == "__main__":
 
         # Save to sandbox
         file_path = f"{SANDBOX_AGENTS}/{agent_name}.py"
-        with open(file_path, "w") as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(code)
 
         # Test-run it
@@ -740,6 +749,80 @@ class NexSandbox:
             "agents_created": len(self.get_sandbox_agents()),
             "recent_tasks": len(self.log.get_recent(100)),
         }
+
+
+# ─────────────────────────────────────────────
+# AUTONOMOUS SANDBOX USE — background loop only
+# Mirrors NexAutonomousEngine's significance/cooldown pattern (see
+# nex_docker_agent.py), but scoped to the safe, stdlib-only sandbox rather
+# than the full-agency Docker environment. Deliberately NOT wired into
+# chat's tool_selector — this only fires from the cognition loop, so it
+# never changes chat behavior.
+# ─────────────────────────────────────────────
+class NexSandboxAutonomy:
+    """
+    Lets NEX use its own code sandbox during background cognition to check
+    a numeric or logical claim computationally, instead of only asserting
+    it. Significance-gated and cooldown-capped so it can't fire every cycle.
+    """
+
+    SIGNIFICANCE_THRESHOLD = 5.5
+    COOLDOWN_CYCLES = 5
+
+    def __init__(self, call_llm_fn, sandbox: "NexSandbox"):
+        self.call_llm = call_llm_fn
+        self.sandbox = sandbox
+        self._last_run_cycle = 0
+
+    def maybe_verify(self, insight: str, agent: str, cycle: int, significance: float, topic: str):
+        """Called every cognition cycle. Runs in a background thread when triggered."""
+        if significance < self.SIGNIFICANCE_THRESHOLD:
+            return
+        if (cycle - self._last_run_cycle) < self.COOLDOWN_CYCLES:
+            return
+
+        print(f"🔒 SANDBOX AUTONOMY TRIGGERED — significance={significance} cycle={cycle}")
+        self._last_run_cycle = cycle
+
+        threading.Thread(
+            target=self._generate_and_run,
+            args=(insight, agent, cycle, topic),
+            daemon=True,
+        ).start()
+
+    def _generate_and_run(self, insight: str, agent: str, cycle: int, topic: str):
+        try:
+            prompt = f"""You are Nexarion. Write a short, self-contained Python script — standard
+library only (json, math, statistics, random, itertools, collections, functools,
+datetime, time, string, re, hashlib, uuid, copy, typing, dataclasses, abc, enum,
+pathlib, textwrap, operator, heapq, bisect, decimal, fractions — nothing else,
+no network, no file access outside the current directory) — that computationally
+checks, estimates, or explores a specific numeric or logical claim from this idea:
+
+IDEA: {insight[:300]}
+TOPIC: {topic}
+
+Print a short, clear result. Python code only. No explanation, no markdown fences."""
+
+            code = self.call_llm(prompt, timeout=60)
+            if not code or len(code.strip()) < 20:
+                return
+            code = code.strip()
+            if code.startswith("```"):
+                lines = code.split("\n")
+                code = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+
+            # Calling run_code() directly (rather than through execute_tool's
+            # generic one-arg registry convention) so the activity log shows
+            # a real description — otherwise every autonomous run would show
+            # up indistinguishably as "code execution", same as manual runs.
+            description = f"[autonomous] [Cycle {cycle}] {agent} verifies: {topic[:50]}"
+            result = self.sandbox.run_code(code, description=description)
+            status = result.get("status", "?")
+            print(f"🔒 SANDBOX AUTONOMY: {description} -> {status}")
+
+        except Exception as e:
+            print(f"🔒 SANDBOX AUTONOMY ERROR: {e}")
 
 
 # ─────────────────────────────────────────────

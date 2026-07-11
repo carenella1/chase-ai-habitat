@@ -144,6 +144,16 @@ class OptimizerDB:
         )"""
         )
 
+        # is_candidate: a rewrite that's live but still on trial, not yet
+        # validated against real scored output. Added after the fact, so
+        # guard against re-running on a DB that already has it.
+        try:
+            cursor.execute(
+                "ALTER TABLE prompt_history ADD COLUMN is_candidate INTEGER DEFAULT 0"
+            )
+        except sqlite3.OperationalError:
+            pass  # column already exists
+
         # Optimization runs
         cursor.execute(
             """
@@ -393,11 +403,13 @@ Write ONLY the improved prompt. No explanation. Start directly with the prompt t
         self,
         agent_name: str,
         new_prompt: str,
-        new_score: float,
         reason: str = "auto_optimized",
     ) -> bool:
         """
-        Save the new prompt as the active version.
+        Save the new prompt as the active version, flagged as an unvalidated
+        candidate — it goes live immediately (there's no shadow-execution
+        path here), but avg_score is left NULL until real scored output
+        under this version accumulates. See resolve_pending_candidates().
         Old version is preserved for rollback.
         """
         conn = self.db._conn()
@@ -415,16 +427,15 @@ Write ONLY the improved prompt. No explanation. Start directly with the prompt t
             (agent_name,),
         )
 
-        # Insert new version
+        # Insert new version as an unvalidated candidate — real score TBD
         conn.execute(
             """INSERT INTO prompt_history
-               (agent_name, version, prompt, avg_score, created_at, is_active, change_reason)
-               VALUES (?, ?, ?, ?, ?, 1, ?)""",
+               (agent_name, version, prompt, avg_score, created_at, is_active, is_candidate, change_reason)
+               VALUES (?, ?, ?, NULL, ?, 1, 1, ?)""",
             (
                 agent_name,
                 next_version,
                 new_prompt,
-                new_score,
                 datetime.utcnow().isoformat(),
                 reason,
             ),
@@ -432,9 +443,78 @@ Write ONLY the improved prompt. No explanation. Start directly with the prompt t
         conn.commit()
 
         print(
-            f"✨ OPTIMIZER: {agent_name} prompt upgraded to v{next_version} (score: {new_score:.2f})"
+            f"✨ OPTIMIZER: {agent_name} prompt upgraded to v{next_version} "
+            f"(candidate — on trial until enough scored samples come in)"
         )
         return True
+
+    def get_active_candidate(self, agent_name: str) -> Optional[dict]:
+        """Return the active candidate row for this agent, if one is on trial."""
+        conn = self.db._conn()
+        row = conn.execute(
+            """SELECT * FROM prompt_history
+               WHERE agent_name = ? AND is_active = 1 AND is_candidate = 1
+               ORDER BY version DESC LIMIT 1""",
+            (agent_name,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def resolve_candidate(self, agent_name: str, min_samples: int) -> Optional[dict]:
+        """
+        Check whether the agent's active candidate prompt has accumulated
+        enough real scored samples to judge. If so, commit it (if it truly
+        scored better than the version it replaced) or revert it (if not).
+        Returns a summary dict of what happened, or None if there's no
+        candidate to resolve or not enough samples yet.
+        """
+        candidate = self.get_active_candidate(agent_name)
+        if not candidate:
+            return None
+
+        conn = self.db._conn()
+        stats = conn.execute(
+            """SELECT COUNT(*) as n, AVG(score_composite) as avg
+               FROM agent_scores WHERE agent_name = ? AND prompt_version = ?""",
+            (agent_name, candidate["version"]),
+        ).fetchone()
+
+        if not stats or stats["n"] < min_samples:
+            return None  # still gathering data
+
+        trial_avg = stats["avg"] or 0.0
+
+        baseline_row = conn.execute(
+            """SELECT avg_score FROM prompt_history
+               WHERE agent_name = ? AND version = ?""",
+            (agent_name, candidate["version"] - 1),
+        ).fetchone()
+        baseline_avg = (
+            baseline_row["avg_score"]
+            if baseline_row and baseline_row["avg_score"] is not None
+            else 0.0
+        )
+
+        if trial_avg >= baseline_avg:
+            conn.execute(
+                """UPDATE prompt_history SET is_candidate = 0, avg_score = ?
+                   WHERE agent_name = ? AND version = ?""",
+                (trial_avg, agent_name, candidate["version"]),
+            )
+            conn.commit()
+            print(
+                f"✅ OPTIMIZER: {agent_name} v{candidate['version']} committed "
+                f"({trial_avg:.2f} vs baseline {baseline_avg:.2f})"
+            )
+            return {"agent": agent_name, "status": "committed", "trial_avg": trial_avg,
+                    "baseline_avg": baseline_avg}
+        else:
+            self.revert_prompt(agent_name)
+            print(
+                f"↩️ OPTIMIZER: {agent_name} v{candidate['version']} reverted — "
+                f"scored {trial_avg:.2f} vs baseline {baseline_avg:.2f}"
+            )
+            return {"agent": agent_name, "status": "reverted", "trial_avg": trial_avg,
+                    "baseline_avg": baseline_avg}
 
     def revert_prompt(self, agent_name: str) -> bool:
         """Roll back to the previous prompt version."""
@@ -527,6 +607,22 @@ class SelfOptimizer:
             agents_improved = 0
 
             for agent_name in DEFAULT_AGENT_PROMPTS.keys():
+                # First, resolve any candidate prompt already on trial —
+                # commit it if it actually scored better, revert it if not.
+                # This must happen before generating a new rewrite so we
+                # never stack an untested candidate on top of another one.
+                resolution = self.optimizer.resolve_candidate(
+                    agent_name, MIN_SAMPLES_BEFORE_OPTIMIZE
+                )
+                if resolution:
+                    improvements[agent_name] = resolution
+                    continue
+                if self.optimizer.get_active_candidate(agent_name):
+                    # Still gathering samples on the current candidate —
+                    # don't pile a second rewrite on top of it.
+                    improvements[agent_name] = {"status": "candidate_pending"}
+                    continue
+
                 # Check if we have enough data
                 conn = self.db._conn()
                 count = conn.execute(
@@ -553,15 +649,16 @@ class SelfOptimizer:
                     improvements[agent_name] = {"status": "no_improvement_generated"}
                     continue
 
-                # Apply if confidence is high enough (we trust the generation)
+                # Goes live as a candidate — not yet trusted, will be
+                # validated against real scored output by resolve_candidate()
+                # on a future optimization cycle.
                 self.optimizer.apply_improved_prompt(
                     agent_name,
                     new_prompt,
-                    avg_score + 0.1,
                     reason=f"auto_optimized_from_score_{avg_score:.2f}",
                 )
                 improvements[agent_name] = {
-                    "status": "improved",
+                    "status": "candidate_started",
                     "old_score": avg_score,
                     "reason": "below_threshold",
                 }

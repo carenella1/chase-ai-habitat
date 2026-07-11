@@ -45,7 +45,7 @@
         <div class="status-tile">
             <div class="tile-icon">🔒</div>
             <div class="tile-body">
-                <div class="tile-label">SANDBOX TRUST <span class="info-dot" data-tip-title="Sandbox Trust" data-tip-body="How much code NEX may run without asking you first. Level 0 runs sandboxed code immediately; level 1 queues it for your approval. NEX doesn't choose to use this on its own today — it's a manual tool." data-tip-link="/how-it-works#sandbox">i</span></div>
+                <div class="tile-label">SANDBOX TRUST <span class="info-dot" data-tip-title="Sandbox Trust" data-tip-body="How much code NEX may run without asking you first. Level 0 runs sandboxed code immediately; level 1 queues it for your approval. NEX can now trigger this itself in the background — to computationally check a claim — when something significant enough comes up, capped to once every 5 cycles. It never does this during chat, only in its own background thinking." data-tip-link="/how-it-works#sandbox">i</span></div>
                 <div class="tile-value" id="trust-level">—</div>
                 <div class="tile-sub" id="trust-name">—</div>
             </div>
@@ -54,7 +54,7 @@
         <div class="status-tile">
             <div class="tile-icon">✨</div>
             <div class="tile-body">
-                <div class="tile-label">AGENT OPTIMIZER <span class="info-dot" data-tip-title="Agent Optimizer" data-tip-body="Scores each of NEX's six internal 'voices' and rewrites the guidance prompt for any that's been underperforming. The rewrite isn't proven better first — it's a try-something-else, always revertible." data-tip-link="/how-it-works#self-optimizer">i</span></div>
+                <div class="tile-label">AGENT OPTIMIZER <span class="info-dot" data-tip-title="Agent Optimizer" data-tip-body="Scores each of NEX's six internal 'voices' and rewrites the guidance prompt for any that's been underperforming. Every rewrite goes on trial: it's watched against real scored output and only kept if it actually measures better, otherwise it's automatically reverted." data-tip-link="/how-it-works#self-optimizer">i</span></div>
                 <div class="tile-value" id="optimizer-avg">—</div>
                 <div class="tile-sub">avg quality score</div>
             </div>
@@ -223,7 +223,7 @@
             <div class="panel-header">
                 <div class="panel-header-left">
                     <span class="panel-kicker">CODE EXECUTION</span>
-                    <h2 class="panel-title">SANDBOX HUB <span class="info-dot" data-tip-title="Sandbox Hub" data-tip-body="A locked-down environment for code NEX writes: no network, no files outside its own folder, 30-second timeout. Runs are human-triggered — NEX doesn't invoke this on its own during chat." data-tip-link="/how-it-works#sandbox">i</span></h2>
+                    <h2 class="panel-title">SANDBOX HUB <span class="info-dot" data-tip-title="Sandbox Hub" data-tip-body="A locked-down environment for code NEX writes: no network, no files outside its own folder, 30-second timeout. Most runs here are ones you trigger yourself, but NEX can also invoke this on its own in the background — to verify a claim computationally — when something significant enough comes up. It never does this during chat." data-tip-link="/how-it-works#sandbox">i</span></h2>
                 </div>
                 <div class="panel-header-right">
                     <div class="trust-badge" id="trust-badge">TRUST LVL 0</div>
@@ -272,7 +272,7 @@
                 <div class="panel-header">
                     <div class="panel-header-left">
                         <span class="panel-kicker">SELF-IMPROVEMENT</span>
-                        <h2 class="panel-title">AGENT OPTIMIZER <span class="info-dot" data-tip-title="Agent Optimizer" data-tip-body="Every 20 cycles, any of NEX's six internal voices scoring below threshold gets its guidance prompt rewritten. Not re-validated against real output before being adopted — revert anytime below." data-tip-link="/how-it-works#self-optimizer">i</span></h2>
+                        <h2 class="panel-title">AGENT OPTIMIZER <span class="info-dot" data-tip-title="Agent Optimizer" data-tip-body="Every 20 cycles, any of NEX's six internal voices scoring below threshold gets its guidance prompt rewritten. The rewrite is put on trial and automatically reverted if it doesn't actually score better than what it replaced — you can also revert anytime below." data-tip-link="/how-it-works#self-optimizer">i</span></h2>
                     </div>
                     <div class="opt-runs" id="opt-runs">— RUNS</div>
                 </div>

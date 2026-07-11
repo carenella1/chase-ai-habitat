@@ -367,6 +367,10 @@ def tool_web_search(query: str) -> dict:
         return {"error": str(e), "query": query, "results": []}
 
 
+def tool_sandbox_run(code: str) -> dict:
+    return nex_sandbox.run_code(code)
+
+
 # =========================
 # TOOL REGISTRY
 # =========================
@@ -413,11 +417,17 @@ TOOL_REGISTRY = {
         "param": "query",
         "example": "web_search('number 1 movie Philippines 2026')",
     },
+    "sandbox_run": {
+        "function": tool_sandbox_run,
+        "description": (
+            "Run Python in NEX's isolated, stdlib-only sandbox to verify a "
+            "claim computationally. Not chat-selectable — only invoked "
+            "autonomously from the background cognition loop."
+        ),
+        "param": "code",
+        "example": "sandbox_run('print(sum(range(100)))')",
+    },
 }
-
-
-def tool_sandbox_run(code: str) -> dict:
-    return nex_sandbox.run_code(code)
 
 
 def execute_tool(tool_name: str, param: str) -> dict:
@@ -467,6 +477,16 @@ def format_tool_result(result: dict) -> str:
         if result.get("success"):
             return f"[Python output]\n{result['output']}"
         return f"[Python error] {result['error']}"
+
+    elif tool == "sandbox_run":
+        status = result.get("status", "")
+        if status == "success":
+            return f"[Sandbox output]\n{result.get('stdout', '')}"
+        if status == "blocked":
+            return f"[Sandbox blocked] {result.get('reason', 'unsafe code')}"
+        if status == "pending_approval":
+            return "[Sandbox] Queued for human approval (trust level 1)."
+        return f"[Sandbox error] {result.get('stderr') or result.get('reason', status)}"
 
     elif tool == "calculator":
         if result.get("result") is not None:

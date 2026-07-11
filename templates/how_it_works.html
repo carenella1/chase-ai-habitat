@@ -140,6 +140,33 @@
             </div>
         </div>
 
+        <!-- 4b. DAILY DIGEST -->
+        <div class="nexus-panel hiw-card" id="digest">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <span class="panel-kicker">MAKING THE INVISIBLE VISIBLE</span>
+                    <h2 class="panel-title">The Daily Digest</h2>
+                </div>
+                <span class="nex-status-badge status-live">Live</span>
+            </div>
+            <p class="hiw-lead">
+                Roughly once a day, NEX writes itself a short briefing — what beliefs it formed, which
+                contradictions it resolved, what deep research it completed, and what it noticed about its own
+                thinking — since the last one.
+            </p>
+            <p class="hiw-why">
+                <strong>The point of this page is explaining what's real; the point of the digest is making that
+                visible without you having to go dig for it.</strong> Everything else on this page describes a
+                mechanism — the digest is the one place that just tells you what happened, in plain language, on its
+                own schedule.
+            </p>
+            <div class="hiw-facts">
+                <span class="hiw-fact"><b>Cadence:</b> wall-clock, ~once a day (not cycle-gated)</span>
+                <span class="hiw-fact"><b>Sources:</b> new beliefs/facts, resolved contradictions, deep research, self-observations</span>
+                <span class="hiw-fact">See it on the <a href="/digest" style="color:var(--accent-blue)">Digest page</a></span>
+            </div>
+        </div>
+
         <!-- 5. SELF-OPTIMIZER -->
         <div class="nexus-panel hiw-card" id="self-optimizer">
             <div class="panel-header">
@@ -155,15 +182,16 @@
                 Every 20 cycles, any voice that's been scoring poorly gets its guidance prompt rewritten.
             </p>
             <p class="hiw-why">
-                <strong>Be clear-eyed about what "trust" means here.</strong> A rewritten prompt isn't proven better
-                before it's adopted — it's simply tried because the old one was underperforming. Every version is
-                kept, though, so any rewrite can be reverted with one click from the Self page. This never touches
-                NEX's core identity, only these six supporting-role prompts.
+                <strong>Rewrites are now put on trial, not trusted on sight.</strong> A rewritten prompt goes live
+                immediately but flagged as a candidate — it's watched against real scored output, and only kept if it
+                actually measures better than what it replaced. If it doesn't, it's automatically reverted, no click
+                required. Every version is still kept, so anything can also be reverted by hand from the Self page.
+                This never touches NEX's core identity, only these six supporting-role prompts.
             </p>
             <div class="hiw-facts">
                 <span class="hiw-fact"><b>6 personas</b> — roles chosen fresh each cycle, not fixed characters</span>
                 <span class="hiw-fact"><b>Rewrite trigger:</b> score below 0.65 after 5+ samples</span>
-                <span class="hiw-fact"><b>No auto-revert</b> if a new prompt performs worse — that's on you</span>
+                <span class="hiw-fact"><b>Auto-resolved:</b> committed or reverted once 5+ real samples judge it</span>
             </div>
         </div>
 
@@ -200,21 +228,25 @@
                     <span class="panel-kicker">CODE EXECUTION</span>
                     <h2 class="panel-title">The Sandbox</h2>
                 </div>
-                <span class="nex-status-badge status-manual">Manual</span>
+                <span class="nex-status-badge status-live">Live</span>
             </div>
             <p class="hiw-lead">
-                NEX can write and run real Python — but only inside a locked-down sandbox, and only when you click
-                "run" yourself from the Self page. It does not currently decide on its own to execute code during a
-                normal conversation.
+                NEX can write and run real Python inside a locked-down sandbox — either because you clicked "run"
+                yourself from the Self page, or because NEX decided on its own, during background cognition, to
+                computationally check a claim it was reasoning about. It never does this during chat — the
+                autonomous path only exists in the background loop.
             </p>
             <p class="hiw-why">
-                <strong>Deliberately conservative.</strong> The sandbox blocks network access, file access outside
-                its own folder, and anything beyond a safe list of standard-library modules — checked both before
-                the code runs and by stripping the environment it runs in. A 30-second timeout caps everything.
+                <strong>Deliberately conservative, in both directions.</strong> The sandbox blocks network access,
+                file access outside its own folder, and anything beyond a safe list of standard-library modules —
+                checked both before the code runs and by stripping the environment it runs in. A 30-second timeout
+                caps everything. Autonomous use is capped too: gated to significant moments, at most once every 5
+                cycles, so it can't fire constantly.
             </p>
             <div class="hiw-facts">
                 <span class="hiw-fact"><b>Current trust level:</b> <span id="hiw-trust-level">—</span></span>
                 <span class="hiw-fact"><b>Level 1:</b> queues code for your approval instead of running it immediately</span>
+                <span class="hiw-fact"><b>Autonomous runs</b> are tagged "[autonomous]" in the Sandbox Hub activity log</span>
                 <span class="hiw-fact"><b>Levels 2/3</b> (real-machine execution): intentionally not built yet</span>
             </div>
         </div>
