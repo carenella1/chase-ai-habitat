@@ -143,6 +143,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* =========================
+       LIGHTWEIGHT MARKDOWN RENDERER
+       (bold, italics, inline code, bullet/numbered lists — nothing fancier)
+    ========================= */
+    function renderMarkdown(text) {
+        let html = esc(text);
+
+        // inline code
+        html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+        // bold: **text** or __text__
+        html = html.replace(/\*\*([^\n*]+)\*\*/g, "<strong>$1</strong>");
+        html = html.replace(/__([^\n_]+)__/g, "<strong>$1</strong>");
+
+        // italics: *text* or _text_
+        html = html.replace(/\*([^\n*]+)\*/g, "<em>$1</em>");
+        html = html.replace(/(^|[^\w])_([^\n_]+)_(?!\w)/g, "$1<em>$2</em>");
+
+        const lines = html.split("\n");
+        const out = [];
+        let listType = null;
+        for (const line of lines) {
+            const bulletMatch = line.match(/^\s*[-*•]\s+(.+)/);
+            const numberMatch = line.match(/^\s*\d+[.)]\s+(.+)/);
+            if (bulletMatch) {
+                if (listType !== "ul") {
+                    if (listType) out.push(`</${listType}>`);
+                    out.push("<ul>");
+                    listType = "ul";
+                }
+                out.push(`<li>${bulletMatch[1]}</li>`);
+            } else if (numberMatch) {
+                if (listType !== "ol") {
+                    if (listType) out.push(`</${listType}>`);
+                    out.push("<ol>");
+                    listType = "ol";
+                }
+                out.push(`<li>${numberMatch[1]}</li>`);
+            } else {
+                if (listType) {
+                    out.push(`</${listType}>`);
+                    listType = null;
+                }
+                out.push(line === "" ? "<br>" : line + "<br>");
+            }
+        }
+        if (listType) out.push(`</${listType}>`);
+        return out.join("\n");
+    }
+
+    /* =========================
        MESSAGE RENDERER
     ========================= */
     function addMessage(text, role = "habitat", skipScroll = false, trace = null) {
@@ -155,7 +205,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const bubble = document.createElement("div");
         bubble.className = "chat-bubble";
-        bubble.textContent = text;
+        if (role === "user") {
+            bubble.textContent = text;
+        } else {
+            bubble.innerHTML = renderMarkdown(text);
+        }
 
         wrap.appendChild(meta);
         wrap.appendChild(bubble);
@@ -190,13 +244,17 @@ document.addEventListener("DOMContentLoaded", () => {
         thread.appendChild(wrap);
         thread.scrollTop = thread.scrollHeight;
 
+        let raw = "";
+
         return {
             appendText(chunk) {
-                bubble.textContent += chunk;
+                raw += chunk;
+                bubble.innerHTML = renderMarkdown(raw);
                 thread.scrollTop = thread.scrollHeight;
             },
             setText(full) {
-                bubble.textContent = full;
+                raw = full;
+                bubble.innerHTML = renderMarkdown(full);
             },
             finish(trace) {
                 if (trace && Object.keys(trace).length > 0) {

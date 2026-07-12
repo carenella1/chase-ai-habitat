@@ -85,6 +85,38 @@
     color: var(--text-main);
 }
 
+.chat-bubble strong {
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.chat-bubble em {
+    font-style: italic;
+}
+
+.chat-bubble code {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.9em;
+    font-family: "Courier New", monospace;
+}
+
+.chat-bubble ul,
+.chat-bubble ol {
+    margin: 4px 0 6px;
+    padding-left: 22px;
+}
+
+.chat-bubble li {
+    margin: 2px 0;
+}
+
+.chat-bubble br:last-child {
+    display: none;
+}
+
 .chat-trace {
     margin-top: 8px;
     padding-top: 8px;
