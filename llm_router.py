@@ -37,6 +37,22 @@ WHAT CHANGED FROM v2:
   - Everything else from v2 (GPU offloading, health checks, backoff,
     warm-up, status reporting) is unchanged
 
+v4 (2026-07-12): Swapped both brains to abliterated (uncensored) variants
+  from the huihui_ai Ollama namespace — huihui_ai/gpt-oss-abliterated:20b
+  (chat) and huihui_ai/qwen3-abliterated:30b-a3b (deep). Same base
+  architectures/quant as before, just with refusal behavior removed via
+  activation ablation rather than prompt tricks. Verified live on this
+  machine same as every other entry in this file:
+    - gpt-oss-abliterated:20b @ num_gpu=-1 → 100% GPU, 13.9GB at 16k ctx
+      (matches the original gpt-oss:20b's footprint almost exactly)
+    - qwen3-abliterated:30b-a3b @ num_gpu=26 → 13.7GB at 32k (deep) ctx,
+      47/53 CPU/GPU split (matches the original qwen3:30b-a3b's tested
+      26-layer config)
+  The original censored models were deleted from disk after this was
+  verified working. Old entries are kept lower in the priority lists as
+  documented fallbacks (same pattern as the qwen3:32b/deepseek-r1:32b
+  entries above) in case they're ever reinstalled.
+
 HARDWARE THIS IS TUNED FOR:
   CPU:  AMD Ryzen 7 7800X3D (8 cores, 3D V-Cache)
   GPU:  NVIDIA RTX 4070 Ti SUPER (16GB VRAM)
@@ -90,7 +106,11 @@ OLLAMA_BASE = "http://localhost:11434"
 # qwen3:30b-a3b's partial-offload slowness is much more tolerable for DEEP
 # calls, which run in the background with nobody watching a spinner.
 CHAT_MODEL_PRIORITY = [
-    "gpt-oss:20b",  # fits 100% GPU (~13GB), fast, benchmarks well on reasoning
+    "huihui_ai/gpt-oss-abliterated:20b",  # uncensored variant — verified
+    #                        100% GPU, ~13.9GB at 16k ctx, same footprint
+    #                        as the original gpt-oss:20b
+    "gpt-oss:20b",  # fallback if the abliterated pull is ever missing
+    #                  (not installed right now — deleted after the swap)
     "qwen3:14b",  # proven fallback, fits fully on GPU
     "qwen3:8b",  # smaller fallback if 14b not installed
     "deepseek-r1:14b",  # last resort
@@ -99,9 +119,13 @@ CHAT_MODEL_PRIORITY = [
 # DEEP BRAIN — powerful, used for background cognition only
 # Most powerful first
 DEEP_MODEL_PRIORITY = [
-    "qwen3:30b-a3b",  # 30B MoE, partial GPU offload (26/48 layers) is fine
-    #                    here — deep calls aren't latency-sensitive
-    "gpt-oss:20b",  # falls back to the chat brain if qwen3:30b-a3b unavailable
+    "huihui_ai/qwen3-abliterated:30b-a3b",  # uncensored variant — verified
+    #                        13.7GB at 32k ctx, 26/48 GPU layers, same
+    #                        footprint as the original qwen3:30b-a3b
+    "qwen3:30b-a3b",  # fallback if the abliterated pull is ever missing
+    #                    (not installed right now — deleted after the swap)
+    "huihui_ai/gpt-oss-abliterated:20b",  # falls back to the chat brain
+    "gpt-oss:20b",  # same, non-abliterated variant
     "qwen3:32b",  # old fallback — not installed right now, kept for
     #                graceful degradation if it's ever reinstalled
     "deepseek-r1:32b",  # same — not installed, kept as a fallback
@@ -123,6 +147,7 @@ THINKING_MODELS = {
     "qwen3:4b",
     "qwen3:30b-a3b",
     "gpt-oss",
+    "qwen3-abliterated:30b-a3b",  # huihui_ai abliterated deep brain
 }
 
 # Models that use the /api/chat endpoint (system prompt support)
@@ -147,10 +172,17 @@ CHAT_API_MODELS = {
 # Order matters for readability, but _get_gpu_layers() below matches on
 # exact-name-first then longest-prefix, so lookup no longer depends on it.
 GPU_LAYERS = {
+    "huihui_ai/gpt-oss-abliterated:20b": -1,  # verified: 100% GPU, 13.9GB
+    #                        at 16k context — same footprint as gpt-oss:20b
+    "huihui_ai/qwen3-abliterated:30b-a3b": 26,  # verified: 13.7GB at 32k
+    #                        (deep) context, 47/53 CPU/GPU split — same
+    #                        footprint as qwen3:30b-a3b at 26 layers
     "gpt-oss:20b": -1,  # verified: 100% GPU, ~13-14GB even at 32k context
+    #                     (not installed right now — kept as a fallback)
     "qwen3:30b-a3b": 26,  # verified: ~11.4GB at 16k context, ~40 tok/s.
     #                        NOTE: -1 (full GPU) does NOT fit — that was
     #                        tested too and leaves under 1GB headroom.
+    #                        (not installed right now — kept as a fallback)
     "qwen3:14b": -1,  # ~8.5GB — fits easily, offload all
     "qwen3:8b": -1,  # ~5GB — fits easily
     "qwen3:32b": 40,  # ~18GB total, ~14GB on GPU (40 layers), rest CPU
@@ -936,8 +968,8 @@ def get_model_recommendations() -> dict:
     recs = {}
 
     wanted = {
-        "gpt-oss:20b": "Best deep brain — OpenAI open-weight, fits fully in 16GB VRAM",
-        "qwen3:30b-a3b": "Best chat brain — MoE, strong reasoning, ~40 tok/s here",
+        "huihui_ai/gpt-oss-abliterated:20b": "Best chat brain — uncensored, fits fully in 16GB VRAM",
+        "huihui_ai/qwen3-abliterated:30b-a3b": "Best deep brain — uncensored MoE, strong reasoning",
         "qwen3:14b": "Lightweight chat brain fallback — fast, fits fully on GPU",
         "deepseek-r1:14b": "Reasoning fallback — proven, fits fully on GPU",
     }
