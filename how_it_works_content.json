@@ -199,13 +199,14 @@
     "kicker": "A SECOND, VISUAL MEDIUM",
     "title": "Creative \u2014 Image Generation",
     "status": "live",
-    "lead": "The Creative tab lets NEX generate images from a text prompt, running entirely on this PC through a separate local engine called ComfyUI \u2014 the same relationship this app has with Ollama, just for pictures instead of words. Nothing leaves the machine.",
-    "why_hook": "The GPU can only hold one brain at a time.",
-    "why_body": "This machine's 16GB of VRAM is shared between the chat/reasoning model (Ollama) and the image model (ComfyUI) \u2014 they cannot both be loaded at once without running out of memory. So every image job first tells Ollama to unload its current model and waits for that VRAM to actually free before starting generation; Ollama simply reloads its model on the next chat message afterward. \"Live\" here means the code path is wired and works end-to-end \u2014 it still needs ComfyUI and at least one model file installed locally to actually produce an image (see install_creative.md), the same way the Docker workspace needs Docker Desktop installed before NEX can use it.",
+    "lead": "The Creative tab lets NEX generate images from a text prompt, running entirely on this PC through a separate local engine called ComfyUI \u2014 the same relationship this app has with Ollama, just for pictures instead of words. Nothing leaves the machine. NEX can also make something on its own, unprompted, when a moment from its background cognition feels significant enough \u2014 the gallery is split into what you asked for and what NEX made by itself.",
+    "why_hook": "The GPU can only hold one brain at a time \u2014 and unprompted art has to earn its slot.",
+    "why_body": "This machine's 16GB of VRAM is shared between the chat/reasoning model (Ollama) and the image model (ComfyUI) \u2014 they cannot both be loaded at once without running out of memory. So every image job first tells Ollama to unload its current model and waits for that VRAM to actually free before starting generation; Ollama simply reloads its model on the next chat message afterward. Autonomous creation reuses the same significance score that already gates journal entries and autonomous builds, but set higher (7.5 vs. the journal's 6.0) and capped to roughly once a day \u2014 a permanent gallery entry plus a multi-minute pause in chat is a bigger commitment than a journal line, so only NEX's most significant moments become art, and it always uses the fast model to keep that pause short. \"Live\" here means the code path is wired and works end-to-end \u2014 it still needs ComfyUI and at least one model file installed locally to actually produce an image (see install_creative.md), the same way the Docker workspace needs Docker Desktop installed before NEX can use it.",
     "facts": [
       "Two model options: Z-Image Turbo (fast, 8 steps) and FLUX.2 klein (quality)",
       "LLM is force-unloaded from VRAM before every generation job, and reloads itself on the next chat message",
-      "Past generations + their prompts are kept in a gallery on the Creative tab"
+      "Autonomous creation: significance \u2265 7.5 (above the journal's 6.0), capped to ~once/day, fast model only",
+      "Gallery splits into \"My Creations\" and \"Nex's Creations\", each with a small nav indicator for new pieces"
     ],
     "live_status_check": null
   }

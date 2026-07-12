@@ -15,6 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     let pollTimer = null;
+    let galleryItems = [];
+    let activeSource = "user";
+
+    const EMPTY_STATES = {
+        user: '<div class="empty-state"><div class="empty-icon">◎</div><div>No images yet.</div><div class="empty-sub">Generate your first image above.</div></div>',
+        nex: '<div class="empty-state"><div class="empty-icon">◎</div><div>Nex hasn\'t felt moved to create anything yet.</div><div class="empty-sub">It only turns its most significant moments into art — at most about once a day.</div></div>',
+    };
 
     async function loadEngineStatus() {
         try {
@@ -42,27 +49,48 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) { console.error("Creative engine status error:", e); }
     }
 
-    function renderGallery(items) {
+    function renderGallery() {
         const grid = $("creative-gallery-grid");
         if (!grid) return;
-        if (!items || !items.length) {
-            grid.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div><div>No images yet.</div><div class="empty-sub">Generate your first image above.</div></div>';
+        const items = galleryItems.filter(item => (item.source || "user") === activeSource);
+        if (!items.length) {
+            grid.innerHTML = EMPTY_STATES[activeSource] || EMPTY_STATES.user;
             return;
         }
-        grid.innerHTML = items.map(item => `
+        grid.innerHTML = items.map(item => {
+            const isNex = item.source === "nex";
+            const badgeClass = "creative-gallery-badge" + (isNex ? " badge-nex" : "");
+            const badgeText = isNex ? "NEX" : (item.model_choice === "quality" ? "FLUX.2" : "TURBO");
+            const caption = isNex && item.artist_note ? item.artist_note : (item.prompt || "");
+            const originLine = isNex && item.origin_agent
+                ? `<span class="creative-gallery-origin">— ${esc(item.origin_agent)}</span>` : "";
+            return `
             <div class="creative-gallery-item">
-                <span class="creative-gallery-badge">${item.model_choice === "quality" ? "FLUX.2" : "TURBO"}</span>
+                <span class="${badgeClass}">${badgeText}</span>
                 <img src="${item.image_url}" alt="${esc(item.prompt || "")}" loading="lazy">
-                <div class="creative-gallery-caption">${esc((item.prompt || "").slice(0, 120))}</div>
-            </div>`).join("");
+                <div class="creative-gallery-caption">${esc(caption.slice(0, 140))}${originLine}</div>
+            </div>`;
+        }).join("");
     }
 
     async function loadGallery() {
         try {
-            const items = await fetch("/creative/gallery").then(r => r.json());
-            renderGallery(items);
+            galleryItems = await fetch("/creative/gallery").then(r => r.json());
+            renderGallery();
         } catch (e) { console.error("Creative gallery error:", e); }
     }
+
+    function setActiveTab(source) {
+        activeSource = source;
+        document.querySelectorAll(".creative-gallery-tab").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.source === source);
+        });
+        renderGallery();
+    }
+
+    document.querySelectorAll(".creative-gallery-tab").forEach(btn => {
+        btn.addEventListener("click", () => setActiveTab(btn.dataset.source));
+    });
 
     function setProgress(pct) {
         const wrap = $("creative-progress-wrap");

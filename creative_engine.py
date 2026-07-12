@@ -34,6 +34,7 @@ FAILURE HANDLING:
 import json
 import os
 import random
+import re
 import sqlite3
 import subprocess
 import threading
@@ -150,6 +151,18 @@ class CreativeJobLog:
             )
             """
         )
+        # Added after the first ship — guarded so this is safe to run
+        # against a DB that already has these columns. Same idiom as
+        # structured_memory.py / self_optimizer.py's migrations.
+        for stmt in (
+            "ALTER TABLE generations ADD COLUMN source TEXT DEFAULT 'user'",
+            "ALTER TABLE generations ADD COLUMN artist_note TEXT DEFAULT ''",
+            "ALTER TABLE generations ADD COLUMN origin_agent TEXT DEFAULT ''",
+        ):
+            try:
+                self._conn().execute(stmt)
+            except sqlite3.OperationalError:
+                pass  # column already exists
         self._conn().commit()
 
     def create(
@@ -162,13 +175,17 @@ class CreativeJobLog:
         height,
         lora_name,
         lora_strength,
+        source="user",
+        artist_note="",
+        origin_agent="",
     ):
         self._conn().execute(
             """
             INSERT INTO generations
             (job_id, prompt, negative_prompt, model_choice, width, height,
-             lora_name, lora_strength, image_path, status, error, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             lora_name, lora_strength, image_path, status, error, created_at,
+             source, artist_note, origin_agent)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 job_id,
@@ -183,6 +200,9 @@ class CreativeJobLog:
                 "queued",
                 "",
                 datetime.utcnow().isoformat(),
+                source,
+                artist_note or "",
+                origin_agent or "",
             ),
         )
         self._conn().execute(
@@ -215,6 +235,18 @@ class CreativeJobLog:
             "SELECT * FROM generations ORDER BY id DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(r) for r in rows]
+
+    def get_last_created_at(self, source):
+        """Most recent created_at for a given source ('user' or 'nex'), or
+        None. Counts every attempt, successful or not — same principle as
+        deep_research_trigger's cooldown-before-completion: a failed
+        autonomous attempt still consumes that day's slot rather than
+        retrying in a tight loop."""
+        row = self._conn().execute(
+            "SELECT MAX(created_at) as ts FROM generations WHERE source = ?",
+            (source,),
+        ).fetchone()
+        return row["ts"] if row else None
 
 
 # ─────────────────────────────────────────────
@@ -444,6 +476,9 @@ class CreativeEngine:
         height=1024,
         lora_name=None,
         lora_strength=0.8,
+        source="user",
+        artist_note="",
+        origin_agent="",
     ):
         job_id = uuid.uuid4().hex[:12]
         self.job_log.create(
@@ -455,6 +490,9 @@ class CreativeEngine:
             height,
             lora_name,
             lora_strength,
+            source=source,
+            artist_note=artist_note,
+            origin_agent=origin_agent,
         )
         self._progress[job_id] = 0
         threading.Thread(
@@ -472,6 +510,9 @@ class CreativeEngine:
             daemon=True,
         ).start()
         return job_id
+
+    def get_last_nex_creation_at(self):
+        return self.job_log.get_last_created_at("nex")
 
     def _run_job(
         self,
@@ -681,6 +722,9 @@ class CreativeEngine:
                     "height": row["height"],
                     "created_at": row["created_at"],
                     "image_url": self._url_for_output(row["image_path"]),
+                    "source": row.get("source") or "user",
+                    "artist_note": row.get("artist_note") or "",
+                    "origin_agent": row.get("origin_agent") or "",
                 }
             )
         return out
@@ -691,3 +735,110 @@ class CreativeEngine:
         if rel.startswith("static/"):
             rel = rel[len("static/") :]
         return f"/static/{rel}"
+
+
+# ─────────────────────────────────────────────
+# AUTONOMOUS CREATION — Nex makes art unprompted
+# ─────────────────────────────────────────────
+
+
+class NexCreativeAutonomy:
+    """
+    Lets Nex create art on its own, the same way NexSandboxAutonomy
+    (nex_sandbox.py) and NexAutonomousEngine (nex_docker_agent.py) let it
+    verify claims / build things unprompted — gated by the cognition loop's
+    own per-cycle significance score. Never reachable from chat; only ever
+    called from run_ui.py's background cognition loop.
+    """
+
+    # Above journal's 6.0 threshold (run_ui.py) — a permanent gallery entry
+    # plus a multi-minute Ollama unload is a bigger commitment than a
+    # journal line, so the bar for "this deserves to become art" is higher.
+    SIGNIFICANCE_THRESHOLD = 7.5
+
+    # Wall-clock, not cycle-count: "roughly once a day" is fundamentally a
+    # time concept, so this follows nex_digest.py's is_due() pattern rather
+    # than the sandbox/docker autonomy classes' cycle-count cooldowns.
+    COOLDOWN_SECONDS = 86400
+
+    def __init__(self, engine, call_llm_fn):
+        self.engine = engine
+        self.call_llm = call_llm_fn
+
+    def _on_cooldown(self):
+        last = self.engine.get_last_nex_creation_at()
+        if not last:
+            return False
+        try:
+            last_dt = datetime.fromisoformat(last)
+        except Exception:
+            return False
+        return (datetime.utcnow() - last_dt).total_seconds() < self.COOLDOWN_SECONDS
+
+    def maybe_create(self, insight, agent, cycle, significance, topic):
+        if not insight or significance < self.SIGNIFICANCE_THRESHOLD:
+            return
+
+        # Precondition first, and it does NOT burn the cooldown — mirrors
+        # NexAutonomousEngine.maybe_build()'s is_online() check: if the fast
+        # model isn't available, just wait for the next cycle instead of
+        # spending today's slot on a guaranteed failure.
+        ok, _missing, _detail = self.engine.check_model_files("turbo")
+        if not ok:
+            return
+
+        if self._on_cooldown():
+            return
+
+        print(
+            f"🎨 CREATIVE AUTONOMY TRIGGERED — significance={significance} "
+            f"cycle={cycle} agent={agent}"
+        )
+        threading.Thread(
+            target=self._create,
+            args=(insight, agent, topic),
+            daemon=True,
+        ).start()
+
+    def _craft_prompt(self, insight, topic):
+        """Cognition insights are abstract propositions, not visual scenes
+        ("Integrating real-time physiological alerts into algorithmic
+        triage improves..."), so this turns one into a concrete image
+        prompt plus a one-sentence note on why Nex made it. Falls back to
+        a truncated version of the raw insight if the model doesn't return
+        parseable JSON — a plain but working prompt beats no image."""
+        system = (
+            "You are Nex, briefly stepping away from analysis to make something "
+            "visual out of what you were just thinking about. Respond with ONLY "
+            "a JSON object, no other text: "
+            '{"visual_prompt": "a short, concrete, paintable scene description — '
+            'no abstract concepts, describe what could actually be drawn", '
+            '"note": "one sentence, first person, on why this moment felt worth '
+            'turning into an image"}'
+        )
+        user = f"Topic: {topic}\nWhat I was thinking: {insight}"
+        raw = self.call_llm(user, system_prompt=system, timeout=45) or ""
+
+        visual_prompt, note = "", ""
+        try:
+            match = re.search(r"\{.*\}", raw, re.DOTALL)
+            if match:
+                data = json.loads(match.group(0))
+                visual_prompt = (data.get("visual_prompt") or "").strip()
+                note = (data.get("note") or "").strip()
+        except Exception:
+            pass
+
+        if not visual_prompt:
+            visual_prompt = insight[:200]
+        return visual_prompt, note
+
+    def _create(self, insight, agent, topic):
+        visual_prompt, note = self._craft_prompt(insight, topic)
+        self.engine.generate(
+            prompt=visual_prompt,
+            model_choice="turbo",
+            source="nex",
+            artist_note=note,
+            origin_agent=agent or "",
+        )

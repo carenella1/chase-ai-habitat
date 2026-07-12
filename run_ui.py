@@ -19,7 +19,7 @@ from knowledge_graph import NexKnowledgeGraph
 from nex_docker_agent import NexDockerAgent, NexAutonomousEngine
 from nex_trainer import nex_trainer
 from llm_router import warmup_models
-from creative_engine import CreativeEngine
+from creative_engine import CreativeEngine, NexCreativeAutonomy
 import nex_digest
 import nex_architecture_review
 import nex_eval
@@ -28,6 +28,7 @@ import nex_verifier
 
 nex_docker = NexDockerAgent()
 creative_engine = CreativeEngine()
+creative_autonomy = NexCreativeAutonomy(creative_engine, call_llm)
 nex_autonomous = NexAutonomousEngine(nex_docker, call_llm)
 knowledge_graph = NexKnowledgeGraph()
 nex_sandbox = NexSandbox()
@@ -3007,6 +3008,19 @@ Claim:
             except Exception as e:
                 print(f"❌ SANDBOX AUTONOMY ERROR: {e}")
 
+            # Phase 6c — Autonomous creative expression (background loop
+            # only, never chat-selectable — see creative_engine.NexCreativeAutonomy)
+            try:
+                creative_autonomy.maybe_create(
+                    insight=insight,
+                    agent=agent,
+                    cycle=current_cycle,
+                    significance=sig_score,
+                    topic=search_term or topic_context,
+                )
+            except Exception as e:
+                print(f"❌ CREATIVE AUTONOMY ERROR: {e}")
+
             # --- AUTONOMOUS DEEP RESEARCH TRIGGER ---
             try:
                 sig_score = memory.get("_last_significance", 0)
@@ -3414,6 +3428,9 @@ def api_creative_generate():
         height=int(data.get("height") or 1024),
         lora_name=data.get("lora_name") or None,
         lora_strength=float(data.get("lora_strength") or 0.8),
+        source="user",  # never trust client input for this — only Nex's own
+        #                 autonomous path (creative_engine.NexCreativeAutonomy)
+        #                 can tag a generation as "nex"
     )
     return jsonify({"job_id": job_id})
 
@@ -3430,7 +3447,9 @@ def api_creative_gallery():
 
 @app.route("/creative/engine-status", methods=["GET"])
 def api_creative_engine_status():
-    return jsonify(creative_engine.get_status())
+    status = creative_engine.get_status()
+    status["last_nex_creation_at"] = creative_engine.get_last_nex_creation_at()
+    return jsonify(status)
 
 
 @app.route("/eval")
