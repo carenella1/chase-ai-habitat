@@ -236,6 +236,14 @@ class CreativeJobLog:
         ).fetchall()
         return [dict(r) for r in rows]
 
+    def delete(self, job_id):
+        row = self.get(job_id)
+        if not row:
+            return None
+        self._conn().execute("DELETE FROM generations WHERE job_id = ?", (job_id,))
+        self._conn().commit()
+        return row
+
     def get_last_created_at(self, source):
         """Most recent created_at for a given source ('user' or 'nex'), or
         None. Counts every attempt, successful or not — same principle as
@@ -728,6 +736,21 @@ class CreativeEngine:
                 }
             )
         return out
+
+    def delete_generation(self, job_id):
+        """Removes a gallery entry (both its DB row and the image file on
+        disk) for a job that finished — used by both the user's own delete
+        action and Nex's own creations, since either can be removed."""
+        row = self.job_log.delete(job_id)
+        if not row:
+            return False
+        image_path = row.get("image_path")
+        if image_path and os.path.exists(image_path):
+            try:
+                os.remove(image_path)
+            except OSError as e:
+                print(f"🎨 CREATIVE: could not remove image file for {job_id}: {e}")
+        return True
 
     @staticmethod
     def _url_for_output(image_path):

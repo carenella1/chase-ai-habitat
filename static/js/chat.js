@@ -306,12 +306,40 @@ document.addEventListener("DOMContentLoaded", () => {
             preview.textContent = date.toLocaleDateString([], { month: "short", day: "numeric" }) +
                 " · " + Math.floor((conv.message_count || 0) / 2) + " exchanges";
 
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "chat-item-delete";
+            deleteBtn.title = "Delete conversation";
+            deleteBtn.textContent = "🗑";
+            deleteBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                deleteConversation(conv.id);
+            });
+
             item.appendChild(title);
             item.appendChild(preview);
+            item.appendChild(deleteBtn);
             chatList.appendChild(item);
 
             item.addEventListener("click", () => loadConversation(conv.id));
         });
+    }
+
+    async function deleteConversation(convId) {
+        if (!confirm("Delete this conversation? This can't be undone.")) return;
+        try {
+            const res = await fetch(`/api/chat/delete/${convId}`, { method: "POST" });
+            const data = await res.json();
+            if (data.status !== "ok") return;
+
+            if (convId === activeConvId) {
+                clearThread();
+                await restoreHistory();
+            } else {
+                await loadConversations();
+            }
+        } catch (err) {
+            console.error("Delete conversation failed:", err);
+        }
     }
 
     async function loadConversation(convId) {

@@ -323,7 +323,8 @@
 }
 
 .chat-item {
-    padding: 8px;
+    position: relative;
+    padding: 8px 28px 8px 8px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
@@ -337,6 +338,35 @@
 .chat-item.active {
     border: 1px solid var(--accent);
     box-shadow: 0 0 8px var(--accent);
+}
+
+.chat-item-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.chat-item:hover .chat-item-delete {
+    opacity: 1;
+}
+
+.chat-item-delete:hover {
+    color: #ff6b6b;
+    border-color: rgba(255,60,60,0.5);
+    background: rgba(255,60,60,0.1);
 }
 
 /* =========================

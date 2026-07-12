@@ -1253,6 +1253,21 @@ def api_chat_clear():
         return jsonify({"status": "error", "error": str(e)})
 
 
+@app.route("/api/chat/delete/<chat_id>", methods=["POST", "DELETE"])
+def api_chat_delete(chat_id):
+    try:
+        path = os.path.join(CHATS_DIR, f"{chat_id}.json")
+        if not os.path.exists(path):
+            return jsonify({"status": "error", "error": "Chat not found"}), 404
+        os.remove(path)
+        # If the deleted chat was active, _get_active_chat_id() will notice
+        # its json file is gone next time it's called and fall back to
+        # _new_chat_id() on its own — no extra bookkeeping needed here.
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
 # =========================
 # 🧠 NEXARION CHAT
 # =========================
@@ -3443,6 +3458,12 @@ def api_creative_status(job_id):
 @app.route("/creative/gallery", methods=["GET"])
 def api_creative_gallery():
     return jsonify(creative_engine.get_gallery())
+
+
+@app.route("/creative/delete/<job_id>", methods=["POST", "DELETE"])
+def api_creative_delete(job_id):
+    ok = creative_engine.delete_generation(job_id)
+    return jsonify({"status": "ok" if ok else "error"})
 
 
 @app.route("/creative/engine-status", methods=["GET"])

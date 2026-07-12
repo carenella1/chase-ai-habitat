@@ -139,6 +139,8 @@
     border: 1px solid rgba(255,255,255,0.08);
     background: rgba(0,0,0,0.3);
     aspect-ratio: 1 / 1;
+    cursor: pointer;
+    transition: outline-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .creative-gallery-item img {
@@ -147,19 +149,6 @@
     object-fit: cover;
     display: block;
 }
-
-.creative-gallery-caption {
-    position: absolute;
-    inset: auto 0 0 0;
-    padding: 8px 10px;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
-    font-size: 11px;
-    color: rgba(255,255,255,0.85);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.creative-gallery-item:hover .creative-gallery-caption { opacity: 1; }
 
 .creative-gallery-badge {
     position: absolute;
@@ -180,10 +169,154 @@
     border-color: rgba(217,165,255,0.35);
 }
 
-.creative-gallery-origin {
-    display: block;
-    margin-top: 3px;
-    font-size: 10px;
-    opacity: 0.55;
-    font-style: italic;
+/* ─────────────────────────────────────────────
+   FULL-TEXT HOVER BUBBLE
+   Floating tooltip shown on hover over a gallery image, carrying the
+   full prompt/artist-note text (the in-frame caption gets clipped by
+   the item's own overflow:hidden, so this has to live outside it).
+   Visual language matches #nex-tooltip in base.css for consistency.
+   ───────────────────────────────────────────── */
+#creative-caption-tip {
+    position: fixed;
+    z-index: 9999;
+    max-width: 320px;
+    background: rgba(2, 8, 18, 0.96);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 10px 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.55), 0 0 20px rgba(0,255,204,0.08);
+    font-family: 'DM Sans', "Segoe UI", sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.9);
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
 }
+
+#creative-caption-tip.visible { opacity: 1; transform: translateY(0); }
+
+#creative-caption-tip .cct-origin {
+    display: block;
+    margin-top: 6px;
+    font-size: 10px;
+    opacity: 0.6;
+    font-style: italic;
+    color: #d9a5ff;
+}
+
+/* ─────────────────────────────────────────────
+   DELETE — selection, toolbar, right-click menu
+   ───────────────────────────────────────────── */
+.creative-gallery-item.queued-delete {
+    outline: 2px solid #ff5566;
+    outline-offset: -2px;
+    box-shadow: 0 0 14px rgba(255,60,80,0.4);
+}
+
+.creative-gallery-item.queued-delete::after {
+    content: "🗑";
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,60,80,0.9);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.creative-gallery-toolbar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid rgba(255,60,80,0.3);
+    border-radius: 6px;
+    background: rgba(255,60,80,0.06);
+}
+
+.creative-gallery-toolbar.active { display: flex; }
+
+.creative-toolbar-label {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.7);
+}
+
+.creative-toolbar-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.creative-trash-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,60,80,0.1);
+    border: 1px solid rgba(255,60,80,0.5);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #ff6b6b;
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.creative-trash-btn:hover {
+    background: rgba(255,60,80,0.2);
+    box-shadow: 0 0 10px rgba(255,60,80,0.35);
+}
+
+.creative-toolbar-cancel {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.creative-toolbar-cancel:hover {
+    color: #fff;
+    border-color: rgba(255,255,255,0.35);
+}
+
+.creative-context-menu {
+    position: fixed;
+    z-index: 10000;
+    min-width: 140px;
+    background: rgba(2, 8, 18, 0.98);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 4px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+}
+
+.creative-context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+}
+
+.creative-context-menu-item:hover { background: rgba(255,255,255,0.06); }
+
+.creative-context-menu-item.danger { color: #ff6b6b; }
+
+.creative-context-menu-item.danger:hover { background: rgba(255,60,80,0.12); }

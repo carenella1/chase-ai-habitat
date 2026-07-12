@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let pollTimer = null;
     let galleryItems = [];
     let activeSource = "user";
+    let selectedForDelete = new Set();
 
     const EMPTY_STATES = {
         user: '<div class="empty-state"><div class="empty-icon">◎</div><div>No images yet.</div><div class="empty-sub">Generate your first image above.</div></div>',
@@ -55,22 +56,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const items = galleryItems.filter(item => (item.source || "user") === activeSource);
         if (!items.length) {
             grid.innerHTML = EMPTY_STATES[activeSource] || EMPTY_STATES.user;
+            updateToolbar();
             return;
         }
         grid.innerHTML = items.map(item => {
             const isNex = item.source === "nex";
             const badgeClass = "creative-gallery-badge" + (isNex ? " badge-nex" : "");
             const badgeText = isNex ? "NEX" : (item.model_choice === "quality" ? "FLUX.2" : "TURBO");
-            const caption = isNex && item.artist_note ? item.artist_note : (item.prompt || "");
-            const originLine = isNex && item.origin_agent
-                ? `<span class="creative-gallery-origin">— ${esc(item.origin_agent)}</span>` : "";
+            const selectedClass = selectedForDelete.has(item.job_id) ? " queued-delete" : "";
             return `
-            <div class="creative-gallery-item">
+            <div class="creative-gallery-item${selectedClass}" data-job-id="${esc(item.job_id)}">
                 <span class="${badgeClass}">${badgeText}</span>
                 <img src="${item.image_url}" alt="${esc(item.prompt || "")}" loading="lazy">
-                <div class="creative-gallery-caption">${esc(caption.slice(0, 140))}${originLine}</div>
             </div>`;
         }).join("");
+        updateToolbar();
     }
 
     async function loadGallery() {
@@ -82,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setActiveTab(source) {
         activeSource = source;
+        selectedForDelete.clear();
         document.querySelectorAll(".creative-gallery-tab").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.source === source);
         });
@@ -90,6 +91,150 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll(".creative-gallery-tab").forEach(btn => {
         btn.addEventListener("click", () => setActiveTab(btn.dataset.source));
+    });
+
+    /* =========================
+       FULL-TEXT HOVER BUBBLE
+    ========================= */
+    function ensureCaptionTip() {
+        let tip = document.getElementById("creative-caption-tip");
+        if (!tip) {
+            tip = document.createElement("div");
+            tip.id = "creative-caption-tip";
+            document.body.appendChild(tip);
+        }
+        return tip;
+    }
+
+    function showCaptionTip(el, item) {
+        const isNex = item.source === "nex";
+        const text = isNex && item.artist_note ? item.artist_note : (item.prompt || "");
+        if (!text) return;
+        const originLine = isNex && item.origin_agent
+            ? `<span class="cct-origin">— ${esc(item.origin_agent)}</span>` : "";
+        const tip = ensureCaptionTip();
+        tip.innerHTML = `${esc(text)}${originLine}`;
+        tip.classList.add("visible");
+
+        const margin = 10;
+        tip.style.left = "0px";
+        tip.style.top = "0px";
+        const r = el.getBoundingClientRect();
+        const tw = tip.offsetWidth || 300;
+        const th = tip.offsetHeight || 60;
+        let left = r.left + r.width / 2 - tw / 2;
+        left = Math.max(margin, Math.min(left, window.innerWidth - tw - margin));
+        let top = r.top - th - 8;
+        if (top < margin) top = r.bottom + 8;
+        tip.style.left = `${left}px`;
+        tip.style.top = `${top}px`;
+    }
+
+    function hideCaptionTip() {
+        const tip = document.getElementById("creative-caption-tip");
+        if (tip) tip.classList.remove("visible");
+    }
+
+    /* =========================
+       DELETE — selection, toolbar, right-click menu
+    ========================= */
+    function updateToolbar() {
+        const toolbar = $("creative-gallery-toolbar");
+        const label = $("creative-toolbar-label");
+        if (!toolbar) return;
+        toolbar.classList.toggle("active", selectedForDelete.size > 0);
+        if (label) {
+            label.textContent = selectedForDelete.size === 1
+                ? "1 selected" : `${selectedForDelete.size} selected`;
+        }
+    }
+
+    function toggleSelect(jobId) {
+        if (selectedForDelete.has(jobId)) selectedForDelete.delete(jobId);
+        else selectedForDelete.add(jobId);
+        renderGallery();
+    }
+
+    function ensureContextMenu() {
+        let menu = document.getElementById("creative-context-menu");
+        if (!menu) {
+            menu = document.createElement("div");
+            menu.id = "creative-context-menu";
+            menu.className = "creative-context-menu";
+            menu.style.display = "none";
+            document.body.appendChild(menu);
+        }
+        return menu;
+    }
+
+    function hideContextMenu() {
+        const menu = document.getElementById("creative-context-menu");
+        if (menu) menu.style.display = "none";
+    }
+
+    function showContextMenu(x, y, jobId) {
+        const menu = ensureContextMenu();
+        menu.innerHTML = `<div class="creative-context-menu-item danger" id="ctx-delete-item">🗑 Delete</div>`;
+        menu.style.display = "block";
+        const mw = menu.offsetWidth || 140;
+        const mh = menu.offsetHeight || 40;
+        menu.style.left = `${Math.min(x, window.innerWidth - mw - 8)}px`;
+        menu.style.top = `${Math.min(y, window.innerHeight - mh - 8)}px`;
+        document.getElementById("ctx-delete-item").addEventListener("click", () => {
+            hideContextMenu();
+            deleteItems([jobId]);
+        });
+    }
+
+    document.addEventListener("click", (e) => {
+        const menu = document.getElementById("creative-context-menu");
+        if (menu && menu.style.display !== "none" && !menu.contains(e.target)) hideContextMenu();
+    });
+
+    async function deleteItems(jobIds) {
+        if (!jobIds.length) return;
+        const label = jobIds.length === 1 ? "this image" : `these ${jobIds.length} images`;
+        if (!confirm(`Delete ${label}? This can't be undone.`)) return;
+        try {
+            await Promise.all(jobIds.map(id =>
+                fetch(`/creative/delete/${id}`, { method: "POST" })
+            ));
+        } catch (e) { console.error("Creative delete error:", e); }
+        selectedForDelete.clear();
+        hideCaptionTip();
+        await loadGallery();
+    }
+
+    const galleryGrid = $("creative-gallery-grid");
+    if (galleryGrid) {
+        galleryGrid.addEventListener("click", (e) => {
+            const el = e.target.closest(".creative-gallery-item");
+            if (!el) return;
+            toggleSelect(el.dataset.jobId);
+        });
+        galleryGrid.addEventListener("contextmenu", (e) => {
+            const el = e.target.closest(".creative-gallery-item");
+            if (!el) return;
+            e.preventDefault();
+            showContextMenu(e.clientX, e.clientY, el.dataset.jobId);
+        });
+        galleryGrid.addEventListener("mouseover", (e) => {
+            const el = e.target.closest(".creative-gallery-item");
+            if (!el) return;
+            const item = galleryItems.find(g => g.job_id === el.dataset.jobId);
+            if (item) showCaptionTip(el, item);
+        });
+        galleryGrid.addEventListener("mouseout", (e) => {
+            const el = e.target.closest(".creative-gallery-item");
+            if (!el || el.contains(e.relatedTarget)) return;
+            hideCaptionTip();
+        });
+    }
+
+    $("creative-toolbar-trash")?.addEventListener("click", () => deleteItems([...selectedForDelete]));
+    $("creative-toolbar-cancel")?.addEventListener("click", () => {
+        selectedForDelete.clear();
+        renderGallery();
     });
 
     function setProgress(pct) {
