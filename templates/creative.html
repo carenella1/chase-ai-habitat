@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nexus-shared.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/creative.css') }}">
+
+<div class="nexus-page">
+
+    <!-- HEADER -->
+    <div class="nexus-header">
+        <div class="nexus-title-block">
+            <div class="nexus-eyebrow">NEX'S CREATIVE STUDIO</div>
+            <h1 class="nexus-title">CR<span class="title-accent">E</span>ATIVE</h1>
+            <div class="nexus-tagline">Local image generation · powered by ComfyUI on this machine</div>
+        </div>
+    </div>
+
+    <!-- STATUS STRIP -->
+    <div class="nexus-status-strip">
+        <div class="status-tile">
+            <div class="tile-icon">🖼️</div>
+            <div class="tile-body">
+                <div class="tile-label">COMFYUI <span class="info-dot" data-tip-title="Local image engine" data-tip-body="ComfyUI runs on this PC as its own process, the same way Ollama does for text. NEX starts it automatically when you generate — it just takes a few seconds the first time." data-tip-link="/how-it-works#creative">i</span></div>
+                <div class="tile-value" id="cs-comfy-status">—</div>
+                <div class="tile-sub" id="cs-comfy-sub">checking…</div>
+            </div>
+            <div class="tile-dot" id="cs-comfy-dot"></div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">⚡</div>
+            <div class="tile-body">
+                <div class="tile-label">FAST MODEL</div>
+                <div class="tile-value" id="cs-turbo-status">—</div>
+                <div class="tile-sub">Z-Image Turbo</div>
+            </div>
+        </div>
+        <div class="status-tile">
+            <div class="tile-icon">💎</div>
+            <div class="tile-body">
+                <div class="tile-label">QUALITY MODEL</div>
+                <div class="tile-value" id="cs-quality-status">—</div>
+                <div class="tile-sub">FLUX.2 klein</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GENERATE PANEL -->
+    <div class="self-section-label">GENERATE</div>
+
+    <div class="nexus-panel panel-generate">
+        <div class="panel-header">
+            <div class="panel-header-left">
+                <span class="panel-kicker">VRAM-SAFE · LLM UNLOADS FIRST</span>
+                <h2 class="panel-title">New Image</h2>
+            </div>
+        </div>
+
+        <div class="creative-form">
+            <div class="creative-field">
+                <label class="panel-label">PROMPT</label>
+                <textarea id="cr-prompt" class="creative-input" placeholder="Describe what you want NEX to create..."></textarea>
+            </div>
+
+            <div class="creative-field">
+                <label class="panel-label">NEGATIVE PROMPT (OPTIONAL)</label>
+                <textarea id="cr-negative" class="creative-input creative-input-small" placeholder="Things to avoid in the image..."></textarea>
+            </div>
+
+            <div class="creative-row">
+                <div class="creative-field creative-field-inline">
+                    <label class="panel-label">MODEL</label>
+                    <select id="cr-model" class="creative-select">
+                        <option value="turbo">Z-Image Turbo — fast (8 steps)</option>
+                        <option value="quality">FLUX.2 klein — quality</option>
+                    </select>
+                </div>
+                <div class="creative-field creative-field-inline">
+                    <label class="panel-label">DIMENSIONS</label>
+                    <select id="cr-dimensions" class="creative-select">
+                        <option value="1024x1024">Square — 1024×1024</option>
+                        <option value="832x1216">Portrait — 832×1216</option>
+                        <option value="1216x832">Landscape — 1216×832</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="creative-row">
+                <div class="creative-field creative-field-inline">
+                    <label class="panel-label">LORA NAME (OPTIONAL)</label>
+                    <input id="cr-lora-name" class="creative-select" type="text" placeholder="e.g. my_style.safetensors">
+                </div>
+                <div class="creative-field creative-field-inline">
+                    <label class="panel-label">LORA STRENGTH</label>
+                    <input id="cr-lora-strength" class="creative-select" type="number" min="0" max="2" step="0.05" value="0.8">
+                </div>
+            </div>
+
+            <div class="creative-generate-row">
+                <button class="nexus-btn btn-run" id="btn-generate">▶ GENERATE</button>
+                <div class="creative-progress-wrap" id="creative-progress-wrap" style="display:none;">
+                    <div class="creative-progress-bar"><div class="creative-progress-fill" id="creative-progress-fill"></div></div>
+                    <div class="creative-progress-label" id="creative-progress-label"></div>
+                </div>
+            </div>
+            <div class="creative-status-line" id="creative-status-line"></div>
+        </div>
+    </div>
+
+    <!-- GALLERY -->
+    <div class="self-section-label">GALLERY</div>
+
+    <div class="nexus-panel panel-gallery">
+        <div class="panel-header">
+            <div class="panel-header-left">
+                <span class="panel-kicker">PAST GENERATIONS</span>
+                <h2 class="panel-title">Gallery</h2>
+            </div>
+        </div>
+        <div id="creative-gallery-grid" class="creative-gallery-grid">
+            <div class="empty-state"><div class="empty-icon">◎</div><div>No images yet.</div><div class="empty-sub">Generate your first image above.</div></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/creative.js') }}"></script>
+{% endblock %}

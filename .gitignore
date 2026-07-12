@@ -49,6 +49,9 @@ habitat_project_tree.txt
 sandbox/outputs/
 sandbox/temp/
 
+# Creative tab runtime output (generated images)
+static/creative_outputs/
+
 # Audio artifacts
 *.wav
 

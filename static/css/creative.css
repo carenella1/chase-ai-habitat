@@ -1,0 +1,150 @@
+/* ═══════════════════════════════════════════════════
+   CREATIVE.CSS — Creative tab (local image generation)
+   Builds on nexus-shared.css's panel/status-tile primitives.
+   ═══════════════════════════════════════════════════ */
+
+.creative-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.creative-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.creative-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.creative-field-inline {
+    flex: 1;
+    min-width: 200px;
+}
+
+.creative-input, .creative-select {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 12px;
+    color: #e2e8f0;
+    font-family: 'DM Sans', "Segoe UI", sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.creative-input {
+    resize: none;
+    min-height: 90px;
+}
+
+.creative-input-small { min-height: 50px; }
+
+.creative-input:focus, .creative-select:focus {
+    outline: none;
+    border-color: rgba(0, 255, 200, 0.3);
+}
+
+.creative-input::placeholder { color: #2d3748; }
+
+.creative-generate-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.creative-progress-wrap {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.creative-progress-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+}
+
+.creative-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+    transition: width 0.4s ease;
+}
+
+.creative-progress-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    white-space: nowrap;
+}
+
+.creative-status-line {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    min-height: 16px;
+}
+
+.creative-status-line.is-error { color: #ff6666; }
+.creative-status-line.is-done { color: var(--accent); }
+
+.creative-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+}
+
+.creative-gallery-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.3);
+    aspect-ratio: 1 / 1;
+}
+
+.creative-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.creative-gallery-caption {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 8px 10px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.creative-gallery-item:hover .creative-gallery-caption { opacity: 1; }
+
+.creative-gallery-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.6);
+    color: var(--accent);
+    border: 1px solid rgba(0,255,204,0.25);
+}

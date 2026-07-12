@@ -19,6 +19,7 @@ from knowledge_graph import NexKnowledgeGraph
 from nex_docker_agent import NexDockerAgent, NexAutonomousEngine
 from nex_trainer import nex_trainer
 from llm_router import warmup_models
+from creative_engine import CreativeEngine
 import nex_digest
 import nex_architecture_review
 import nex_eval
@@ -26,6 +27,7 @@ import nex_verifier
 
 
 nex_docker = NexDockerAgent()
+creative_engine = CreativeEngine()
 nex_autonomous = NexAutonomousEngine(nex_docker, call_llm)
 knowledge_graph = NexKnowledgeGraph()
 nex_sandbox = NexSandbox()
@@ -3390,6 +3392,45 @@ def api_digest_entries():
 @app.route("/api/digest/status", methods=["GET"])
 def api_digest_status():
     return jsonify(nex_digest.get_status())
+
+
+@app.route("/creative")
+def creative_page():
+    return render_template("creative.html", active="creative")
+
+
+@app.route("/creative/generate", methods=["POST"])
+def api_creative_generate():
+    data = request.get_json(force=True, silent=True) or {}
+    prompt = (data.get("prompt") or "").strip()
+    if not prompt:
+        return jsonify({"error": "A prompt is required."}), 400
+
+    job_id = creative_engine.generate(
+        prompt=prompt,
+        negative_prompt=data.get("negative_prompt") or "",
+        model_choice=data.get("model_choice") or "turbo",
+        width=int(data.get("width") or 1024),
+        height=int(data.get("height") or 1024),
+        lora_name=data.get("lora_name") or None,
+        lora_strength=float(data.get("lora_strength") or 0.8),
+    )
+    return jsonify({"job_id": job_id})
+
+
+@app.route("/creative/status/<job_id>", methods=["GET"])
+def api_creative_status(job_id):
+    return jsonify(creative_engine.get_job_status(job_id))
+
+
+@app.route("/creative/gallery", methods=["GET"])
+def api_creative_gallery():
+    return jsonify(creative_engine.get_gallery())
+
+
+@app.route("/creative/engine-status", methods=["GET"])
+def api_creative_engine_status():
+    return jsonify(creative_engine.get_status())
 
 
 @app.route("/eval")
