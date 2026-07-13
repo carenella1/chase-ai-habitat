@@ -112,6 +112,13 @@ class CreativeError(Exception):
     human-readable explanation — gets shown to Chase as-is, no traceback."""
 
 
+class JobCancelled(Exception):
+    """Raised internally when a background job notices mid-run that the
+    user cancelled it. cancel_job() has already written the terminal DB
+    status by the time this is raised, so _run_job just needs to stop
+    quietly instead of overwriting that with an error."""
+
+
 # ─────────────────────────────────────────────
 # JOB / GALLERY DATABASE
 # ─────────────────────────────────────────────
@@ -163,6 +170,19 @@ class CreativeJobLog:
                 self._conn().execute(stmt)
             except sqlite3.OperationalError:
                 pass  # column already exists
+
+        # Any job still in a non-terminal status is a leftover from the
+        # last time this process ran — its background thread died with the
+        # process, so nothing was ever going to write it an error. Left
+        # alone it would sit as "generating" forever with no way for the
+        # UI to know it's dead. Runs once per engine startup, not per job.
+        self._conn().execute(
+            """
+            UPDATE generations SET status = 'error',
+                error = 'Interrupted — NEX restarted before this finished.'
+            WHERE status NOT IN ('done', 'error', 'cancelled')
+            """
+        )
         self._conn().commit()
 
     def create(
@@ -272,6 +292,7 @@ class CreativeEngine:
         self.job_log = CreativeJobLog()
         os.makedirs(OUTPUT_DIR, exist_ok=True)
         self._progress = {}  # job_id -> int 0-100, cleared when the job ends
+        self._cancel_events = {}  # job_id -> threading.Event, cleared when the job ends
         self._comfy_starting = False
         self._comfy_start_error = None
 
@@ -294,6 +315,34 @@ class CreativeEngine:
                 choice: self.check_model_files(choice)[0] for choice in WORKFLOWS
             },
         }
+
+    def cancel_job(self, job_id):
+        """User-initiated stop. Best-effort: flags the background thread to
+        bail at its next checkpoint, tells ComfyUI to interrupt whatever
+        it's currently running (so the GPU actually frees up instead of
+        grinding on unwatched), and marks the job cancelled so the UI can
+        stop polling. Safe to call on a job that already finished — no-op."""
+        row = self.job_log.get(job_id)
+        if not row or row["status"] in ("done", "error", "cancelled"):
+            return False
+
+        event = self._cancel_events.get(job_id)
+        if event:
+            event.set()
+
+        try:
+            requests.post(f"{COMFYUI_URL}/interrupt", timeout=5)
+        except Exception as e:
+            print(f"🎨 CREATIVE: /interrupt call failed (non-fatal): {e}")
+
+        self.job_log.update(job_id, status="cancelled", error="Cancelled by user.")
+        self._progress.pop(job_id, None)
+        return True
+
+    def _check_cancelled(self, job_id):
+        event = self._cancel_events.get(job_id)
+        if event and event.is_set():
+            raise JobCancelled()
 
     def start_comfyui(self):
         if self.is_online():
@@ -503,6 +552,7 @@ class CreativeEngine:
             origin_agent=origin_agent,
         )
         self._progress[job_id] = 0
+        self._cancel_events[job_id] = threading.Event()
         threading.Thread(
             target=self._run_job,
             args=(
@@ -543,6 +593,7 @@ class CreativeEngine:
                 if result["status"] == "error":
                     raise CreativeError(result["message"])
                 for _ in range(90):
+                    self._check_cancelled(job_id)
                     time.sleep(1)
                     if self.is_online():
                         break
@@ -556,10 +607,12 @@ class CreativeEngine:
             if not ok:
                 raise CreativeError(detail)
 
+            self._check_cancelled(job_id)
             self.job_log.update(job_id, status="unloading_llm")
             self._progress[job_id] = 10
             self._unload_llm()
 
+            self._check_cancelled(job_id)
             self.job_log.update(job_id, status="generating")
             self._progress[job_id] = 20
 
@@ -584,6 +637,7 @@ class CreativeEngine:
                 daemon=True,
             ).start()
 
+            self._check_cancelled(job_id)
             resp = requests.post(
                 f"{COMFYUI_URL}/prompt",
                 json={"prompt": workflow, "client_id": client_id},
@@ -598,8 +652,15 @@ class CreativeEngine:
             if not prompt_id:
                 raise CreativeError(f"ComfyUI didn't return a job id: {data}")
 
-            image_info = self._wait_for_history(prompt_id, timeout=300)
+            image_info = self._wait_for_history(job_id, prompt_id, timeout=300)
             if image_info is None:
+                # Stop watching, but also tell ComfyUI to actually drop the
+                # job — otherwise it keeps grinding on the GPU unwatched and
+                # can collide with whatever the user tries to generate next.
+                try:
+                    requests.post(f"{COMFYUI_URL}/interrupt", timeout=5)
+                except Exception as e:
+                    print(f"🎨 CREATIVE: /interrupt call failed (non-fatal): {e}")
                 raise CreativeError(
                     "Timed out waiting for ComfyUI to finish generating."
                 )
@@ -623,6 +684,8 @@ class CreativeEngine:
             self.job_log.update(job_id, status="done", image_path=out_path)
             self._progress[job_id] = 100
 
+        except JobCancelled:
+            pass  # cancel_job() already wrote the terminal status
         except CreativeError as e:
             self.job_log.update(job_id, status="error", error=str(e))
         except Exception as e:
@@ -631,10 +694,12 @@ class CreativeEngine:
             )
         finally:
             self._progress.pop(job_id, None)
+            self._cancel_events.pop(job_id, None)
 
-    def _wait_for_history(self, prompt_id, timeout=300):
+    def _wait_for_history(self, job_id, prompt_id, timeout=300):
         deadline = time.time() + timeout
         while time.time() < deadline:
+            self._check_cancelled(job_id)
             try:
                 r = requests.get(f"{COMFYUI_URL}/history/{prompt_id}", timeout=10)
                 if r.status_code == 200:

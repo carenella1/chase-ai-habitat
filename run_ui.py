@@ -3468,6 +3468,12 @@ def api_creative_delete(job_id):
     return jsonify({"status": "ok" if ok else "error"})
 
 
+@app.route("/creative/cancel/<job_id>", methods=["POST"])
+def api_creative_cancel(job_id):
+    ok = creative_engine.cancel_job(job_id)
+    return jsonify({"status": "ok" if ok else "not_found_or_already_done"})
+
+
 @app.route("/creative/engine-status", methods=["GET"])
 def api_creative_engine_status():
     status = creative_engine.get_status()

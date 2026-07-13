@@ -206,7 +206,8 @@
       "Two model options: Z-Image Turbo (fast, 8 steps) and FLUX.2 klein (quality)",
       "LLM is force-unloaded from VRAM before every generation job, and reloads itself on the next chat message",
       "Autonomous creation: significance \u2265 7.5 (above the journal's 6.0), capped to ~once/day, fast model only",
-      "Gallery splits into \"My Creations\" and \"Nex's Creations\", each with a small nav indicator for new pieces"
+      "Gallery splits into \"My Creations\" and \"Nex's Creations\", each with a small nav indicator for new pieces",
+      "A stuck or too-slow job can be cancelled from the UI (which also tells ComfyUI to actually stop, not just stop watching); jobs orphaned by an app restart are marked failed on the next startup instead of appearing stuck forever"
     ],
     "live_status_check": null
   }

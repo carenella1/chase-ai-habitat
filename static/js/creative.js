@@ -12,9 +12,17 @@ document.addEventListener("DOMContentLoaded", () => {
         saving: "Saving image…",
         done: "Done!",
         error: "Error",
+        cancelled: "Cancelled",
     };
 
+    const WATCHDOG_MS = 6 * 60 * 1000; // if a job hasn't resolved by then, the
+    // server may have died mid-job (see creative_engine.py's orphan cleanup) —
+    // surface a toast instead of leaving the user staring at a stuck bar.
+
     let pollTimer = null;
+    let watchdogTimer = null;
+    let currentJobId = null;
+    let lastGenerateBody = null;
     let galleryItems = [];
     let activeSource = "user";
     let selectedForDelete = new Set();
@@ -92,6 +100,40 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".creative-gallery-tab").forEach(btn => {
         btn.addEventListener("click", () => setActiveTab(btn.dataset.source));
     });
+
+    /* =========================
+       TOAST — surfaces stuck/failed generations with Retry/Cancel
+    ========================= */
+    function ensureToast() {
+        let toast = document.getElementById("creative-toast");
+        if (!toast) {
+            toast = document.createElement("div");
+            toast.id = "creative-toast";
+            document.body.appendChild(toast);
+        }
+        return toast;
+    }
+
+    function hideToast() {
+        const toast = document.getElementById("creative-toast");
+        if (toast) toast.classList.remove("visible");
+    }
+
+    function showToast(message, { retry = false, cancel = false, kind = "error" } = {}) {
+        const toast = ensureToast();
+        toast.className = `creative-toast visible is-${kind}`;
+
+        let buttons = "";
+        if (retry) buttons += `<button class="creative-toast-btn creative-toast-btn-primary" id="creative-toast-retry">Retry</button>`;
+        if (cancel) buttons += `<button class="creative-toast-btn creative-toast-btn-danger" id="creative-toast-cancel">Cancel job</button>`;
+        buttons += `<button class="creative-toast-btn" id="creative-toast-dismiss">Dismiss</button>`;
+
+        toast.innerHTML = `<div class="creative-toast-msg">${esc(message)}</div><div class="creative-toast-actions">${buttons}</div>`;
+
+        $("creative-toast-dismiss")?.addEventListener("click", hideToast);
+        if (retry) $("creative-toast-retry")?.addEventListener("click", () => { hideToast(); retryGenerate(); });
+        if (cancel) $("creative-toast-cancel")?.addEventListener("click", () => { hideToast(); cancelCurrentJob(); });
+    }
 
     /* =========================
        FULL-TEXT HOVER BUBBLE
@@ -251,7 +293,40 @@ document.addEventListener("DOMContentLoaded", () => {
         line.className = "creative-status-line" + (kind ? ` is-${kind}` : "");
     }
 
+    function showCancelButton(show) {
+        const btn = $("btn-cancel-generate");
+        if (!btn) return;
+        btn.style.display = show ? "inline-flex" : "none";
+        btn.disabled = false;
+    }
+
+    function clearWatchdog() {
+        if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+    }
+
+    async function cancelCurrentJob() {
+        if (!currentJobId) return;
+        const btn = $("btn-cancel-generate");
+        if (btn) btn.disabled = true;
+        setStatusLine("Cancelling…", null);
+        try {
+            await fetch(`/creative/cancel/${currentJobId}`, { method: "POST" });
+        } catch (e) { console.error("Creative cancel error:", e); }
+        // The poll loop picks up the resulting "cancelled" status on its
+        // next tick and finalizes the UI — nothing else to do here.
+    }
+
     function pollJob(jobId) {
+        currentJobId = jobId;
+        clearWatchdog();
+        watchdogTimer = setTimeout(() => {
+            showToast(
+                "This generation is taking longer than expected. It may still finish " +
+                "on its own, or something may have gone wrong.",
+                { cancel: true, kind: "warn" }
+            );
+        }, WATCHDOG_MS);
+
         if (pollTimer) clearInterval(pollTimer);
         pollTimer = setInterval(async () => {
             try {
@@ -260,10 +335,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 setProgress(s.progress || 0);
                 if (s.status === "error") {
                     setStatusLine(s.error || "Something went wrong.", "error");
+                    showToast(s.error || "Something went wrong.", { retry: true });
+                    stopPolling();
+                } else if (s.status === "cancelled") {
+                    setStatusLine(s.error || "Cancelled.", "error");
+                    hideToast();
                     stopPolling();
                 } else if (s.status === "done") {
                     setStatusLine("Done!", "done");
                     setProgress(100);
+                    hideToast();
                     stopPolling();
                     loadGallery();
                 } else {
@@ -277,31 +358,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const btn = $("btn-generate");
         if (btn) { btn.disabled = false; btn.textContent = "▶ GENERATE"; }
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        clearWatchdog();
+        showCancelButton(false);
+        currentJobId = null;
         loadEngineStatus();
     }
 
-    async function generate() {
-        const prompt = $("cr-prompt").value.trim();
-        if (!prompt) {
-            setStatusLine("Type a prompt first.", "error");
-            return;
-        }
-        const [width, height] = $("cr-dimensions").value.split("x").map(Number);
-        const body = {
-            prompt,
-            negative_prompt: $("cr-negative").value.trim(),
-            model_choice: $("cr-model").value,
-            width,
-            height,
-            lora_name: $("cr-lora-name").value.trim() || null,
-            lora_strength: parseFloat($("cr-lora-strength").value) || 0.8,
-        };
-
+    async function submitGenerate(body) {
+        hideToast();
         const btn = $("btn-generate");
         btn.disabled = true;
         btn.textContent = "● WORKING…";
         setProgress(0);
         setStatusLine("Queued…", null);
+        showCancelButton(true);
 
         try {
             const res = await fetch("/creative/generate", {
@@ -322,7 +392,33 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function retryGenerate() {
+        if (!lastGenerateBody) return;
+        submitGenerate(lastGenerateBody);
+    }
+
+    async function generate() {
+        const prompt = $("cr-prompt").value.trim();
+        if (!prompt) {
+            setStatusLine("Type a prompt first.", "error");
+            return;
+        }
+        const [width, height] = $("cr-dimensions").value.split("x").map(Number);
+        const body = {
+            prompt,
+            negative_prompt: $("cr-negative").value.trim(),
+            model_choice: $("cr-model").value,
+            width,
+            height,
+            lora_name: $("cr-lora-name").value.trim() || null,
+            lora_strength: parseFloat($("cr-lora-strength").value) || 0.8,
+        };
+        lastGenerateBody = body;
+        await submitGenerate(body);
+    }
+
     $("btn-generate").addEventListener("click", generate);
+    $("btn-cancel-generate")?.addEventListener("click", cancelCurrentJob);
 
     loadEngineStatus();
     loadGallery();
