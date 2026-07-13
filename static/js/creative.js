@@ -75,6 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return `
             <div class="creative-gallery-item${selectedClass}" data-job-id="${esc(item.job_id)}">
                 <span class="${badgeClass}">${badgeText}</span>
+                <span class="creative-gallery-select" data-job-id="${esc(item.job_id)}" title="Select"></span>
                 <img src="${item.image_url}" alt="${esc(item.prompt || "")}" loading="lazy">
             </div>`;
         }).join("");
@@ -91,6 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function setActiveTab(source) {
         activeSource = source;
         selectedForDelete.clear();
+        closeLightbox();
         document.querySelectorAll(".creative-gallery-tab").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.source === source);
         });
@@ -247,12 +249,102 @@ document.addEventListener("DOMContentLoaded", () => {
         await loadGallery();
     }
 
+    /* =========================
+       LIGHTBOX — large view with carousel + delete
+    ========================= */
+    let lightboxIndex = -1;
+
+    function currentSourceItems() {
+        return galleryItems.filter(item => (item.source || "user") === activeSource);
+    }
+
+    function renderLightbox() {
+        const items = currentSourceItems();
+        if (!items.length || lightboxIndex < 0) { closeLightbox(); return; }
+        if (lightboxIndex >= items.length) lightboxIndex = items.length - 1;
+        const item = items[lightboxIndex];
+
+        const isNex = item.source === "nex";
+        const badge = $("lightbox-badge");
+        badge.className = "creative-gallery-badge" + (isNex ? " badge-nex" : "");
+        badge.textContent = isNex ? "NEX" : (item.model_choice === "quality" ? "FLUX.2" : "TURBO");
+
+        $("lightbox-img").src = item.image_url;
+        $("lightbox-img").alt = item.prompt || "";
+
+        const captionText = isNex && item.artist_note ? item.artist_note : (item.prompt || "");
+        const originLine = isNex && item.origin_agent
+            ? `<span class="clc-origin">— ${esc(item.origin_agent)}</span>` : "";
+        $("lightbox-caption").innerHTML = `${esc(captionText)}${originLine}`;
+
+        $("lightbox-count").textContent = items.length > 1 ? `${lightboxIndex + 1} / ${items.length}` : "";
+        $("lightbox-prev").disabled = items.length <= 1;
+        $("lightbox-next").disabled = items.length <= 1;
+        $("lightbox-delete").dataset.jobId = item.job_id;
+    }
+
+    function openLightbox(jobId) {
+        const items = currentSourceItems();
+        const idx = items.findIndex(item => item.job_id === jobId);
+        if (idx === -1) return;
+        lightboxIndex = idx;
+        renderLightbox();
+        $("creative-lightbox").classList.add("visible");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+        lightboxIndex = -1;
+        $("creative-lightbox").classList.remove("visible");
+        document.body.style.overflow = "";
+    }
+
+    function navLightbox(delta) {
+        const items = currentSourceItems();
+        if (!items.length) { closeLightbox(); return; }
+        lightboxIndex = (lightboxIndex + delta + items.length) % items.length;
+        renderLightbox();
+    }
+
+    async function deleteFromLightbox() {
+        const jobId = $("lightbox-delete").dataset.jobId;
+        if (!jobId) return;
+        if (!confirm("Delete this image? This can't be undone.")) return;
+        try {
+            await fetch(`/creative/delete/${jobId}`, { method: "POST" });
+        } catch (e) { console.error("Creative delete error:", e); }
+        selectedForDelete.delete(jobId);
+        hideCaptionTip();
+        await loadGallery();
+        const items = currentSourceItems();
+        if (!items.length) { closeLightbox(); return; }
+        renderLightbox();
+    }
+
+    $("lightbox-close")?.addEventListener("click", closeLightbox);
+    $("lightbox-backdrop")?.addEventListener("click", closeLightbox);
+    $("lightbox-prev")?.addEventListener("click", () => navLightbox(-1));
+    $("lightbox-next")?.addEventListener("click", () => navLightbox(1));
+    $("lightbox-delete")?.addEventListener("click", deleteFromLightbox);
+
+    document.addEventListener("keydown", (e) => {
+        if (!$("creative-lightbox").classList.contains("visible")) return;
+        if (e.key === "Escape") closeLightbox();
+        else if (e.key === "ArrowLeft") navLightbox(-1);
+        else if (e.key === "ArrowRight") navLightbox(1);
+    });
+
     const galleryGrid = $("creative-gallery-grid");
     if (galleryGrid) {
         galleryGrid.addEventListener("click", (e) => {
+            const selectEl = e.target.closest(".creative-gallery-select");
+            if (selectEl) {
+                toggleSelect(selectEl.dataset.jobId);
+                return;
+            }
             const el = e.target.closest(".creative-gallery-item");
             if (!el) return;
-            toggleSelect(el.dataset.jobId);
+            openLightbox(el.dataset.jobId);
         });
         galleryGrid.addEventListener("contextmenu", (e) => {
             const el = e.target.closest(".creative-gallery-item");

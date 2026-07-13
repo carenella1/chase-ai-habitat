@@ -137,6 +137,27 @@
     </div>
 
 </div>
+
+<!-- LIGHTBOX -->
+<div id="creative-lightbox" class="creative-lightbox">
+    <div class="creative-lightbox-backdrop" id="lightbox-backdrop"></div>
+    <div class="creative-lightbox-content">
+        <button class="creative-lightbox-close" id="lightbox-close" title="Close">✕</button>
+        <button class="creative-lightbox-nav lightbox-prev" id="lightbox-prev" title="Previous">‹</button>
+        <div class="creative-lightbox-image-wrap">
+            <span class="creative-gallery-badge" id="lightbox-badge"></span>
+            <img id="lightbox-img" src="" alt="">
+        </div>
+        <button class="creative-lightbox-nav lightbox-next" id="lightbox-next" title="Next">›</button>
+        <div class="creative-lightbox-footer">
+            <div class="creative-lightbox-caption" id="lightbox-caption"></div>
+            <div class="creative-lightbox-actions">
+                <span class="creative-lightbox-count" id="lightbox-count"></span>
+                <button class="creative-trash-btn" id="lightbox-delete" title="Delete this image">🗑 Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
