@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const EMPTY_STATES = {
         user: '<div class="empty-state"><div class="empty-icon">◎</div><div>No images yet.</div><div class="empty-sub">Generate your first image above.</div></div>',
-        nex: '<div class="empty-state"><div class="empty-icon">◎</div><div>Nex hasn\'t felt moved to create anything yet.</div><div class="empty-sub">It only turns its most significant moments into art — at most about once a day.</div></div>',
+        nex: '<div class="empty-state"><div class="empty-icon">◎</div><div>Nex hasn\'t felt moved to create anything yet.</div><div class="empty-sub">It only turns its most significant moments into art — no fixed schedule, just whenever something feels worth it.</div></div>',
     };
 
     async function loadEngineStatus() {

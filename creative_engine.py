@@ -844,10 +844,12 @@ class NexCreativeAutonomy:
     # journal line, so the bar for "this deserves to become art" is higher.
     SIGNIFICANCE_THRESHOLD = 7.5
 
-    # Wall-clock, not cycle-count: "roughly once a day" is fundamentally a
-    # time concept, so this follows nex_digest.py's is_due() pattern rather
-    # than the sandbox/docker autonomy classes' cycle-count cooldowns.
-    COOLDOWN_SECONDS = 86400
+    # Wall-clock, not cycle-count: this follows nex_digest.py's is_due()
+    # pattern rather than the sandbox/docker autonomy classes' cycle-count
+    # cooldowns. Short enough that the significance bar above — not this —
+    # is the real gate on how often Nex creates; long enough that a stretch
+    # of high-significance cycles can't turn into a slideshow.
+    COOLDOWN_SECONDS = 7200
 
     def __init__(self, engine, call_llm_fn):
         self.engine = engine
