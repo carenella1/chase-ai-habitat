@@ -5,9 +5,12 @@ separate free program called **ComfyUI**, running quietly in the background
 on your own PC (no cloud, nothing leaves your machine). Think of it like
 Ollama, but for images instead of text.
 
-**Status as of the last check (2026-07-11): ComfyUI is installed and three of
-the four required FLUX files are in place. Only `clip_l.safetensors` is still
-missing — see the checklist in section 2.**
+**Status as of the 2026-07-13 fix: ComfyUI is installed and all required
+files for both options are in place.** (An earlier version of this doc had
+you fetching `t5xxl_fp8_e4m3fn.safetensors`/`clip_l.safetensors`/
+`ae.safetensors` for the "quality" option — those are FLUX.1 files. FLUX.2
+klein-9B, which is what's actually installed, needs a different text
+encoder and VAE entirely; see the checklist in section 2.)
 
 ---
 
@@ -45,32 +48,24 @@ NEX's Creative tab offers two options, **fast** (Z-Image Turbo) and
 |---|---|---|
 | `z-image-turbo-fp8-aio.safetensors` | `models\checkpoints\` | ✅ present |
 | `flux-2-klein-9b.safetensors` (main FLUX model) | `models\unet\` | ✅ present — **see size note below** |
-| `t5xxl_fp8_e4m3fn.safetensors` (FLUX text encoder) | `models\clip\` | ✅ present |
-| `ae.safetensors` (FLUX image decoder / VAE) | `models\vae\` | ✅ present |
-| `clip_l.safetensors` (FLUX text encoder) | `models\clip\` | ❌ **still missing** |
+| `qwen_3_8b_fp8mixed.safetensors` (FLUX.2 text encoder) | `models\text_encoders\` | ✅ present |
+| `full_encoder_small_decoder.safetensors` (FLUX.2 image decoder / VAE) | `models\vae\` | ✅ present |
 
-**Fast option (Z-Image Turbo) is fully ready to use right now.**
+**Both options are fully ready to use right now.**
 
-**Quality option (FLUX.2 klein) needs one more file**: `clip_l.safetensors`.
-This one's genuinely harder to find than it should be if you're searching
-Comfy-Org's own collection — it isn't listed there under that name. It comes
-from a different, very standard repo instead:
+FLUX.2 klein-9B uses a single **Qwen3-8B** text encoder (not the T5-XXL +
+CLIP-L pair FLUX.1 used) and its own small-decoder VAE. If you ever
+reinstall from scratch, get them from:
 
-**`https://huggingface.co/comfyanonymous/flux_text_encoders`**
+- `qwen_3_8b_fp8mixed.safetensors` — `https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors`
+- `full_encoder_small_decoder.safetensors` — `https://huggingface.co/black-forest-labs/FLUX.2-small-decoder/resolve/main/full_encoder_small_decoder.safetensors`
 
-That repo is the canonical source ComfyUI's own examples point to for FLUX's
-text encoders, and it's almost certainly where `t5xxl_fp8_e4m3fn.safetensors`
-(already in your `models\clip\` folder) came from — `clip_l.safetensors`
-sits right next to it in the same file list. It's small (~235MB, plain
-OpenAI CLIP-L/14) — download it and drop it straight into
-`C:\ComfyUI\ComfyUI\models\clip\`.
-
-**Note on `CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors`** (the other file
-already sitting in your `models\clip\` folder): that's an OpenCLIP ViT-H
-model, a different architecture used for other things (like IP-Adapter or
-Stable Cascade) — it is not a substitute for FLUX's `clip_l.safetensors` and
-ComfyUI won't accept it in that role. It's harmless to leave it there; it's
-just not doing anything for the Creative tab.
+**Leftover files you can ignore (or delete to save space)**: `models\clip\`
+still has `t5xxl_fp8_e4m3fn.safetensors`, `clip_l.safetensors`, and
+`CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors`, and `models\vae\` still has
+`ae.safetensors` — these were FLUX.1-era downloads that turned out not to
+apply to FLUX.2 klein-9B. Neither workflow uses them anymore; they're just
+inert disk space (~5.7GB combined) unless you add a FLUX.1 workflow later.
 
 ### ⚠️ Size note on the FLUX unet file
 
@@ -78,11 +73,13 @@ The file on disk, `flux-2-klein-9b.safetensors`, is the **9B** parameter
 build at ~18GB — bigger than the 4B build this feature was originally scoped
 around. You checked and a 4B FLUX.2 klein build isn't published on Hugging
 Face, so 9B is what's actually available — this isn't something to keep
-chasing. An 18GB file doesn't fit inside 16GB VRAM on its own, so ComfyUI
-will spill part of it onto the CPU/system RAM: the "quality" option will
-work, just noticeably slower than the fast option, with some risk of running
-out of memory depending on overhead at generation time. Nothing to do here —
-just setting the expectation.
+chasing. At full precision that's too big for a 16GB card on its own, so
+`flux2_klein_quality.json` loads it with `weight_dtype: "fp8_e4m3fn"` —
+ComfyUI compresses it to roughly half size (~9GB) the moment it loads, the
+same trick already used for the Turbo checkpoint. That's noticeably slower
+than the fast option (bigger model, more sampling steps), but should fit
+without spilling to system RAM as long as nothing else is holding a big
+chunk of VRAM at the same time (e.g. a chat model still loaded in Ollama).
 
 ## 3. Optional: LoRAs
 

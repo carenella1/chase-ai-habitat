@@ -88,21 +88,32 @@ MODEL_LABELS = {
 # actionable error instead of letting ComfyUI reject the job with a 400.
 #
 # These filenames match what's actually sitting in C:\ComfyUI\ComfyUI\models\
-# as of the 2026-07-11 install check — not invented placeholders. Note the
-# FLUX unet file Chase has is the 9B build (flux-2-klein-9b.safetensors,
-# ~18GB on disk) — no 4B build is published, so this is what's actually
-# available; it's too big to fit fully in 16GB VRAM, so it'll spill to CPU
-# and run slower than the fast option. See install_creative.md — as of the
-# last check, clip_l.safetensors is the only file still missing.
+# as of the 2026-07-13 fix (see install_creative.md). Note the FLUX unet file
+# Chase has is the 9B build (flux-2-klein-9b.safetensors, ~18GB on disk) — no
+# 4B build is published, so this is what's actually available. It's loaded
+# with weight_dtype "fp8_e4m3fn" in flux2_klein_quality.json (on-the-fly
+# compression to ~9GB) so it has a real chance of fitting in 16GB VRAM
+# instead of always spilling to CPU.
+#
+# IMPORTANT: FLUX.2 klein-9B is NOT architecturally compatible with FLUX.1's
+# text encoders/VAE — an earlier version of this workflow used FLUX.1's
+# t5xxl+clip_l (DualCLIPLoader) and ae.safetensors, which made ComfyUI crash
+# instantly on every "quality" job with a tensor shape-mismatch error deep in
+# the flux model code. Because _wait_for_history() only watches for a
+# successful "outputs" entry and never checks ComfyUI's own reported error
+# status, that instant crash surfaced as a silent 5-minute hang ending in a
+# generic "Timed out" message — which is what looked like the model "getting
+# stuck." FLUX.2 klein-9B actually needs a single Qwen3-8B text encoder
+# (CLIPLoader, type "flux2") and its own small-decoder VAE, matching
+# ComfyUI's own bundled template (image_flux2_text_to_image_9b.json).
 CHECKPOINT_FILES = {
     "turbo": [
         (["checkpoints"], ["z-image-turbo-fp8-aio.safetensors"]),
     ],
     "quality": [
         (["unet", "diffusion_models"], ["flux-2-klein-9b.safetensors"]),
-        (["clip"], ["t5xxl_fp8_e4m3fn.safetensors"]),
-        (["clip"], ["clip_l.safetensors"]),
-        (["vae"], ["ae.safetensors"]),
+        (["text_encoders"], ["qwen_3_8b_fp8mixed.safetensors"]),
+        (["vae"], ["full_encoder_small_decoder.safetensors"]),
     ],
 }
 
@@ -507,8 +518,11 @@ class CreativeEngine:
                 workflow["7"]["inputs"]["clip"] = ["20", 1]
         else:  # "quality" — FLUX.2 klein
             workflow["6"]["inputs"]["text"] = prompt
+            workflow["7"]["inputs"]["text"] = negative_prompt or ""
             workflow["27"]["inputs"]["width"] = width
             workflow["27"]["inputs"]["height"] = height
+            workflow["17"]["inputs"]["width"] = width
+            workflow["17"]["inputs"]["height"] = height
             workflow["25"]["inputs"]["noise_seed"] = seed
             if lora_name:
                 workflow["30"] = {
@@ -519,7 +533,8 @@ class CreativeEngine:
                         "strength_model": lora_strength,
                     },
                 }
-                workflow["17"]["inputs"]["model"] = ["30", 0]
+                # Flux2Scheduler (17) has no "model" input in this graph —
+                # only CFGGuider (22) needs the LoRA'd model rewired in.
                 workflow["22"]["inputs"]["model"] = ["30", 0]
 
     # ---- job submission + polling ----
@@ -708,6 +723,24 @@ class CreativeEngine:
                         for node_output in entry["outputs"].values():
                             if node_output.get("images"):
                                 return node_output["images"][0]
+                    # ComfyUI records a history entry the moment a job errors
+                    # out too, well before our timeout — ignoring status_str
+                    # here means a job that crashes in <1s still makes the
+                    # user wait the full timeout for a generic message. Surface
+                    # the real error (which node, why) immediately instead.
+                    status = (entry or {}).get("status", {})
+                    if status.get("status_str") == "error":
+                        detail = "ComfyUI reported an error."
+                        for msg_type, payload in status.get("messages", []):
+                            if msg_type == "execution_error":
+                                detail = (
+                                    f"ComfyUI error in node '{payload.get('node_type')}': "
+                                    f"{payload.get('exception_message')}"
+                                )
+                                break
+                        raise CreativeError(detail)
+            except CreativeError:
+                raise
             except Exception:
                 pass
             time.sleep(1.5)
