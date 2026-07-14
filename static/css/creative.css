@@ -54,6 +54,54 @@
 
 .creative-input::placeholder { color: #2d3748; }
 
+.creative-lora-toggle {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: 'DM Sans', "Segoe UI", sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 0;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+}
+
+.creative-lora-toggle:hover { opacity: 1; }
+
+.creative-lora-row { margin-top: -6px; }
+
+.creative-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.12);
+    margin: 15px 0;
+}
+
+.creative-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+    cursor: pointer;
+}
+
+.creative-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+    cursor: pointer;
+}
+
 .creative-generate-row {
     display: flex;
     align-items: center;

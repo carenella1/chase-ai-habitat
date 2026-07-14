@@ -3481,6 +3481,11 @@ def api_creative_engine_status():
     return jsonify(status)
 
 
+@app.route("/creative/loras", methods=["GET"])
+def api_creative_loras():
+    return jsonify({"loras": creative_engine.list_loras()})
+
+
 @app.route("/eval")
 def eval_page():
     return render_template("eval.html", active="eval")

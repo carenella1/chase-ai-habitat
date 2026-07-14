@@ -32,6 +32,37 @@ document.addEventListener("DOMContentLoaded", () => {
         nex: '<div class="empty-state"><div class="empty-icon">◎</div><div>Nex hasn\'t felt moved to create anything yet.</div><div class="empty-sub">It only turns its most significant moments into art — no fixed schedule, just whenever something feels worth it.</div></div>',
     };
 
+    async function loadLoras() {
+        const select = $("cr-lora-name");
+        if (!select) return;
+        try {
+            const { loras = [] } = await fetch("/creative/loras").then(r => r.json());
+            const current = select.value;
+            select.innerHTML = '<option value="">— None —</option>';
+            for (const name of loras) {
+                const opt = document.createElement("option");
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            }
+            if (loras.includes(current)) select.value = current;
+        } catch (e) { console.error("Creative LoRA list error:", e); }
+    }
+
+    $("cr-lora-toggle")?.addEventListener("click", () => {
+        const row = $("cr-lora-row");
+        const toggle = $("cr-lora-toggle");
+        const showing = row.style.display !== "none";
+        row.style.display = showing ? "none" : "flex";
+        toggle.textContent = showing ? "+ Add LoRA" : "− Hide LoRA";
+        if (!showing) loadLoras();
+    });
+
+    $("cr-lora-strength")?.addEventListener("input", () => {
+        const pct = Math.round(parseFloat($("cr-lora-strength").value) * 100);
+        $("cr-lora-strength-value").textContent = `${pct}%`;
+    });
+
     async function loadEngineStatus() {
         try {
             const s = await fetch("/creative/engine-status").then(r => r.json());
@@ -502,7 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
             model_choice: $("cr-model").value,
             width,
             height,
-            lora_name: $("cr-lora-name").value.trim() || null,
+            lora_name: $("cr-lora-name").value || null,
             lora_strength: parseFloat($("cr-lora-strength").value) || 0.8,
         };
         lastGenerateBody = body;

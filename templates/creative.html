@@ -84,14 +84,18 @@
                 </div>
             </div>
 
-            <div class="creative-row">
+            <button type="button" class="creative-lora-toggle" id="cr-lora-toggle">+ Add LoRA</button>
+
+            <div class="creative-row creative-lora-row" id="cr-lora-row" style="display:none;">
                 <div class="creative-field creative-field-inline">
-                    <label class="panel-label">LORA NAME (OPTIONAL)</label>
-                    <input id="cr-lora-name" class="creative-select" type="text" placeholder="e.g. my_style.safetensors">
+                    <label class="panel-label">LORA</label>
+                    <select id="cr-lora-name" class="creative-select">
+                        <option value="">— None —</option>
+                    </select>
                 </div>
                 <div class="creative-field creative-field-inline">
-                    <label class="panel-label">LORA STRENGTH</label>
-                    <input id="cr-lora-strength" class="creative-select" type="number" min="0" max="2" step="0.05" value="0.8">
+                    <label class="panel-label">STRENGTH — <span id="cr-lora-strength-value">80%</span></label>
+                    <input id="cr-lora-strength" class="creative-slider" type="range" min="0" max="2" step="0.05" value="0.8">
                 </div>
             </div>
 

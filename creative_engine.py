@@ -445,6 +445,45 @@ class CreativeEngine:
                     )
         return True, None, None
 
+    def list_loras(self):
+        """Returns the LoRA filenames available to pick from in the UI's
+        dropdown. Prefers asking ComfyUI directly (its /object_info API
+        reports exactly what it will accept for lora_name) since that
+        guarantees no typos ever reach a generation job. Falls back to
+        scanning the loras folder on disk when ComfyUI isn't running yet,
+        so the dropdown still works before the first generate of the day."""
+        if self.is_online():
+            try:
+                r = requests.get(
+                    f"{COMFYUI_URL}/object_info/LoraLoader", timeout=5
+                )
+                if r.status_code == 200:
+                    names = (
+                        r.json()
+                        .get("LoraLoader", {})
+                        .get("input", {})
+                        .get("required", {})
+                        .get("lora_name", [[]])[0]
+                    )
+                    if names:
+                        return sorted(names)
+            except Exception as e:
+                print(f"🎨 CREATIVE: couldn't fetch LoRA list from ComfyUI, "
+                      f"falling back to a folder scan: {e}")
+
+        loras_dir = os.path.join(COMFYUI_DIR, "models", "loras")
+        names = []
+        if os.path.isdir(loras_dir):
+            for root, _dirs, files in os.walk(loras_dir):
+                rel = os.path.relpath(root, loras_dir)
+                for fname in files:
+                    if fname.lower().endswith((".safetensors", ".pt", ".ckpt")):
+                        names.append(
+                            fname if rel == "."
+                            else os.path.join(rel, fname).replace("\\", "/")
+                        )
+        return sorted(names)
+
     # ---- VRAM handoff ----
 
     def _unload_llm(self):
