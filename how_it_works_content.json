@@ -225,5 +225,20 @@
       "Own-code lookups are scoped to the project folder for speed, separate from the general whole-disk search"
     ],
     "live_status_check": null
+  },
+  {
+    "id": "chat-web-search",
+    "kicker": "ON-DEMAND LOOKUPS",
+    "title": "Chat-Triggered Web Search & Links",
+    "status": "live",
+    "lead": "Ask Nex to search the web, check the news, or find a link about something, and it doesn't answer from memory alone — it runs a real, live search (DuckDuckGo results plus the actual page text) right there in the chat, separate from the slower Autonomous Research loop. Source links it mentions are now real URLs it actually fetched, rendered as clickable links in the chat window — not invented ones.",
+    "why_hook": "A link is only trustworthy if it's the one that was actually fetched.",
+    "why_body": "The search tool always ran live searches, but it used to discard the real page URLs after using them internally, leaving Nex with only a domain name to reference — so if it wanted to cite a source, it had nothing real to link to. Now the actual URL travels with the search result all the way into the prompt, and Nex is told to only ever link to a URL it was actually handed, never to guess or reconstruct one. The chat window itself was also taught to render [text](url) markdown and bare URLs as real clickable links that open in a new tab, something it couldn't do before — with the link-building code escaping quotes and rejecting any non-http(s) scheme so a scraped page can't smuggle in something like a javascript: link.",
+    "facts": [
+      "Triggers on natural phrasing: \"search the web for...\", \"find me a link about...\", \"search online\", plus the existing lookup phrasings",
+      "Real source URLs now flow from the search tool into the prompt and into the reply — never fabricated",
+      "Separate from the background Autonomous Research loop — this fires immediately, mid-chat, as one search pass rather than a multi-source investigation"
+    ],
+    "live_status_check": null
   }
 ]

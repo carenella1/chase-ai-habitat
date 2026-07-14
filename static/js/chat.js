@@ -142,12 +142,47 @@ document.addEventListener("DOMContentLoaded", () => {
         return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
+    // For text dropped inside an HTML attribute (e.g. href="..."): esc() already
+    // neutralizes & < >, this additionally neutralizes quotes so a crafted URL
+    // can't break out of the attribute and inject new ones.
+    function escAttr(s) {
+        return String(s || "").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     /* =========================
        LIGHTWEIGHT MARKDOWN RENDERER
-       (bold, italics, inline code, bullet/numbered lists — nothing fancier)
+       (bold, italics, inline code, bullet/numbered lists, links — nothing fancier)
     ========================= */
     function renderMarkdown(text) {
         let html = esc(text);
+
+        // Links — resolved first and swapped for inert placeholder tokens so the
+        // bold/italics regexes below (which key off * and _) can't run across
+        // href values or link text and mangle them. Restored at the very end.
+        const linkStash = [];
+        function stashLink(tag) {
+            const token = `\u0000L${linkStash.length}\u0000`;
+            linkStash.push(tag);
+            return token;
+        }
+        function makeAnchor(href, label) {
+            return `<a href="${escAttr(href)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+        }
+
+        // [text](url) — only http(s) links are ever turned into real anchors;
+        // anything else (javascript:, data:, etc.) is left as plain text.
+        html = html.replace(/\[([^\[\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, (m, label, url) => {
+            return stashLink(makeAnchor(url, label));
+        });
+
+        // bare https://... URLs not already consumed above
+        html = html.replace(/(https?:\/\/[^\s<>()]+)/gi, (m, url) => {
+            const trailMatch = url.match(/[.,!?;:]+$/);
+            const trail = trailMatch ? trailMatch[0] : "";
+            const clean = trail ? url.slice(0, -trail.length) : url;
+            if (!clean) return m;
+            return stashLink(makeAnchor(clean, clean)) + trail;
+        });
 
         // inline code
         html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -189,7 +224,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
         if (listType) out.push(`</${listType}>`);
-        return out.join("\n");
+        let result = out.join("\n");
+        if (linkStash.length) {
+            result = result.replace(/\u0000L(\d+)\u0000/g, (m, i) => linkStash[Number(i)]);
+        }
+        return result;
     }
 
     /* =========================

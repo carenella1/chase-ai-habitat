@@ -232,8 +232,14 @@ def _extract_file_search_param(msg):
 def _extract_search_param(msg):
     """Extract search query — catch-all for any current information request."""
     query = re.sub(
-        r"\b(tell me|find me|get me|show me|what is|what are|who is|who are|"
-        r"where is|when is|how is|can you|please|right now|currently|today|"
+        r"\b(search the web for|search the internet for|search online for|"
+        r"do a web search for|do a search for|search the web|search the internet|"
+        r"search online|search up|search for|web search for|google search for|"
+        r"find (?:me )?a link (?:to|about|for)?|find (?:me )?(?:some )?links? (?:to|about|for)?|"
+        r"give me a link (?:to|about|for)?|give me (?:some )?links? (?:to|about|for)?|"
+        r"send me a link (?:to|about|for)?|"
+        r"tell me|find me|get me|show me|what is|what are|who is|who are|"
+        r"where is|when is|how is|can you|could you|please|right now|currently|today|"
         r"the latest|latest|current|now)\b",
         "",
         msg,
@@ -417,6 +423,26 @@ TOOL_INTENTS = [
     {
         "tool": "web_search",
         "signals": [
+            # Explicit search requests
+            "search the web",
+            "search the internet",
+            "search online",
+            "search up",
+            "do a search",
+            "do a web search",
+            "web search",
+            "google search",
+            "can you search",
+            "could you search",
+            "search for information",
+            "look for information",
+            "find a link",
+            "find links",
+            "find some links",
+            "give me a link",
+            "give me links",
+            "give me some links",
+            "send me a link",
             # Current info
             "right now",
             "currently",

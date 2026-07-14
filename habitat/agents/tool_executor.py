@@ -300,15 +300,24 @@ def tool_news_search(query: str) -> dict:
             r'class="result__snippet"[^>]*>(.*?)</a>', r.text, re.DOTALL
         )
         titles = re.findall(r'class="result__a"[^>]*>(.*?)</a>', r.text, re.DOTALL)
+        urls = [unquote(u) for u in re.findall(r'uddg=(https?[^&"]+)', r.text)]
         results = []
         for i, (title, snippet) in enumerate(zip(titles[:5], snippets[:5])):
-            title_clean = re.sub(r"<[^>]+>", "", title).strip()
-            snippet_clean = re.sub(r"<[^>]+>", "", snippet).strip()
+            title_clean = _html_unescape(re.sub(r"<[^>]+>", "", title)).strip()
+            snippet_clean = _html_unescape(re.sub(r"<[^>]+>", "", snippet)).strip()
             if title_clean and snippet_clean:
-                results.append(f"{title_clean}: {snippet_clean}")
+                results.append({
+                    "title": title_clean,
+                    "snippet": snippet_clean,
+                    "url": urls[i] if i < len(urls) else "",
+                })
         if not results:
             return {"error": "No news results found", "query": query, "results": []}
-        return {"query": query, "results": results, "summary": " | ".join(results[:3])}
+        return {
+            "query": query,
+            "results": results,
+            "summary": " | ".join(f"{r['title']}: {r['snippet']}" for r in results[:3]),
+        }
     except Exception as e:
         return {"error": str(e), "query": query, "results": []}
 
@@ -325,12 +334,17 @@ def tool_web_search(query: str) -> dict:
             r'class="result__snippet"[^>]*>(.*?)</a>', r.text, re.DOTALL
         )
         titles = re.findall(r'class="result__a"[^>]*>(.*?)</a>', r.text, re.DOTALL)
+        urls = [unquote(u) for u in re.findall(r'uddg=(https?[^&"]+)', r.text)]
         results = []
         for i in range(min(4, len(titles), len(snippets))):
-            title = re.sub(r"<[^>]+>", "", titles[i]).strip()
-            snippet = re.sub(r"<[^>]+>", "", snippets[i]).strip()
+            title = _html_unescape(re.sub(r"<[^>]+>", "", titles[i])).strip()
+            snippet = _html_unescape(re.sub(r"<[^>]+>", "", snippets[i])).strip()
             if title and snippet:
-                results.append(f"{title}: {snippet}")
+                results.append({
+                    "title": title,
+                    "snippet": snippet,
+                    "url": urls[i] if i < len(urls) else "",
+                })
         if not results:
             return {"error": "No search results found", "query": query, "results": []}
 
@@ -339,11 +353,13 @@ def tool_web_search(query: str) -> dict:
         # something to actually cross-reference.
         page_sections = []
         try:
-            actual_urls = [unquote(u) for u in re.findall(r'uddg=(https?[^&"]+)', r.text)]
             fetched_domains = set()
-            for top_url in actual_urls:
+            for r_item in results:
                 if len(page_sections) >= 3:
                     break
+                top_url = r_item["url"]
+                if not top_url:
+                    continue
                 domain = urlparse(top_url).netloc.replace("www.", "")
                 if domain in fetched_domains:
                     continue
@@ -372,7 +388,7 @@ def tool_web_search(query: str) -> dict:
                 page_text = ". ".join(sentences[:6])
                 if page_text:
                     fetched_domains.add(domain)
-                    page_sections.append(f"[{domain}] {page_text}")
+                    page_sections.append(f"[{domain}]({top_url}) {page_text}")
         except Exception:
             pass
         top_content = "\n\n".join(page_sections)
@@ -380,7 +396,7 @@ def tool_web_search(query: str) -> dict:
             "query": query,
             "results": results,
             "top_content": top_content[:2500] if top_content else "",
-            "summary": " | ".join(results[:3]),
+            "summary": " | ".join(f"{r['title']}: {r['snippet']}" for r in results[:3]),
         }
     except Exception as e:
         return {"error": str(e), "query": query, "results": []}
@@ -639,6 +655,17 @@ def execute_tool(tool_name: str, param: str) -> dict:
         return {"error": str(e), "_tool": tool_name}
 
 
+def _format_result_link(r: dict) -> str:
+    """Render a search result dict as 'title: snippet', with a real markdown link when a URL is present."""
+    title, snippet, url = r.get("title", ""), r.get("snippet", ""), r.get("url", "")
+    if url:
+        # Titles are scraped page text and can contain [ ] ( ) which would
+        # otherwise break the markdown link syntax being built here.
+        safe_title = title.replace("[", "(").replace("]", ")")
+        return f"[{safe_title}]({url}) — {snippet}"
+    return f"{title}: {snippet}"
+
+
 def format_tool_result(result: dict) -> str:
     """Format a tool result for injection into the Nexarion prompt."""
     tool = result.get("_tool", "tool")
@@ -703,7 +730,7 @@ def format_tool_result(result: dict) -> str:
         if not results:
             return f"[News: {query}] No results found"
         lines = [f"[Recent news: {query}]"]
-        body = "\n".join(f"• {r}" for r in results[:4])
+        body = "\n".join(f"• {_format_result_link(r)}" for r in results[:4])
         lines.append(wrap_untrusted_web_content(body, source="news search"))
         return "\n".join(lines)
 
@@ -715,7 +742,7 @@ def format_tool_result(result: dict) -> str:
         if top:
             lines.append(wrap_untrusted_web_content(top[:1800], source="web search"))
         elif results:
-            body = "\n".join(f"• {r}" for r in results[:4])
+            body = "\n".join(f"• {_format_result_link(r)}" for r in results[:4])
             lines.append(wrap_untrusted_web_content(body, source="web search"))
         return "\n".join(lines)
 
