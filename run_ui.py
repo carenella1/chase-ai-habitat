@@ -1481,17 +1481,9 @@ def _build_nexarion_prompt(
         for t in recent
     )
 
-    capabilities_block = """You have access to real-time tools that execute automatically when relevant:
-- market_data: live prices for any stock, crypto, or commodity
-- web_fetch: read any URL in full
-- python_exec: run Python code and return output
-- calculator: evaluate any mathematical expression
-- wiki_deep: fetch full Wikipedia articles
-- news_search: search for recent news on any topic
-- web_search: general search for any current information
+    capabilities_block = """Before you started writing this reply, the system already checked whether Chase's message needed a live lookup — current web info, news, a stock price, a calculation, a Wikipedia article — and ran it automatically if so. You did not do this and cannot do it yourself mid-reply: there is no search action available inside your response, only the answer itself. Never write things like "let me search," "I'll look that up," "we should use web_search," or any other narration of a plan to go find something — go straight to answering.
 
-When Chase asks for current information or computation, these tools fire before you respond.
-Use that data directly. Never say you lack real-time access.
+If a lookup ran, its real results are already given to you below under "Real-time information retrieved" — read that data and answer directly from it. If no such section appears below, none ran; answer from what you already know instead of claiming you lack real-time access.
 
 CITING SOURCES: when the retrieved data below includes a markdown link like [title](https://...), that URL is real — it was actually fetched, not guessed. When you reference that source in your reply, carry the link over in the same [text](url) markdown format so Chase can click through to it. Only ever use a URL that appears verbatim in the retrieved data — never invent, guess, or reconstruct a URL from memory."""
 
@@ -1595,6 +1587,37 @@ def _clean_nexarion_output(text: str) -> str:
     if len(text) < 30:
         return text
 
+    return text
+
+
+def _strip_unverified_links(text: str, *verified_sources: str) -> str:
+    """
+    Defense-in-depth against fabricated citations: the prompt tells the model
+    to only ever link to a URL it was actually handed in the retrieved data,
+    but models don't reliably follow that (confirmed in testing — it will
+    confidently invent realistic-looking [title](url) citations even when no
+    search actually ran). Any link in the reply whose URL doesn't appear
+    verbatim in this turn's real retrieved data gets its link stripped —
+    the visible text stays, the fake URL doesn't — so a hallucinated source
+    can never render as a clickable link.
+    """
+    import re
+
+    verified_text = "\n".join(s for s in verified_sources if s)
+    verified_urls = set(re.findall(r'https?://[^\s\)\]"<>]+', verified_text))
+
+    def _check_markdown(m):
+        label, url = m.group(1), m.group(2)
+        return m.group(0) if url in verified_urls else label
+
+    text = re.sub(r'\[([^\[\]]+)\]\((https?://[^\s\)]+)\)', _check_markdown, text)
+
+    def _check_bare(m):
+        url = m.group(0)
+        return url if url in verified_urls else ""
+
+    text = re.sub(r'https?://[^\s<>\)\]]+', _check_bare, text)
+    text = re.sub(r"[ \t]{2,}", " ", text)
     return text
 
 
@@ -1801,6 +1824,8 @@ def api_chat():
 
             full_raw = "".join(raw_chunks)
             output = _clean_nexarion_output(full_raw) if full_raw.strip() else ""
+            if output:
+                output = _strip_unverified_links(output, tool_context, domain_briefing)
 
             if not output or not output.strip():
                 fallback = "My language model isn't responding, Chase. Check that Ollama is running."

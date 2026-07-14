@@ -238,6 +238,12 @@ def _extract_search_param(msg):
         r"find (?:me )?a link (?:to|about|for)?|find (?:me )?(?:some )?links? (?:to|about|for)?|"
         r"give me a link (?:to|about|for)?|give me (?:some )?links? (?:to|about|for)?|"
         r"send me a link (?:to|about|for)?|"
+        r"find (?:me )?(?:all (?:of )?(?:the )?)?(?:any )?evidence (?:of|for|about)?|"
+        r"any evidence (?:of|for|about)?|"
+        r"find (?:me )?(?:any |all )?information (?:on|about)?|"
+        r"any information (?:on|about)?|"
+        r"find (?:me )?(?:any |all )?data (?:on|about)?|"
+        r"find out (?:about|everything about)?|"
         r"tell me|find me|get me|show me|what is|what are|who is|who are|"
         r"where is|when is|how is|can you|could you|please|right now|currently|today|"
         r"the latest|latest|current|now)\b",
@@ -245,6 +251,9 @@ def _extract_search_param(msg):
         msg,
         flags=re.IGNORECASE,
     ).strip()
+    # Trailing filler ("...that you can", "...you can find") left over from
+    # open-ended research phrasing ("find all the evidence of X that you can")
+    query = re.sub(r"\s*(that you can find|that you can|you can find)\.?$", "", query, flags=re.IGNORECASE).strip()
     query = re.sub(r"\s+", " ", query).strip().rstrip("?.,!")
     return query if len(query) > 2 else msg.strip().rstrip("?.,!")
 
@@ -443,6 +452,19 @@ TOOL_INTENTS = [
             "give me links",
             "give me some links",
             "send me a link",
+            "find evidence",
+            "find all evidence",
+            "find any evidence",
+            "evidence of",
+            "evidence for",
+            "any evidence of",
+            "find information about",
+            "find information on",
+            "any information on",
+            "any information about",
+            "find data on",
+            "find out about",
+            "find everything",
             # Current info
             "right now",
             "currently",
