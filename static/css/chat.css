@@ -103,6 +103,23 @@
     font-family: "Courier New", monospace;
 }
 
+.chat-bubble a {
+    color: var(--accent-blue);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(102, 204, 255, 0.35);
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.chat-bubble a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.chat-bubble a:visited {
+    color: var(--accent-blue);
+    opacity: 0.85;
+}
+
 .chat-bubble ul,
 .chat-bubble ol {
     margin: 4px 0 6px;
