@@ -192,6 +192,43 @@ def _extract_wiki_param(msg):
     return None
 
 
+def _extract_file_path_param(msg):
+    """Explicit absolute Windows path — only fires when the user gives a real path."""
+    m = re.search(r'[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+\.[A-Za-z0-9]{1,6}', msg)
+    if m:
+        return m.group().strip()
+    m = re.search(r'[A-Za-z]:/(?:[^/:*?"<>|\r\n]+/)*[^/:*?"<>|\r\n]+\.[A-Za-z0-9]{1,6}', msg)
+    if m:
+        return m.group().strip()
+    return None
+
+
+def _extract_own_code_param(msg):
+    msg_lower = msg.lower()
+    m = re.search(r'\b([\w\-]+\.py)\b', msg)
+    if m:
+        return m.group(1).strip()
+    return "overview"
+
+
+def _extract_file_search_param(msg):
+    # Quoted filename wins outright — most explicit signal
+    m = re.search(r'["\']([^"\']+\.[A-Za-z0-9]{1,6})["\']', msg)
+    if m:
+        return m.group(1).strip()
+    # A bare filename.ext token — avoids grabbing filler words like
+    # "me a file called" that sit between the verb and the actual name
+    m = re.search(r'\b([\w\-]+\.[A-Za-z0-9]{1,6})\b', msg)
+    if m:
+        return m.group(1).strip()
+    # No extension given (e.g. a folder or extensionless name) — fall back
+    # to whatever follows "called"/"named"
+    m = re.search(r"(?:called|named)\s+[\"']?([\w\-]+)[\"']?", msg, re.IGNORECASE)
+    if m:
+        return m.group(1).strip()
+    return None
+
+
 def _extract_search_param(msg):
     """Extract search query — catch-all for any current information request."""
     query = re.sub(
@@ -210,6 +247,41 @@ def _extract_search_param(msg):
 # TOOL INTENT DEFINITIONS
 # =========================
 TOOL_INTENTS = [
+    {
+        "tool": "own_code",
+        "signals": [
+            "your own code", "your source code", "look at your own code",
+            "reference your own code", "read your own code", "your codebase",
+            "your project files", "how are you built", "how are you coded",
+        ],
+        "negative": [],
+        "extractor": _extract_own_code_param,
+        "priority": 12,
+    },
+    {
+        "tool": "file_read",
+        "signals": [
+            "what's in the file", "what is in the file", "read the file",
+            "open the file", "show me the contents", "contents of",
+            "read this file", "open this file",
+        ],
+        "negative": [],
+        "extractor": _extract_file_path_param,
+        "priority": 11,
+    },
+    {
+        "tool": "file_search",
+        "signals": [
+            "find the file", "locate the file", "find a file", "locate a file",
+            "search for a file", "look for a file", "where is the file",
+            "where is", "where's",
+            "on my desktop", "on my computer", "on my c drive", "on the c drive",
+            "in my files", "find me the file", "on my hard drive",
+        ],
+        "negative": [],
+        "extractor": _extract_file_search_param,
+        "priority": 10,
+    },
     {
         "tool": "web_fetch",
         "signals": [

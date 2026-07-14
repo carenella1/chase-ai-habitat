@@ -11,11 +11,16 @@ Current tools:
 - wiki_deep    — fetch full Wikipedia article
 - news_search  — search for recent news on a topic
 - web_search   — general web search (catch-all for current info)
+- file_search  — locate a file anywhere on disk by name/pattern
+- file_read    — read a text file's contents by path
+- own_code     — list or read Nexarion's own project source files
 """
 
+import os
 import re
 import json
 import time
+import fnmatch
 import traceback
 import requests
 from html import unescape as _html_unescape
@@ -27,6 +32,20 @@ nex_sandbox = NexSandbox()
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; NexarionTools/1.0)"}
 REQUEST_TIMEOUT = 10
+
+# habitat/agents/tool_executor.py -> project root is two levels up
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+FILE_READ_MAX_BYTES = 200_000  # ~200KB cap so a huge file can't blow out the prompt
+FILE_SEARCH_TIMEOUT = 8.0  # seconds — keeps the search inside run_ui.py's ~12s tool budget
+FILE_SEARCH_MAX_RESULTS = 20
+
+TEXT_EXTENSIONS = {
+    ".txt", ".md", ".py", ".js", ".ts", ".tsx", ".jsx", ".json", ".csv", ".html",
+    ".htm", ".css", ".yml", ".yaml", ".ini", ".cfg", ".conf", ".log", ".xml",
+    ".sql", ".bat", ".ps1", ".sh", ".c", ".cpp", ".h", ".java", ".rs", ".go",
+    ".rb", ".php", ".env", ".toml", ".rst", ".gitignore",
+}
 
 
 # =========================
@@ -372,6 +391,159 @@ def tool_sandbox_run(code: str) -> dict:
 
 
 # =========================
+# FILE SYSTEM ACCESS
+# =========================
+# Read-only. No write/delete/execute anywhere in this module. Scope is the
+# whole local disk (per owner's explicit choice), time-boxed so a search
+# that can't finish in the chat-response budget degrades gracefully instead
+# of hanging the reply.
+def _is_probably_text(path: str) -> bool:
+    ext = os.path.splitext(path)[1].lower()
+    if ext in TEXT_EXTENSIONS:
+        return True
+    if ext == "":
+        try:
+            with open(path, "rb") as f:
+                chunk = f.read(1024)
+            return b"\x00" not in chunk
+        except Exception:
+            return False
+    return False
+
+
+def tool_file_read(path: str) -> dict:
+    """Read a text file's contents by path, with a size cap."""
+    path = (path or "").strip().strip("\"'")
+    if not path:
+        return {"error": "No path given", "content": ""}
+    if not os.path.isfile(path):
+        return {"error": f"No such file: {path}", "content": ""}
+
+    try:
+        size = os.path.getsize(path)
+    except OSError as e:
+        return {"error": str(e), "content": ""}
+
+    if not _is_probably_text(path):
+        return {
+            "error": f"'{path}' doesn't look like a text file — binary content isn't readable this way",
+            "content": "",
+            "path": path,
+            "size": size,
+        }
+
+    truncated = size > FILE_READ_MAX_BYTES
+    try:
+        with open(path, "rb") as f:
+            raw = f.read(FILE_READ_MAX_BYTES)
+        try:
+            content = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            content = raw.decode("latin-1", errors="replace")
+    except Exception as e:
+        return {"error": str(e), "content": "", "path": path}
+
+    return {"path": path, "size": size, "content": content, "truncated": truncated}
+
+
+def tool_file_search(query: str) -> dict:
+    """Search the whole local disk for a file by name or wildcard pattern, time-boxed."""
+    query = (query or "").strip().strip("\"'")
+    if not query:
+        return {"error": "No filename or pattern given", "matches": []}
+
+    pattern = query if any(c in query for c in "*?") else f"*{query}*"
+    pattern = pattern.lower()
+
+    roots = []
+    for d in "CDEFGHIJ":
+        drive = f"{d}:\\"
+        if os.path.exists(drive):
+            roots.append(drive)
+
+    skip_dirs = {"$recycle.bin", "system volume information", "winsxs"}
+    matches = []
+    start = time.time()
+    timed_out = False
+
+    for root in roots:
+        if time.time() - start > FILE_SEARCH_TIMEOUT:
+            timed_out = True
+            break
+        for dirpath, dirnames, filenames in os.walk(root, topdown=True, onerror=lambda e: None):
+            if time.time() - start > FILE_SEARCH_TIMEOUT:
+                timed_out = True
+                break
+            dirnames[:] = [d for d in dirnames if d.lower() not in skip_dirs]
+            for fname in filenames:
+                if fnmatch.fnmatch(fname.lower(), pattern):
+                    full = os.path.join(dirpath, fname)
+                    try:
+                        stat = os.stat(full)
+                        matches.append({
+                            "path": full,
+                            "size": stat.st_size,
+                            "modified": time.strftime("%Y-%m-%d %H:%M", time.localtime(stat.st_mtime)),
+                        })
+                    except OSError:
+                        continue
+                    if len(matches) >= FILE_SEARCH_MAX_RESULTS:
+                        break
+            if len(matches) >= FILE_SEARCH_MAX_RESULTS:
+                break
+        if len(matches) >= FILE_SEARCH_MAX_RESULTS:
+            break
+
+    result = {"query": query, "matches": matches, "timed_out": timed_out and len(matches) < FILE_SEARCH_MAX_RESULTS}
+
+    # Auto-preview: if the search landed on a small number of hits and the
+    # top one is readable text under the size cap, attach its content so
+    # "find X" and "what's in X" resolve in one tool call.
+    if 0 < len(matches) <= 3:
+        top = matches[0]["path"]
+        if _is_probably_text(top) and matches[0]["size"] <= FILE_READ_MAX_BYTES:
+            read_result = tool_file_read(top)
+            if not read_result.get("error"):
+                result["preview_path"] = top
+                result["preview_content"] = read_result["content"]
+                result["preview_truncated"] = read_result["truncated"]
+
+    return result
+
+
+def tool_own_code(query: str) -> dict:
+    """List or read Nexarion's own project source files (scoped to the project root, not the whole disk)."""
+    query = (query or "").strip().strip("\"'")
+    root = PROJECT_ROOT
+    skip_dirs = {"habitat-env", ".git", "__pycache__", "node_modules", "data", "sandbox"}
+
+    if not query or query.lower() in {"overview", "list", "structure"}:
+        top_files = sorted(
+            f for f in os.listdir(root)
+            if f.endswith(".py") and os.path.isfile(os.path.join(root, f))
+        )
+        return {"root": root, "files": top_files[:40], "query": query}
+
+    matches = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in skip_dirs]
+        for fname in filenames:
+            if query.lower() in fname.lower():
+                matches.append(os.path.join(dirpath, fname))
+        if len(matches) >= FILE_SEARCH_MAX_RESULTS:
+            break
+
+    result = {"root": root, "query": query, "matches": matches[:FILE_SEARCH_MAX_RESULTS]}
+    if len(matches) == 1 and _is_probably_text(matches[0]):
+        r = tool_file_read(matches[0])
+        if not r.get("error"):
+            result["preview_path"] = matches[0]
+            result["preview_content"] = r["content"]
+            result["preview_truncated"] = r["truncated"]
+    return result
+
+
+# =========================
 # TOOL REGISTRY
 # =========================
 TOOL_REGISTRY = {
@@ -426,6 +598,24 @@ TOOL_REGISTRY = {
         ),
         "param": "code",
         "example": "sandbox_run('print(sum(range(100)))')",
+    },
+    "file_search": {
+        "function": tool_file_search,
+        "description": "Search the whole local disk for a file by name or wildcard pattern",
+        "param": "query",
+        "example": "file_search('creative_engine.py')",
+    },
+    "file_read": {
+        "function": tool_file_read,
+        "description": "Read the text contents of a file at a specific path",
+        "param": "path",
+        "example": "file_read('C:/Users/User/Desktop/notes.txt')",
+    },
+    "own_code": {
+        "function": tool_own_code,
+        "description": "List or read Nexarion's own project source files",
+        "param": "query",
+        "example": "own_code('creative_engine')",
     },
 }
 
@@ -527,6 +717,44 @@ def format_tool_result(result: dict) -> str:
         elif results:
             body = "\n".join(f"• {r}" for r in results[:4])
             lines.append(wrap_untrusted_web_content(body, source="web search"))
+        return "\n".join(lines)
+
+    elif tool == "file_search":
+        matches = result.get("matches", [])
+        query = result.get("query", "")
+        if not matches:
+            note = " (search timed out before finishing — try narrowing the name)" if result.get("timed_out") else ""
+            return f"[File search: {query}] No matching files found{note}"
+        lines = [f"[File search: {query}] Found {len(matches)} match(es):"]
+        for m in matches[:10]:
+            lines.append(f"  • {m['path']} ({m['size']} bytes, modified {m['modified']})")
+        if result.get("preview_content"):
+            trunc = " (truncated)" if result.get("preview_truncated") else ""
+            lines.append(f"\nContents of {result['preview_path']}{trunc}:")
+            lines.append(result["preview_content"][:4000])
+        return "\n".join(lines)
+
+    elif tool == "file_read":
+        if result.get("content"):
+            trunc = " (truncated)" if result.get("truncated") else ""
+            return f"[File: {result.get('path')}]{trunc}\n{result['content'][:4000]}"
+        return f"[File read error] {result.get('error', 'unknown')}"
+
+    elif tool == "own_code":
+        query = result.get("query", "")
+        if result.get("files") is not None:
+            files = result.get("files", [])
+            return "[Nexarion's project files]\n" + "\n".join(f"  • {f}" for f in files)
+        matches = result.get("matches", [])
+        if not matches:
+            return f"[Own code: {query}] No matching source file found"
+        lines = [f"[Own code: {query}] Found {len(matches)} match(es):"]
+        for m in matches[:10]:
+            lines.append(f"  • {m}")
+        if result.get("preview_content"):
+            trunc = " (truncated)" if result.get("preview_truncated") else ""
+            lines.append(f"\nContents of {result['preview_path']}{trunc}:")
+            lines.append(result["preview_content"][:4000])
         return "\n".join(lines)
 
     content = result.get(

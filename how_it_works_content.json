@@ -210,5 +210,20 @@
       "A stuck or too-slow job can be cancelled from the UI (which also tells ComfyUI to actually stop, not just stop watching); jobs orphaned by an app restart are marked failed on the next startup instead of appearing stuck forever"
     ],
     "live_status_check": null
+  },
+  {
+    "id": "file-access",
+    "kicker": "READING YOUR MACHINE",
+    "title": "File Search & Reading",
+    "status": "live",
+    "lead": "In chat, NEX can locate a file anywhere on the local disk by name and read its text contents — including its own source code. Ask it to find something on your Desktop, or to look at one of its own project files, and it searches the real filesystem instead of guessing.",
+    "why_hook": "Read-only, and time-boxed on purpose.",
+    "why_body": "This is a plain read tool, not the sandbox or the Docker workspace — there's no write, delete, or execute path anywhere in it. Scope is the whole local disk, by explicit choice, rather than a folder allowlist. A whole-drive name search can't always finish inside the few seconds a chat reply can wait, so it's capped at ~8 seconds and reports honestly if it ran out of time instead of hanging the reply. File reads are capped at ~200KB and skip anything that isn't recognizably a text file, so a huge log or a binary can't blow out the response.",
+    "facts": [
+      "Read-only: no write, delete, or execute capability in this tool",
+      "Whole-disk search, ~8s time budget per chat message, ~200KB read cap per file",
+      "Own-code lookups are scoped to the project folder for speed, separate from the general whole-disk search"
+    ],
+    "live_status_check": null
   }
 ]
