@@ -100,7 +100,8 @@
     "facts": [
       "4 persona buckets, scored with decay so recent behavior dominates",
       "Real local voice (Kokoro TTS) and listening (Whisper)",
-      "Only speaks in Orb mode \u2014 typed chat stays silent"
+      "Only speaks in Nex Live \u2014 typed chat stays silent",
+      "A volume slider next to the mic button controls playback level, saved between sessions"
     ],
     "live_status_check": null
   },
@@ -244,15 +245,15 @@
   {
     "id": "nex-face",
     "kicker": "A FACE FOR NEX",
-    "title": "The Nex Avatar",
+    "title": "The Nex Avatar & Nex Live",
     "status": "live",
-    "lead": "A small animated portrait now sits in the bottom-left corner of every page — not decoration, but a live readout of what Nex is actually doing: idle, listening, thinking, or speaking. Click it and it opens Orb Mode, the same full voice interface the \"Orb\" button on the Chat page opens.",
+    "lead": "A small animated portrait sits in the bottom-left corner of every page — not decoration, but a live readout of what Nex is actually doing: idle, listening, thinking, or speaking. Click it and it opens Nex Live, the full voice interface (formerly \"Orb Mode\") reached from the \"Nex Live\" button on the Chat page — and that same face, scaled up, is now what Nex Live actually shows instead of an abstract orb.",
     "why_hook": "It reads Nex's real state, it doesn't perform one.",
-    "why_body": "The avatar doesn't run its own logic for \"am I thinking right now\" — it's wired into the exact same state signal Orb Mode already tracked (idle/listening/thinking/speaking), so the two can never drift out of sync or show contradictory things. Clicking it on the Chat page just triggers the existing Orb button; clicking it anywhere else takes you to Chat and opens Orb Mode automatically. No separate voice interface was built for it.",
+    "why_body": "The avatar doesn't run its own logic for \"am I thinking right now\" — it's wired into the exact same state signal Nex Live already tracks (idle/listening/thinking/speaking), so the mini avatar and the big Nex Live face can never drift out of sync or show contradictory things. Clicking the mini avatar on the Chat page just triggers the existing \"Nex Live\" button; clicking it anywhere else takes you to Chat and opens Nex Live automatically. Nex Live used to show a separate circular \"orb\" with its own color/pulse animation per state; that system had silently stopped reacting to state changes (a leftover class-name mismatch from an earlier refactor) and has been replaced outright with the same face widget, so there's only one animation system to keep working.",
     "facts": [
-      "Same 4 states as Orb Mode: idle · listening · thinking · speaking",
+      "Same 4 states drive both: idle · listening · thinking · speaking",
       "Pure CSS/SVG, no new libraries or images added",
-      "Click opens the existing Orb Mode overlay — doesn't duplicate it"
+      "Nex Live's big face and the bottom-left mini avatar share one CSS animation system (.nf-face), not two"
     ],
     "live_status_check": null
   }

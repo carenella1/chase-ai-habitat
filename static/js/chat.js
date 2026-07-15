@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const newChatBtn = document.getElementById("new-chat-btn");
     const chatList = document.getElementById("chat-list");
     const traceToggleBtn = document.getElementById("trace-toggle-btn");
+    const volumeSlider = document.getElementById("volume-slider");
+    const volumeIcon = document.getElementById("volume-icon");
 
     let isListening = false;
     let isSending = false;
@@ -24,6 +26,35 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeConvId = null;
     let lastResponse = null;
     let traceEnabled = false;
+    let currentAudioEl = null;
+
+    /* =========================
+       VOLUME CONTROL
+       Persisted in localStorage so it survives reloads. Applied to
+       whichever Audio() element is currently playing Nex's voice.
+    ========================= */
+    function getVolume() {
+        const stored = localStorage.getItem("nexVolume");
+        const vol = stored !== null ? parseFloat(stored) : 0.8;
+        return Number.isFinite(vol) ? Math.min(1, Math.max(0, vol)) : 0.8;
+    }
+
+    function updateVolumeIcon(vol) {
+        if (!volumeIcon) return;
+        volumeIcon.textContent = vol === 0 ? "🔇" : vol < 0.5 ? "🔉" : "🔊";
+    }
+
+    if (volumeSlider) {
+        const initialVol = getVolume();
+        volumeSlider.value = Math.round(initialVol * 100);
+        updateVolumeIcon(initialVol);
+        volumeSlider.addEventListener("input", () => {
+            const vol = volumeSlider.value / 100;
+            localStorage.setItem("nexVolume", String(vol));
+            updateVolumeIcon(vol);
+            if (currentAudioEl) currentAudioEl.volume = vol;
+        });
+    }
 
     /* =========================
        TRACE TOGGLE
@@ -589,7 +620,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     const isWav = audio.startsWith("UklG");
                     const mime = isWav ? "audio/wav" : "audio/mpeg";
                     const audioEl = new Audio(`data:${mime};base64,${audio}`);
+                    audioEl.volume = getVolume();
+                    currentAudioEl = audioEl;
                     audioEl.onended = () => {
+                        if (currentAudioEl === audioEl) currentAudioEl = null;
                         if (orbMode) {
                             setOrbState("idle");
                             setTimeout(startListening, 2000);
@@ -597,13 +631,23 @@ document.addEventListener("DOMContentLoaded", () => {
                     };
                     audioEl.onerror = () => {
                         const alt = new Audio(`data:${isWav ? "audio/mpeg" : "audio/wav"};base64,${audio}`);
+                        alt.volume = getVolume();
+                        currentAudioEl = alt;
                         alt.onended = () => {
+                            if (currentAudioEl === alt) currentAudioEl = null;
                             if (orbMode) { setOrbState("idle"); setTimeout(startListening, 2000); }
                         };
-                        alt.play().catch(() => { if (orbMode) setOrbState("idle"); });
+                        alt.play().catch((e) => {
+                            console.error("🔈 Nex voice playback failed (alt format):", e);
+                            if (orbMode) setOrbState("idle");
+                        });
                     };
-                    audioEl.play().catch(() => { if (orbMode) setOrbState("idle"); });
+                    audioEl.play().catch((e) => {
+                        console.error("🔈 Nex voice playback failed:", e);
+                        if (orbMode) setOrbState("idle");
+                    });
                 } else {
+                    console.warn("🔈 Nex has no voice for this reply — TTS returned no audio. Check habitat_debug.log for a Kokoro error.");
                     if (orbMode) setOrbState("idle");
                 }
             } else {
@@ -681,7 +725,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* =========================
-       ORB MODE
+       NEX LIVE (face-to-face voice mode)
     ========================= */
     function setOrbState(state) {
         if (window.NexFace) window.NexFace.setState(state);
@@ -694,10 +738,9 @@ document.addEventListener("DOMContentLoaded", () => {
             speaking: "Speaking…"
         };
         if (orbStatus) orbStatus.textContent = states[state] || "Ready";
-        if (orbEl) {
-            orbEl.classList.remove("state-listening", "state-thinking", "state-speaking");
-            if (state !== "idle") orbEl.classList.add(`state-${state}`);
-        }
+        // The face's own eye/mouth animation per state is driven by this
+        // same data-state attribute (see nex_face.css's shared .nf-face rules).
+        if (orbEl) orbEl.dataset.state = state;
     }
 
     if (modeBtn) {
@@ -705,6 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
             orbMode = true;
             if (orbOverlay) {
                 orbOverlay.style.display = "flex";
+                orbOverlay.classList.add("orb-visible");
                 setOrbState("idle");
             }
         });
@@ -714,12 +758,15 @@ document.addEventListener("DOMContentLoaded", () => {
         exitOrbBtn.addEventListener("click", () => {
             orbMode = false;
             isListening = false;
-            if (orbOverlay) orbOverlay.style.display = "none";
+            if (orbOverlay) {
+                orbOverlay.style.display = "none";
+                orbOverlay.classList.remove("orb-visible");
+            }
         });
     }
 
     // Arriving here via the Nex face widget on another page (?voice=1) — open
-    // Orb Mode the same way the "Orb" button does, then clean the URL.
+    // Nex Live the same way the "Nex Live" button does, then clean the URL.
     if (new URLSearchParams(window.location.search).get("voice") === "1") {
         history.replaceState(null, "", window.location.pathname);
         if (modeBtn) modeBtn.click();

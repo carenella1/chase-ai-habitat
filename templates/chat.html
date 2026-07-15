@@ -27,7 +27,11 @@
             <input id="chat-input" placeholder="Speak to Nexarion..." />
             <button id="send-btn" class="chat-btn primary">Send</button>
             <button id="mic-btn" class="chat-btn" title="Voice input">🎤</button>
-            <button id="mode-toggle" class="chat-btn" title="Orb Mode">Orb</button>
+            <div class="volume-control" title="Nex voice volume">
+                <span class="volume-icon" id="volume-icon">🔊</span>
+                <input type="range" id="volume-slider" min="0" max="100" value="80" aria-label="Nex voice volume" />
+            </div>
+            <button id="mode-toggle" class="chat-btn" title="Nex Live">Nex Live</button>
         </div>
     </div>
 
@@ -69,7 +73,7 @@
 
 </div>
 
-<!-- ORB MODE OVERLAY -->
+<!-- NEX LIVE OVERLAY -->
 <div id="orb-overlay">
 
     <div id="orb-rings">
@@ -78,15 +82,33 @@
         <div class="orb-ring ring-3"></div>
     </div>
 
-    <div id="nexarion-orb"></div>
+    <div id="nexarion-orb" class="nf-face" data-state="idle">
+        <svg class="nf-svg" viewBox="0 0 200 200">
+            <polygon class="nf-plate-outer" points="100,14 165,50 178,100 165,150 100,186 35,150 22,100 35,50"/>
+            <polygon class="nf-plate-inner" points="100,32 152,60 162,100 152,140 100,168 48,140 38,100 48,60"/>
+            <line class="nf-bridge-line" x1="83" y1="98" x2="93" y2="98"/>
+            <line class="nf-bridge-line" x1="107" y1="98" x2="117" y2="98"/>
+            <circle class="nf-bridge-node" cx="100" cy="98" r="2.6"/>
+            <rect class="nf-eye nf-eye-l" x="66" y="88" width="16" height="7" rx="1"/>
+            <rect class="nf-eye nf-eye-r" x="118" y="88" width="16" height="7" rx="1"/>
+            <line class="nf-mbase" x1="72" y1="140" x2="128" y2="140"/>
+            <rect class="nf-mbar" x="73" y="128" width="4" height="12"/>
+            <rect class="nf-mbar" x="82" y="128" width="4" height="12"/>
+            <rect class="nf-mbar" x="91" y="128" width="4" height="12"/>
+            <rect class="nf-mbar" x="100" y="128" width="4" height="12"/>
+            <rect class="nf-mbar" x="109" y="128" width="4" height="12"/>
+            <rect class="nf-mbar" x="118" y="128" width="4" height="12"/>
+            <rect class="nf-mbar" x="123" y="128" width="4" height="12"/>
+        </svg>
+    </div>
 
     <div id="orb-status-text">Nexarion is ready</div>
 
     <div id="orb-response-text"></div>
 
-    <div id="orb-hint">Tap the orb or use the mic to speak</div>
+    <div id="orb-hint">Tap Nex or use the mic to speak</div>
 
-    <button id="exit-orb" class="chat-btn">&#x2715; Exit Orb Mode</button>
+    <button id="exit-orb" class="chat-btn">&#x2715; Exit Nex Live</button>
 
 </div>
 

@@ -1,6 +1,6 @@
 // Persistent Nex avatar, bottom-left on every page. Exposes window.NexFace.setState()
 // so chat.js can drive it off the same idle/listening/thinking/speaking states as
-// Orb Mode. Clicking it opens Orb Mode — on the chat page it just clicks the existing
+// Nex Live. Clicking it opens Nex Live — on the chat page it just clicks the existing
 // #mode-toggle button; on any other page it navigates to the chat page first.
 (function () {
     document.addEventListener("DOMContentLoaded", () => {
