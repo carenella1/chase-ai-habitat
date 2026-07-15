@@ -533,6 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         addMessage(text, "user");
         if (orbMode) setOrbState("thinking");
+        else if (window.NexFace) window.NexFace.setState("thinking");
 
         const typing = showTyping();
         let stream = null;
@@ -617,6 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } finally {
             isSending = false;
             sendBtn.disabled = false;
+            if (!orbMode && window.NexFace) window.NexFace.setState("idle");
             if (orbMode && !isListening && !lastResponse?.audio) {
                 setTimeout(startListening, 4000);
             }
@@ -682,6 +684,7 @@ document.addEventListener("DOMContentLoaded", () => {
        ORB MODE
     ========================= */
     function setOrbState(state) {
+        if (window.NexFace) window.NexFace.setState(state);
         if (!orbOverlay) return;
         orbOverlay.dataset.state = state;
         const states = {
@@ -713,6 +716,13 @@ document.addEventListener("DOMContentLoaded", () => {
             isListening = false;
             if (orbOverlay) orbOverlay.style.display = "none";
         });
+    }
+
+    // Arriving here via the Nex face widget on another page (?voice=1) — open
+    // Orb Mode the same way the "Orb" button does, then clean the URL.
+    if (new URLSearchParams(window.location.search).get("voice") === "1") {
+        history.replaceState(null, "", window.location.pathname);
+        if (modeBtn) modeBtn.click();
     }
 
     if (orbEl) {

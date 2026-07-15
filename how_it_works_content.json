@@ -240,5 +240,20 @@
       "Separate from the background Autonomous Research loop — this fires immediately, mid-chat, as one search pass rather than a multi-source investigation"
     ],
     "live_status_check": null
+  },
+  {
+    "id": "nex-face",
+    "kicker": "A FACE FOR NEX",
+    "title": "The Nex Avatar",
+    "status": "live",
+    "lead": "A small animated portrait now sits in the bottom-left corner of every page — not decoration, but a live readout of what Nex is actually doing: idle, listening, thinking, or speaking. Click it and it opens Orb Mode, the same full voice interface the \"Orb\" button on the Chat page opens.",
+    "why_hook": "It reads Nex's real state, it doesn't perform one.",
+    "why_body": "The avatar doesn't run its own logic for \"am I thinking right now\" — it's wired into the exact same state signal Orb Mode already tracked (idle/listening/thinking/speaking), so the two can never drift out of sync or show contradictory things. Clicking it on the Chat page just triggers the existing Orb button; clicking it anywhere else takes you to Chat and opens Orb Mode automatically. No separate voice interface was built for it.",
+    "facts": [
+      "Same 4 states as Orb Mode: idle · listening · thinking · speaking",
+      "Pure CSS/SVG, no new libraries or images added",
+      "Click opens the existing Orb Mode overlay — doesn't duplicate it"
+    ],
+    "live_status_check": null
   }
 ]
