@@ -57,7 +57,12 @@ def _get_kokoro():
         return None, False
 
 
-def generate_local_voice(text: str, persona: str = "analytical") -> str:
+def generate_local_voice(
+    text: str,
+    persona: str = "analytical",
+    voice_id: str | None = None,
+    speed: float | None = None,
+) -> str:
     if not text or not text.strip():
         return ""
 
@@ -68,12 +73,16 @@ def generate_local_voice(text: str, persona: str = "analytical") -> str:
     try:
         import numpy as np
         import soundfile as sf
+        from habitat.voice.kokoro_voices import KOKORO_VOICE_IDS
 
-        voice_id = KOKORO_VOICE_MAP.get(persona, KOKORO_VOICE_MAP["default"])
-        speed = KOKORO_SPEED_MAP.get(persona, 1.0)
+        resolved_voice_id = (
+            voice_id if voice_id in KOKORO_VOICE_IDS
+            else KOKORO_VOICE_MAP.get(persona, KOKORO_VOICE_MAP["default"])
+        )
+        resolved_speed = speed if speed is not None else KOKORO_SPEED_MAP.get(persona, 1.0)
 
         audio_chunks = []
-        generator = pipeline(text, voice=voice_id, speed=speed, split_pattern=r"\n+")
+        generator = pipeline(text, voice=resolved_voice_id, speed=resolved_speed, split_pattern=r"\n+")
 
         for _, _, audio in generator:
             if audio is not None and len(audio) > 0:

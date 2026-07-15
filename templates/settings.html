@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+
+<div class="settings-page">
+
+    <div class="settings-header">
+        <h1 class="page-title">NEX <span class="title-accent">SETTINGS</span></h1>
+        <p class="page-subtitle">Audio devices, voice, and Nex Live behavior</p>
+    </div>
+
+    <div class="settings-grid">
+
+        <!-- AUDIO INPUT -->
+        <div class="panel-section">
+            <label class="panel-label">MICROPHONE</label>
+            <p class="settings-hint">Which input device Nex Live listens through.</p>
+            <select id="input-device-select" class="settings-select">
+                <option value="">Loading devices…</option>
+            </select>
+        </div>
+
+        <!-- AUDIO OUTPUT -->
+        <div class="panel-section">
+            <label class="panel-label">SPEAKER / OUTPUT</label>
+            <p class="settings-hint">Which device Nex's voice plays through. Browser-controlled — may not be supported everywhere.</p>
+            <select id="output-device-select" class="settings-select">
+                <option value="">System default</option>
+            </select>
+            <p class="settings-note" id="output-device-note" style="display:none;">
+                This browser doesn't support output device selection — system default will be used.
+            </p>
+        </div>
+
+        <!-- VOLUME -->
+        <div class="panel-section">
+            <label class="panel-label">VOLUME</label>
+            <p class="settings-hint">Nex's speaking volume in Nex Live. Synced with the quick control on the Chat page.</p>
+            <div class="settings-volume-row">
+                <span class="volume-icon" id="settings-volume-icon">🔊</span>
+                <input type="range" id="settings-volume-slider" min="0" max="100" value="80" aria-label="Nex voice volume" />
+            </div>
+        </div>
+
+        <!-- SILENCE SENSITIVITY -->
+        <div class="panel-section">
+            <label class="panel-label">SILENCE SENSITIVITY</label>
+            <p class="settings-hint">How long Nex waits after you stop talking before responding. Lower = snappier, higher = more patient with pauses.</p>
+            <div class="settings-volume-row">
+                <span class="settings-range-value" id="silence-value">700ms</span>
+                <input type="range" id="silence-slider" min="400" max="1500" step="50" value="700" aria-label="Silence sensitivity" />
+            </div>
+        </div>
+
+        <!-- VOICE TYPE -->
+        <div class="panel-section settings-section-wide">
+            <label class="panel-label">VOICE</label>
+            <p class="settings-hint">
+                By default Nex's voice drifts on its own with its cognitive persona (see How Nex Works).
+                Pin one of Kokoro's built-in voices below to override that and keep the sound fixed.
+            </p>
+            <div class="voice-active-row">
+                <span class="settings-hint">Active:</span>
+                <span id="voice-active-label" class="voice-active-label">Auto (persona-driven)</span>
+                <button id="voice-clear-btn" class="settings-btn" style="display:none;">Clear override</button>
+            </div>
+            <div class="voice-grid" id="voice-grid">
+                {% for v in voice_catalog %}
+                <div class="voice-card" data-voice-id="{{ v.id }}">
+                    <div class="voice-card-main">
+                        <span class="voice-card-label">{{ v.label }}</span>
+                        <span class="voice-card-meta">{{ v.gender }} · {{ v.accent }}</span>
+                    </div>
+                    <div class="voice-card-actions">
+                        <button class="settings-btn voice-preview-btn" data-voice-id="{{ v.id }}">▶ Preview</button>
+                        <button class="settings-btn voice-select-btn" data-voice-id="{{ v.id }}">Use this voice</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/js/settings.js"></script>
+{% endblock %}

@@ -94,14 +94,16 @@
     "kicker": "PERSONALITY",
     "title": "Personality & Voice",
     "status": "live",
-    "lead": "NEX's tone \u2014 analytical, challenger, explorer, or philosopher \u2014 isn't a setting you pick. It's inferred every 15 cycles from how NEX has actually been arguing lately, and that same reading now drives its literal spoken voice too.",
+    "lead": "NEX's tone \u2014 analytical, challenger, explorer, or philosopher \u2014 isn't a setting you pick by default. It's inferred every 15 cycles from how NEX has actually been arguing lately, and that same reading drives its spoken voice too \u2014 unless you pin a specific voice on the Settings page, which locks the sound while the underlying persona keeps drifting in the background.",
     "why_hook": "Personality as a readout of behavior, not a costume.",
-    "why_body": "If NEX has been mostly challenging ideas lately, \"challenger\" wins and its voice shifts to match, with every drift logged so the change is visible over time instead of silent.",
+    "why_body": "If NEX has been mostly challenging ideas lately, \"challenger\" wins and its voice shifts to match, with every drift logged so the change is visible over time instead of silent \u2014 unless a voice override is set in Settings, in which case the audible voice stays fixed even as the persona bookkeeping keeps running underneath.",
     "facts": [
       "4 persona buckets, scored with decay so recent behavior dominates",
       "Real local voice (Kokoro TTS) and listening (Whisper)",
       "Only speaks in Nex Live \u2014 typed chat stays silent",
-      "A volume slider next to the mic button controls playback level, saved between sessions"
+      "End-of-speech detection uses Silero VAD, a neural model, instead of a simple volume threshold \u2014 more reliable with headset mics that apply automatic gain control or noise gating",
+      "Settings lets you pin one of Kokoro's ~28 built-in voices, overriding the auto-drift for playback only",
+      "A Settings page controls mic/output device, mic silence sensitivity, playback volume, and voice choice, persisted across sessions"
     ],
     "live_status_check": null
   },

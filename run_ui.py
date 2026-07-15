@@ -59,6 +59,8 @@ from habitat.voice.local_tts import (
     is_available as local_tts_available,
 )
 from habitat.voice.speech_to_text import transcribe_audio_data
+from habitat.voice.kokoro_voices import KOKORO_VOICE_CATALOG
+from habitat.utils.settings_store import load_settings, save_settings
 
 from habitat.workspace.global_workspace import workspace, compute_salience
 from habitat.self_model.self_model import (
@@ -705,6 +707,61 @@ def how_it_works_page():
     return render_template("how_it_works.html", active="how_it_works", cards=cards)
 
 
+@app.route("/settings")
+def settings_page():
+    return render_template("settings.html", active="settings", voice_catalog=KOKORO_VOICE_CATALOG)
+
+
+@app.route("/api/settings", methods=["GET"])
+def api_get_settings():
+    try:
+        return jsonify({"status": "ok", "settings": load_settings()})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/settings", methods=["POST"])
+def api_post_settings():
+    try:
+        data = request.get_json() or {}
+        return jsonify({"status": "ok", "settings": save_settings(data)})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
+@app.route("/api/settings/audio-devices")
+def api_audio_devices():
+    try:
+        import sounddevice as sd
+
+        devices = sd.query_devices()
+        hostapis = sd.query_hostapis()
+        try:
+            default_input = sd.default.device[0]
+        except Exception:
+            default_input = None
+        inputs = [
+            {
+                "index": i,
+                "name": d["name"],
+                "channels": d["max_input_channels"],
+                "is_default": i == default_input,
+            }
+            for i, d in enumerate(devices)
+            if d["max_input_channels"] > 0
+            # Windows exposes each physical mic once per audio host API
+            # (MME/DirectSound/WASAPI/WDM-KS). The WDM-KS variant doesn't
+            # support the blocking read() our capture loop uses (PortAudio
+            # raises "Blocking API not supported yet"), so it's excluded —
+            # the same physical device is still selectable via its other
+            # host API entries.
+            and "WDM-KS" not in hostapis[d["hostapi"]]["name"]
+        ]
+        return jsonify({"status": "ok", "devices": inputs})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
 @app.route("/api/cognition/all")
 def api_cognition_all():
     memory = ensure_memory(load_memory())
@@ -849,8 +906,20 @@ def api_voice_speak():
         if not text:
             return jsonify({"status": "error", "audio": ""})
 
-        current_persona = get_voice_status().get("current_persona", "analytical")
-        audio_b64 = generate_local_voice(text, persona=current_persona)
+        # Precedence: an explicit voice_id in the request (Settings' Preview
+        # button) > a persisted voice_override (Settings' pinned voice) >
+        # the persona auto-drift system (default, unset).
+        explicit_voice = data.get("voice_id")
+        if explicit_voice:
+            audio_b64 = generate_local_voice(text, voice_id=explicit_voice)
+        else:
+            override = load_settings().get("voice_override")
+            if override:
+                audio_b64 = generate_local_voice(text, voice_id=override)
+            else:
+                current_persona = get_voice_status().get("current_persona", "analytical")
+                audio_b64 = generate_local_voice(text, persona=current_persona)
+
         return jsonify({"status": "ok", "audio": audio_b64})
     except Exception as e:
         print(f"⚠️ Voice speak error: {e}")
@@ -860,21 +929,19 @@ def api_voice_speak():
 @app.route("/api/voice/listen", methods=["POST"])
 def api_voice_listen():
     try:
-        import speech_recognition as sr
+        from habitat.voice.vad_listen import record_until_silence
 
-        r = sr.Recognizer()
-        r.energy_threshold = 300
-        r.dynamic_energy_threshold = True
-        r.pause_threshold = 0.8
-        with sr.Microphone() as source:
-            print("🎤 Listening...")
-            r.adjust_for_ambient_noise(source, duration=0.5)
-            audio = r.listen(source, timeout=10, phrase_time_limit=15)
+        settings = load_settings()
+        print("🎤 Listening...")
+        audio = record_until_silence(
+            device_index=settings.get("input_device_index"),
+            silence_ms=settings.get("silence_ms", 700),
+        )
+        if audio is None:
+            return jsonify({"status": "timeout", "text": ""})
         text = transcribe_audio_data(audio)
         print(f"🎤 Got: {text}")
         return jsonify({"status": "ok", "text": text})
-    except sr.WaitTimeoutError:
-        return jsonify({"status": "timeout", "text": ""})
     except Exception as e:
         print(f"🎤 Error: {e}")
         traceback.print_exc()

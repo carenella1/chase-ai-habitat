@@ -1,0 +1,225 @@
+/* =========================
+   SETTINGS PAGE
+   Same dark-terminal aesthetic as discovery.css/self.css
+========================= */
+
+.settings-page {
+    padding: 32px 40px;
+    min-height: 100vh;
+}
+
+.settings-header {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.page-title {
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+    margin: 0 0 6px 0;
+}
+
+.title-accent {
+    color: var(--accent);
+}
+
+.page-subtitle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.settings-section-wide {
+    grid-column: 1 / -1;
+}
+
+.panel-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.panel-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    display: block;
+}
+
+.settings-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.settings-note {
+    font-size: 11px;
+    color: var(--accent-warn);
+    margin: 0;
+}
+
+.settings-select {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 9px 10px;
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    outline: none;
+}
+
+.settings-select:focus {
+    border-color: var(--accent);
+}
+
+.settings-volume-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-range-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    min-width: 52px;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 3px;
+    background: rgba(0, 240, 255, 0.2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    cursor: pointer;
+}
+
+.voice-active-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.voice-active-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+}
+
+.settings-btn {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 11px;
+    transition: 0.2s ease;
+}
+
+.settings-btn:hover {
+    background: var(--accent-dim);
+    box-shadow: 0 0 10px var(--accent);
+}
+
+.settings-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+    box-shadow: none;
+}
+
+.voice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.voice-card {
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.voice-card.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+}
+
+.voice-card-main {
+    display: flex;
+    flex-direction: column;
+}
+
+.voice-card-label {
+    font-size: 13px;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.voice-card-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: capitalize;
+}
+
+.voice-card-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.voice-card-actions .settings-btn {
+    flex: 1;
+}
+
+@media (max-width: 900px) {
+    .settings-grid { grid-template-columns: 1fr; }
+}
