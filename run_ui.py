@@ -3575,6 +3575,16 @@ def api_creative_engine_status():
     return jsonify(status)
 
 
+@app.route("/creative/start-comfyui", methods=["POST"])
+def api_creative_start_comfyui():
+    return jsonify(creative_engine.start_comfyui())
+
+
+@app.route("/creative/stop-comfyui", methods=["POST"])
+def api_creative_stop_comfyui():
+    return jsonify(creative_engine.stop_comfyui())
+
+
 @app.route("/creative/loras", methods=["GET"])
 def api_creative_loras():
     return jsonify({"loras": creative_engine.list_loras()})

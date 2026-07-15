@@ -306,6 +306,7 @@ class CreativeEngine:
         self._cancel_events = {}  # job_id -> threading.Event, cleared when the job ends
         self._comfy_starting = False
         self._comfy_start_error = None
+        self._comfy_process = None  # only set if THIS session launched ComfyUI
 
     # ---- ComfyUI process management ----
 
@@ -391,7 +392,7 @@ class CreativeEngine:
                 # identically to double-clicking that launcher by hand —
                 # just headless and on a fixed port. --disable-auto-launch
                 # stops ComfyUI popping its own browser tab open.
-                subprocess.Popen(
+                self._comfy_process = subprocess.Popen(
                     [
                         python_exe,
                         "-s",
@@ -420,6 +421,24 @@ class CreativeEngine:
             )
         finally:
             self._comfy_starting = False
+
+    def stop_comfyui(self):
+        """Stops ComfyUI, but only if this session is the one that started
+        it — if it was already running before Nex launched (started by
+        hand, or by another app), leave it alone."""
+        if self._comfy_process is None:
+            return {"status": "skipped", "message": "Not started by this session"}
+        try:
+            self._comfy_process.terminate()
+            try:
+                self._comfy_process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self._comfy_process.kill()
+            return {"status": "stopped"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+        finally:
+            self._comfy_process = None
 
     # ---- model file presence checks ----
 

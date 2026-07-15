@@ -36,6 +36,7 @@ STARTUP_TIMEOUT = 45
 # =============================================================
 flask_process = None
 webview_window = None
+ollama_process = None  # only set if THIS session launched Ollama
 
 
 # =============================================================
@@ -65,10 +66,12 @@ def log(msg):
 # STEP 0: AUTO-START OLLAMA
 # =============================================================
 def ensure_ollama_running():
+    global ollama_process
+
     log("Checking if Ollama is running...")
     try:
         requests.get("http://127.0.0.1:11434", timeout=2)
-        log("Ollama already running.")
+        log("Ollama already running (not started by this session — won't be stopped on exit).")
         return True
     except Exception:
         pass
@@ -77,7 +80,7 @@ def ensure_ollama_running():
     ollama_path = OLLAMA_EXE if os.path.exists(OLLAMA_EXE) else "ollama"
 
     try:
-        subprocess.Popen(
+        ollama_process = subprocess.Popen(
             [ollama_path, "serve"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -163,6 +166,22 @@ def wait_for_flask(timeout=STARTUP_TIMEOUT):
 
     log("Flask did not respond in time.")
     return False
+
+
+# =============================================================
+# STEP 3.5: START COMFYUI (fire-and-forget)
+# ComfyUI can take up to ~90s to load on a slow disk, so this doesn't wait
+# for it — it just kicks off the same background start Flask already does
+# lazily on your first image generation, just earlier. The window opens
+# immediately; Creative will show ComfyUI as still starting if you open it
+# before that finishes.
+# =============================================================
+def start_comfyui():
+    try:
+        requests.post(f"{APP_URL}/creative/start-comfyui", timeout=5)
+        log("ComfyUI start requested (loading in the background).")
+    except Exception as e:
+        log(f"Could not request ComfyUI start (non-fatal): {e}")
 
 
 # =============================================================
@@ -275,7 +294,17 @@ def _show_error_box(message):
 # =============================================================
 def shutdown():
     log("Shutting down Nexarion Habitat...")
-    global flask_process
+    global flask_process, ollama_process
+
+    # Ask Flask to stop ComfyUI (only if this session started it) while
+    # Flask is still alive to receive the request — has to happen before
+    # flask_process is terminated below.
+    try:
+        requests.post(f"{APP_URL}/creative/stop-comfyui", timeout=5)
+        log("ComfyUI stop requested.")
+    except Exception as e:
+        log(f"Could not request ComfyUI stop (non-fatal): {e}")
+
     if flask_process:
         try:
             flask_process.terminate()
@@ -285,6 +314,20 @@ def shutdown():
                 flask_process.kill()
             except Exception:
                 pass
+
+    # Only stop Ollama if this session is the one that started it — if it
+    # was already running before Nexarion launched, leave it alone.
+    if ollama_process:
+        try:
+            ollama_process.terminate()
+            ollama_process.wait(timeout=5)
+            log("Ollama stopped.")
+        except Exception:
+            try:
+                ollama_process.kill()
+            except Exception:
+                pass
+
     os._exit(0)
 
 
@@ -311,6 +354,7 @@ def main():
         shutdown()
         return
 
+    start_comfyui()
     open_window()
     shutdown()
 
